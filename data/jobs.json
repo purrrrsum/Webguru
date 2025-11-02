@@ -1,0 +1,12 @@
+{
+  "jobs": [
+    {
+      "id": "job1",
+      "userId": "user1",
+      "agentId": "agent1",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+

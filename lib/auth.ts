@@ -1,0 +1,115 @@
+import { NextAuthOptions } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { User } from './utils';
+import { verifyOTP } from './otp';
+import { getUserByEmail, createUser } from './db';
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    }),
+    CredentialsProvider({
+      name: 'OTP',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        otp: { label: 'OTP', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.otp) {
+          return null;
+        }
+
+        // Check for admin bypass
+        if (credentials.otp === 'admin-login') {
+          const agent = await getUserByEmail(credentials.email);
+          if (agent && agent.role === 'agent') {
+            return {
+              id: agent.id,
+              email: agent.email,
+              name: agent.name,
+              role: agent.role,
+            };
+          }
+          return null;
+        }
+
+        if (!verifyOTP(credentials.email, credentials.otp)) {
+          return null;
+        }
+
+        // Find or create user
+        let user = await getUserByEmail(credentials.email);
+
+        if (!user) {
+          // Create new user
+          user = await createUser({
+            email: credentials.email,
+            name: credentials.email.split('@')[0],
+            company: '',
+            address: '',
+            phone: '',
+            jobCount: 0,
+            role: 'user',
+          });
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === 'google') {
+        // Find or create user
+        let dbUser = await getUserByEmail(user.email || '');
+
+        if (!dbUser && user.email) {
+          dbUser = await createUser({
+            email: user.email,
+            name: user.name || user.email.split('@')[0],
+            company: '',
+            address: '',
+            phone: '',
+            jobCount: 0,
+            role: 'user',
+          });
+        }
+
+        if (user.id && dbUser) {
+          user.id = dbUser.id;
+          user.name = dbUser.name;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.id = user.id;
+        token.role = (user as any).role || 'user';
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as 'user' | 'agent';
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/auth/signin',
+  },
+  session: {
+    strategy: 'jwt',
+  },
+};
+

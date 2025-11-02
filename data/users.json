@@ -1,0 +1,24 @@
+{
+  "user1": {
+    "id": "user1",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "company": "ABC Designs",
+    "address": "123, MG Road, Mumbai, India",
+    "phone": "+919876543210",
+    "jobCount": 0,
+    "role": "user"
+  },
+  "agent1": {
+    "id": "agent1",
+    "email": "agent@thesupport.in",
+    "password": "$2b$10$5z5z5z5z5z5z5z5z5z5z5u5z5z5z5z5z5z5z5z5z5z5z5z5z5z5z",
+    "name": "Support Agent",
+    "company": "TheSupport.in",
+    "address": "Delhi, India",
+    "phone": "+919900112233",
+    "jobCount": 0,
+    "role": "agent"
+  }
+}
+
