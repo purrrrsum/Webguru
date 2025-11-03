@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "package": "node package-for-hosting.js"
+    "package": "node package-for-hosting.js",
+    "verify-db": "npx tsx scripts/verify-db.ts",
+    "init-db": "npx tsx scripts/init-db.ts"
   },
   "dependencies": {
     "next": "^14.0.0",

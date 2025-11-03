@@ -87,6 +87,17 @@ Variable Name: RESEND_API_KEY
 Value: your_resend_api_key
 ```
 
+**🔑 How to Get Resend API Key:**
+1. Go to https://resend.com and sign up for a free account (or sign in)
+2. Navigate to https://resend.com/api-keys
+3. Click **"Create API Key"**
+4. Give it a name (e.g., "Railway Production" or "thesupport.agency")
+5. Select **"Sending access"** permission (recommended for security)
+6. **Copy the API key immediately** - it's only shown once!
+7. Paste it as the value for `RESEND_API_KEY` above
+
+**Note:** Resend free tier includes 3,000 emails/month and 100 emails/day
+
 ```
 Variable Name: ADMIN_EMAIL
 Value: agent@thesupport.in
@@ -118,39 +129,106 @@ Value: production
 
 After Railway deploys successfully, initialize the database:
 
-### Option A: Using Railway Web Interface (Easiest)
+### Option A: Using Railway CLI with Connection String (Recommended)
 
-1. Click on your **PostgreSQL** service in Railway
-2. Go to **"Query"** tab
-3. Open `lib/db-schema.sql` from your local project
-4. **Copy all the contents**
-5. **Paste into Railway Query editor**
-6. Click **"Run"** or press `Ctrl+Enter`
-7. You should see: **"Successfully executed"** ✅
+1. **Get Database Connection String:**
+   - Click on your **PostgreSQL** service in Railway
+   - Go to **"Variables"** tab
+   - Find and copy the `DATABASE_URL` or `PGDATABASE_URL` value
+   - It looks like: `postgresql://user:password@host:port/database`
 
-### Option B: Using Railway CLI
+2. **Use psql (if installed) or an online tool:**
+   
+   **Option A1: Using psql command (if you have PostgreSQL client installed)**
+   ```powershell
+   # In PowerShell, replace <DATABASE_URL> with your actual connection string
+   $env:PGPASSWORD="your_password"; psql "<DATABASE_URL>"
+   # Then paste the SQL from lib/db-schema.sql
+   ```
+   
+   **Option A2: Using online PostgreSQL client**
+   - Visit: https://adminer.org or https://www.pgadmin.org/ (for web access)
+   - Or download: https://www.pgadmin.org/download/ (pgAdmin) or TablePlus
+   - Connect using your Railway `DATABASE_URL`
+   - Open SQL Query tool and paste contents from `lib/db-schema.sql`
+   - Execute
+
+### Option B: Using Railway CLI (Alternative Method)
 
 1. **Install Railway CLI:**
-   ```bash
+   ```powershell
    npm install -g @railway/cli
    ```
 
 2. **Login:**
-   ```bash
+   ```powershell
    railway login
    ```
    (Opens browser to authenticate)
 
-3. **Link to your project:**
-   ```bash
+3. **Connect to your project:**
+   ```powershell
+   cd D:\Webguru
    railway link
    ```
    (Select your Railway project)
 
-4. **Run database initialization:**
-   ```bash
-   railway run npx tsx scripts/init-db.ts
+4. **Connect to PostgreSQL:**
+   ```powershell
+   railway connect postgres
    ```
+   This will open a psql session connected to your Railway database.
+
+5. **Run the schema:**
+   - Copy the entire contents of `lib/db-schema.sql`
+   - Paste into the psql terminal
+   - Press Enter to execute
+
+### Option C: Using External Database Tool (Easiest Visual Method)
+
+If you prefer a visual interface, use a database client:
+
+1. **Get Database Connection String:**
+   - In Railway, click your PostgreSQL service
+   - Go to **"Variables"** tab
+   - Copy the `DATABASE_URL` value
+
+2. **Choose a tool:**
+   - **TablePlus** (Recommended - beautiful UI): https://tableplus.com/download
+   - **pgAdmin** (Full-featured): https://www.pgadmin.org/download/
+   - **DBeaver** (Free, open-source): https://dbeaver.io/download/
+   - **Online (Adminer)**: https://www.adminer.org/ (single PHP file)
+
+3. **Connect and run SQL:**
+   - Open your chosen database tool
+   - Create a new PostgreSQL connection
+   - Paste your `DATABASE_URL` connection string
+   - Connect to the database
+   - Open SQL Query window/editor
+   - Copy entire contents from `lib/db-schema.sql`
+   - Paste and execute
+   - You should see tables created! ✅
+
+4. **Verify tables were created:**
+   ```powershell
+   # Option 1: Run verification script (if Railway CLI is linked)
+   railway run npm run verify-db
+   
+   # Option 2: Run locally (if DATABASE_URL is set in .env.local)
+   npm run verify-db
+   
+   # Option 3: Manual SQL check (in your database tool)
+   # Open lib/verify-tables.sql and run all queries, OR
+   # Run this simple query to see all tables:
+   SELECT table_name FROM information_schema.tables 
+   WHERE table_schema = 'public';
+   ```
+
+**Expected Results After Running Schema:**
+- ✅ **3 tables created:** `users`, `jobs`, `files`
+- ✅ **2 users inserted:** agent@thesupport.in and user@example.com
+- ✅ **5 indexes created** for performance
+- ✅ **0 jobs** and **0 files** initially (empty until you use the app)
 
 ---
 

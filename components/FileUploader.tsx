@@ -1,20 +1,23 @@
 'use client';
 
-import { useRef, useState, DragEvent } from 'react';
+import { useRef, useState, DragEvent, useEffect } from 'react';
 
 interface FileUploaderProps {
   onUpload: (file: File) => Promise<void>;
   maxSize?: number; // in bytes
+  enablePaste?: boolean;
 }
 
 export default function FileUploader({
   onUpload,
   maxSize = 20 * 1024 * 1024, // 20MB default
+  enablePaste = true,
 }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const validateFile = (file: File): string | null => {
     if (file.size > maxSize) {
@@ -73,8 +76,40 @@ export default function FileUploader({
     }
   };
 
+  // Handle paste event for images
+  useEffect(() => {
+    if (!enablePaste) return;
+
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          if (blob) {
+            // Create a File object from the blob
+            const file = new File([blob], `pasted-image-${Date.now()}.png`, {
+              type: blob.type || 'image/png',
+            });
+            await handleFile(file);
+          }
+          break;
+        }
+      }
+    };
+
+    const container = containerRef.current || window;
+    container.addEventListener('paste', handlePaste);
+    return () => {
+      container.removeEventListener('paste', handlePaste);
+    };
+  }, [enablePaste, handleFile]);
+
   return (
-    <div className="w-full">
+    <div className="w-full" ref={containerRef} tabIndex={-1}>
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -106,6 +141,11 @@ export default function FileUploader({
           <p className="text-xs text-gray-400">
             Max file size: {(maxSize / (1024 * 1024)).toFixed(0)}MB
           </p>
+          {enablePaste && (
+            <p className="text-xs text-whatsapp-green mt-1">
+              💡 Tip: You can also paste images directly (Ctrl+V / Cmd+V)
+            </p>
+          )}
         </label>
       </div>
 

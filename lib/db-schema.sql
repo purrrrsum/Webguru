@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_files_job_id ON files(job_id);
 CREATE INDEX IF NOT EXISTS idx_files_uploaded_by ON files(uploaded_by);
 
 -- Insert default agent user
+-- Note: Password hash is for "Support123!" - admin login uses plain text comparison from env vars
 INSERT INTO users (id, email, name, company, address, phone, job_count, role, password)
 VALUES (
   'agent1',
@@ -57,9 +58,15 @@ VALUES (
   '+919900112233',
   0,
   'agent',
-  '$2b$10$5z5z5z5z5z5z5z5z5z5z5u5z5z5z5z5z5z5z5z5z5z5z5z5z5z5z'
+  '$2a$10$ONwyTUXOP6VukZFuyv6yRuwzhneu4nO8Kx3mVF8kFKz.0grdkkfQ2'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (email) DO UPDATE SET
+  name = EXCLUDED.name,
+  company = EXCLUDED.company,
+  address = EXCLUDED.address,
+  phone = EXCLUDED.phone,
+  role = EXCLUDED.role,
+  password = EXCLUDED.password;
 
 -- Insert sample user
 INSERT INTO users (id, email, name, company, address, phone, job_count, role)
@@ -73,5 +80,9 @@ VALUES (
   0,
   'user'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (email) DO UPDATE SET
+  name = EXCLUDED.name,
+  company = EXCLUDED.company,
+  address = EXCLUDED.address,
+  phone = EXCLUDED.phone;
 

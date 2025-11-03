@@ -16,6 +16,7 @@ export default function Navigation() {
             <Link href="/" className="text-2xl font-bold text-whatsapp-green hover:text-whatsapp-green-dark">
               thesupport.agency
             </Link>
+            <span className="ml-2 text-sm text-gray-600 hidden md:inline">Affordable Proofreading for Design Agencies</span>
           </div>
           <div className="hidden md:flex items-center space-x-4">
             <Link 
@@ -49,14 +50,14 @@ export default function Navigation() {
               Pricing
             </Link>
             <Link 
-              href="/blog"
+              href="/become-agent"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname?.startsWith('/blog') 
+                pathname === '/become-agent' 
                   ? 'text-whatsapp-green bg-whatsapp-green-light' 
                   : 'text-gray-700 hover:text-whatsapp-green hover:bg-gray-50'
               }`}
             >
-              Blog
+              Become an Agent
             </Link>
             <Link 
               href="/contact"
