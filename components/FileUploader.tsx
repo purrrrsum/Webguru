@@ -80,7 +80,7 @@ export default function FileUploader({
   useEffect(() => {
     if (!enablePaste) return;
 
-    const handlePaste = async (e: ClipboardEvent) => {
+    const handlePaste = (e: ClipboardEvent) => {
       const items = e.clipboardData?.items;
       if (!items) return;
 
@@ -94,7 +94,10 @@ export default function FileUploader({
             const file = new File([blob], `pasted-image-${Date.now()}.png`, {
               type: blob.type || 'image/png',
             });
-            await handleFile(file);
+            // Handle file asynchronously without making the handler async
+            handleFile(file).catch((error) => {
+              console.error('Error handling pasted file:', error);
+            });
           }
           break;
         }
@@ -102,11 +105,12 @@ export default function FileUploader({
     };
 
     const container = containerRef.current || window;
-    container.addEventListener('paste', handlePaste);
+    container.addEventListener('paste', handlePaste as EventListener);
     return () => {
-      container.removeEventListener('paste', handlePaste);
+      container.removeEventListener('paste', handlePaste as EventListener);
     };
-  }, [enablePaste, handleFile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enablePaste]);
 
   return (
     <div className="w-full" ref={containerRef} tabIndex={-1}>
