@@ -36,6 +36,20 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Test login bypass - temporarily enabled for testing
+        if (credentials.otp === 'test-login-bypass') {
+          const user = await getUserByEmail(credentials.email);
+          if (user && user.role === 'user') {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+            };
+          }
+          return null;
+        }
+
         if (!verifyOTP(credentials.email, credentials.otp)) {
           return null;
         }
