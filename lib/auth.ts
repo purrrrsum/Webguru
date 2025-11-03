@@ -68,7 +68,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
-        // Find or create user
+        // Find or create user (always as 'user' role for Google login)
         let dbUser = await getUserByEmail(user.email || '');
 
         if (!dbUser && user.email) {
@@ -79,13 +79,15 @@ export const authOptions: NextAuthOptions = {
             address: '',
             phone: '',
             jobCount: 0,
-            role: 'user',
+            role: 'user', // Google login always creates regular users
           });
         }
 
-        if (user.id && dbUser) {
+        if (dbUser) {
+          // Update user object with database user info
           user.id = dbUser.id;
           user.name = dbUser.name;
+          (user as any).role = dbUser.role;
         }
       }
       return true;

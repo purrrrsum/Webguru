@@ -77,6 +77,14 @@ export default function Navigation() {
                 >
                   Dashboard
                 </Link>
+                {session.user.role === 'agent' && (
+                  <Link 
+                    href="/admin" 
+                    className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium"
@@ -85,12 +93,20 @@ export default function Navigation() {
                 </button>
               </>
             ) : (
-              <Link 
-                href="/auth/signin" 
-                className="bg-whatsapp-green text-white px-4 py-2 rounded-md hover:bg-whatsapp-green-dark text-sm font-medium"
-              >
-                Sign In
-              </Link>
+              <>
+                <Link 
+                  href="/auth/signin" 
+                  className="text-gray-700 hover:text-whatsapp-green px-3 py-2 text-sm font-medium"
+                >
+                  User Login
+                </Link>
+                <Link 
+                  href="/agent-login" 
+                  className="bg-whatsapp-green text-white px-4 py-2 rounded-md hover:bg-whatsapp-green-dark text-sm font-medium"
+                >
+                  Agent Login
+                </Link>
+              </>
             )}
           </div>
         </div>

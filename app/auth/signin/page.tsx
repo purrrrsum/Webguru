@@ -70,9 +70,9 @@ export default function SignInPage() {
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-whatsapp-green mb-2">
-            thesupport.in
+            thesupport.agency
           </h1>
-          <p className="text-gray-600">Sign in to continue</p>
+          <p className="text-gray-600">User Sign In</p>
         </div>
 
         {error && (
@@ -195,7 +195,7 @@ export default function SignInPage() {
 
         <div className="mt-6 pt-6 border-t border-gray-200">
           <Link
-            href="/admin"
+            href="/agent-login"
             className="block text-center text-sm text-whatsapp-green hover:underline"
           >
             Agent Login →
