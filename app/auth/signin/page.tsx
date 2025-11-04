@@ -9,6 +9,8 @@ export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginMethod, setLoginMethod] = useState<'otp' | 'password'>('password');
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +69,30 @@ export default function SignInPage() {
     }
   };
 
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        otp: password, // Using OTP field for password (auth handles it)
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOTPLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -82,7 +108,7 @@ export default function SignInPage() {
       if (result?.error) {
         setError('Invalid OTP. Please try again.');
       } else {
-        router.push('/');
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -107,7 +133,68 @@ export default function SignInPage() {
           </div>
         )}
 
-        {step === 'email' ? (
+        {loginMethod === 'password' ? (
+          <form onSubmit={handlePasswordLogin}>
+            <div className="mb-4">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                placeholder="your@email.com"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                placeholder="Enter password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-whatsapp-green hover:bg-whatsapp-green-dark text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMethod('otp');
+                  setStep('email');
+                  setError(null);
+                  setPassword('');
+                }}
+                className="text-sm text-whatsapp-green hover:underline"
+              >
+                Login with OTP instead
+              </button>
+            </div>
+          </form>
+        ) : step === 'email' ? (
           <>
             {/* Test Login Button - Temporarily enabled for testing */}
             <button
@@ -156,6 +243,21 @@ export default function SignInPage() {
               >
                 {loading ? 'Sending...' : 'Send OTP'}
               </button>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod('password');
+                    setStep('email');
+                    setError(null);
+                    setOtp('');
+                  }}
+                  className="text-sm text-whatsapp-green hover:underline"
+                >
+                  Login with password instead
+                </button>
+              </div>
             </form>
           </>
         ) : (
@@ -191,17 +293,31 @@ export default function SignInPage() {
               {loading ? 'Verifying...' : 'Verify OTP'}
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setStep('email');
-                setOtp('');
-                setError(null);
-              }}
-              className="w-full text-whatsapp-green hover:underline text-sm"
-            >
-              Change email
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('email');
+                  setOtp('');
+                  setError(null);
+                }}
+                className="flex-1 text-whatsapp-green hover:underline text-sm"
+              >
+                Change email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMethod('password');
+                  setStep('email');
+                  setOtp('');
+                  setError(null);
+                }}
+                className="flex-1 text-whatsapp-green hover:underline text-sm"
+              >
+                Use password
+              </button>
+            </div>
           </form>
         )}
 

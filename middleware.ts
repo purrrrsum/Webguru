@@ -17,6 +17,7 @@ export default withAuth(
       '/terms',
       '/auth/signin',
       '/admin', // Admin login page is public
+      '/test-chat', // Test page for getting chat URLs
     ];
 
     const isPublicRoute = publicRoutes.some(route => 
@@ -42,7 +43,7 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const pathname = req.nextUrl.pathname;
         // Public routes don't need token
-        const publicRoutes = ['/', '/about', '/pricing', '/contact', '/blog', '/policy', '/terms', '/auth/signin', '/admin'];
+        const publicRoutes = ['/', '/about', '/pricing', '/contact', '/blog', '/policy', '/terms', '/auth/signin', '/admin', '/test-chat'];
         const isPublic = publicRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`));
         
         if (isPublic || pathname.startsWith('/api/auth')) {

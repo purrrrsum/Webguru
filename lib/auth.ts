@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { User } from './utils';
 import { verifyOTP } from './otp';
 import { getUserByEmail, createUser } from './db';
+import { compare } from 'bcryptjs';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -40,6 +41,27 @@ export const authOptions: NextAuthOptions = {
         if (credentials.otp === 'test-login-bypass') {
           const user = await getUserByEmail(credentials.email);
           if (user && user.role === 'user') {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+            };
+          }
+          return null;
+        }
+
+        // Password login for users and agents
+        // If OTP field contains a password-like string (not 6 digits), try password login
+        if (credentials.otp && credentials.otp.length > 6 && !/^\d{6}$/.test(credentials.otp)) {
+          const user = await getUserByEmail(credentials.email);
+          if (!user || !user.password) {
+            return null;
+          }
+
+          // Verify password
+          const passwordMatch = await compare(credentials.otp, user.password);
+          if (passwordMatch) {
             return {
               id: user.id,
               email: user.email,

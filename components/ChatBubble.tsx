@@ -32,8 +32,23 @@ export default function ChatBubble({
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const handleDownload = () => {
-    window.open(file.url, '_blank');
+  const handleDownload = async () => {
+    try {
+      // Use the download API endpoint for proper file downloads with authentication
+      const downloadUrl = `/api/download?fileId=${file.id}`;
+      
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = file.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download error:', error);
+      // Fallback to opening original URL in new tab
+      window.open(file.url, '_blank');
+    }
   };
 
   const handleTick = async () => {

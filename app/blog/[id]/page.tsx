@@ -48,8 +48,9 @@ const blogPosts: Record<string, { title: string; date: string; category: string;
   },
 };
 
-export default function BlogPostPage({ params }: { params: { id: string } }) {
-  const post = blogPosts[params.id];
+export default async function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const post = blogPosts[id];
 
   if (!post) {
     notFound();

@@ -50,30 +50,40 @@ export default function AgentLoginPage() {
     setError(null);
 
     try {
-      // Verify admin credentials
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      // Try password login directly (for all agents with passwords)
+      const result = await signIn('credentials', {
+        email,
+        otp: password, // Using OTP field for password (auth handles it)
+        redirect: false,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        // Sign in with the agent credentials using special admin-login OTP
-        const result = await signIn('credentials', {
-          email: data.email,
-          otp: 'admin-login',
-          redirect: false,
+      if (result?.error) {
+        // Fallback to admin login API for backward compatibility
+        const response = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
         });
 
-        if (result?.error) {
-          setError('Authentication failed. Please try again.');
+        if (response.ok) {
+          const data = await response.json();
+          // Sign in with the agent credentials using special admin-login OTP
+          const result2 = await signIn('credentials', {
+            email: data.email,
+            otp: 'admin-login',
+            redirect: false,
+          });
+
+          if (result2?.error) {
+            setError('Authentication failed. Please try again.');
+          } else {
+            router.push('/dashboard');
+          }
         } else {
-          router.push('/dashboard');
+          setError('Invalid email or password. Please try again.');
         }
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Invalid credentials');
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
