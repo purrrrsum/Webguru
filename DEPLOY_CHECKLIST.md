@@ -128,7 +128,7 @@ After adding environment variables:
 
 OR trigger new deployment via:
 ```bash
-vercel --prod
+railway up
 ```
 
 ---
