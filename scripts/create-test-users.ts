@@ -14,6 +14,16 @@ interface UserData {
 
 const USERS: UserData[] = [
   {
+    id: 'sampletest',
+    email: 'sampletest@thesupport.in',
+    name: 'Sample Test User',
+    company: 'Test Company',
+    address: 'Test Address',
+    phone: '+919999999999',
+    role: 'user',
+    password: 'Test123!',
+  },
+  {
     id: 'user1',
     email: 'user1@thesupport.in',
     name: 'Alice Johnson',

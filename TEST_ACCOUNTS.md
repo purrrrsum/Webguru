@@ -2,6 +2,15 @@
 
 This document contains the credentials for all test users and agents created by the `create-test-users` script.
 
+## Sample Test Account (Recommended for Quick Testing)
+
+**Email:** `sampletest@thesupport.in`  
+**Password:** `Test123!`  
+**Name:** Sample Test User  
+**Role:** User
+
+This account is specifically created for quick testing on the live site.
+
 ## Users (5 accounts)
 
 All users have the password: **`User123!`**
