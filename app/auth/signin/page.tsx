@@ -21,26 +21,96 @@ export default function SignInPage() {
     alert('Google login temporarily disabled. Use test login below.');
   };
 
-  const handleTestLogin = async () => {
+  const handleDirectUserAccess = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Direct login as test user
+      // Log in as sample test user
       const result = await signIn('credentials', {
-        email: 'user@example.com',
-        otp: 'test-login-bypass',
+        email: 'sampletest@thesupport.in',
+        otp: 'Test123!',
         redirect: false,
       });
 
       if (result?.error) {
-        setError('Test login failed. Please check database.');
-      } else {
+        setError('Login failed. Please check database.');
+        setLoading(false);
+        return;
+      }
+
+      // Get or create a job and redirect to chat
+      try {
+        const jobsRes = await fetch('/api/jobs');
+        if (jobsRes.ok) {
+          const jobsData = await jobsRes.json();
+          const jobs = jobsData.jobs || [];
+          
+          if (jobs.length > 0) {
+            // Use existing job
+            router.push(`/chat/${jobs[0].id}`);
+          } else {
+            // Create new job
+            const createRes = await fetch('/api/jobs', { method: 'POST' });
+            if (createRes.ok) {
+              const jobData = await createRes.json();
+              router.push(`/chat/${jobData.job.id}`);
+            } else {
+              router.push('/dashboard');
+            }
+          }
+        } else {
+          router.push('/dashboard');
+        }
+      } catch (err) {
         router.push('/dashboard');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
-    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDirectAgentAccess = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Log in as agent1
+      const result = await signIn('credentials', {
+        email: 'agent1@thesupport.in',
+        otp: 'Agent123!',
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Login failed. Please check database.');
+        setLoading(false);
+        return;
+      }
+
+      // Get existing job and redirect to chat
+      try {
+        const jobsRes = await fetch('/api/jobs');
+        if (jobsRes.ok) {
+          const jobsData = await jobsRes.json();
+          const jobs = jobsData.jobs || [];
+          
+          if (jobs.length > 0) {
+            // Use first available job
+            router.push(`/chat/${jobs[0].id}`);
+          } else {
+            // No jobs yet, go to dashboard
+            router.push('/dashboard');
+          }
+        } else {
+          router.push('/dashboard');
+        }
+      } catch (err) {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
       setLoading(false);
     }
   };
@@ -127,6 +197,36 @@ export default function SignInPage() {
           <p className="text-gray-600">User Sign In</p>
         </div>
 
+        {/* Direct Access Buttons */}
+        <div className="mb-6 space-y-3">
+          <button
+            onClick={handleDirectUserAccess}
+            disabled={loading}
+            className="w-full px-4 py-3 bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition-colors flex items-center justify-center gap-2 disabled:opacity-50 font-semibold text-lg shadow-md"
+          >
+            👤 Access as User
+          </button>
+          <button
+            onClick={handleDirectAgentAccess}
+            disabled={loading}
+            className="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 font-semibold text-lg shadow-md"
+          >
+            👨‍💼 Access as Agent
+          </button>
+          <p className="text-xs text-gray-500 text-center">
+            Direct access to messages (bypasses login form)
+          </p>
+        </div>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">OR</span>
+          </div>
+        </div>
+
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
             {error}
@@ -196,26 +296,6 @@ export default function SignInPage() {
           </form>
         ) : step === 'email' ? (
           <>
-            {/* Test Login Button - Temporarily enabled for testing */}
-            <button
-              onClick={handleTestLogin}
-              disabled={loading}
-              className="w-full mb-4 px-4 py-3 bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition-colors flex items-center justify-center gap-3 disabled:opacity-50 font-medium"
-            >
-              🧪 Test Login (User)
-            </button>
-            <p className="text-xs text-gray-500 mb-4 text-center">
-              Login as: user@example.com (Test Mode)
-            </p>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">OR</span>
-              </div>
-            </div>
 
             <form onSubmit={handleSendOTP}>
               <div className="mb-4">
