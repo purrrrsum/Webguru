@@ -6,7 +6,18 @@ import { verifyOTP } from './otp';
 import { getUserByEmail, createUser } from './db';
 import { compare } from 'bcryptjs';
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error('⚠️  WARNING: NEXTAUTH_SECRET is not set. Authentication will not work properly.');
+  console.error('   Generate one with: openssl rand -base64 32');
+}
+
+if (!process.env.NEXTAUTH_URL) {
+  console.warn('⚠️  WARNING: NEXTAUTH_URL is not set. Using default.');
+}
+
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
