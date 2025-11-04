@@ -28,36 +28,33 @@ npm run build
 # If build succeeds, you're ready to deploy!
 ```
 
-#### 2. Connect to Vercel
+#### 2. Connect to Railway
 
-**Option A: Via Vercel Dashboard**
-1. Go to [vercel.com](https://vercel.com)
-2. Click "Add New Project"
-3. Import your Git repository (GitHub/GitLab/Bitbucket)
-4. Configure the project:
-   - Framework Preset: Next.js
-   - Root Directory: `./` (or your project root)
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
+**Option A: Via Railway Dashboard (Recommended)**
+1. Go to [railway.app](https://railway.app)
+2. Click "New Project"
+3. Select "Deploy from GitHub repo"
+4. Select your repository
+5. Railway auto-detects Next.js and starts deployment
 
-**Option B: Via Vercel CLI**
+**Option B: Via Railway CLI**
 ```bash
-# Install Vercel CLI globally
-npm i -g vercel
+# Install Railway CLI globally
+npm i -g @railway/cli
 
-# Login to Vercel
-vercel login
+# Login to Railway
+railway login
 
-# Deploy (follow prompts)
-vercel
+# Link to project
+railway link
 
-# For production deployment
-vercel --prod
+# Deploy
+railway up
 ```
 
-#### 3. Configure Environment Variables in Vercel
+#### 3. Configure Environment Variables in Railway
 
-Go to your project settings → Environment Variables and add:
+Go to your Railway service → Variables tab and add:
 
 ```env
 NEXTAUTH_SECRET=your_generated_secret_here
@@ -102,7 +99,7 @@ ADMIN_PASSWORD=Support123! (optional)
 #### 7. Redeploy
 
 After setting environment variables:
-- Vercel automatically redeploys, OR
+- Railway automatically redeploys, OR
 - Go to Deployments → Click "Redeploy"
 
 ---
