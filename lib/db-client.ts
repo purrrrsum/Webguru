@@ -1,8 +1,8 @@
 import { Pool } from 'pg';
 import { User, Job, FileData } from './utils';
 
-// Database connection pool for Hostinger PostgreSQL
-// Uses standard PostgreSQL connection string
+// Database connection pool for PostgreSQL
+// Uses standard PostgreSQL connection string (works with Railway, Hostinger, or any PostgreSQL)
 
 let pool: Pool | null = null;
 
@@ -45,7 +45,7 @@ export async function query(text: string, params?: any[]) {
   }
 }
 
-// Template literal tag function that works like @vercel/postgres
+// Template literal tag function for SQL queries (similar to @vercel/postgres API)
 function sqlTemplate(strings: TemplateStringsArray, ...values: any[]) {
   let text = '';
   const params: any[] = [];

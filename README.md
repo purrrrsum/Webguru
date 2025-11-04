@@ -37,8 +37,8 @@ A hard-coded WhatsApp-style design correction portal built with Next.js 14.
    - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
    - `NEXTAUTH_URL`: Your app URL (e.g., `http://localhost:3000` for dev)
    - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: From Google Cloud Console
-   - `RESEND_API_KEY`: From Resend dashboard
-   - `BLOB_READ_WRITE_TOKEN`: From Vercel dashboard (Blob storage)
+   - `RESEND_API_KEY`: From Resend dashboard (optional, for OTP emails)
+   - `DATABASE_URL`: PostgreSQL connection string (required)
 
 3. **Run development server**:
    ```bash
@@ -108,18 +108,13 @@ vercel --prod
 
 ### Detailed Instructions
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive deployment guide including:
-- Step-by-step Vercel deployment
-- Environment variables setup
-- Domain configuration (rant.zone)
-- Alternative deployment options
-- Troubleshooting guide
+See [DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md) or [RAILWAY_DB_SETUP.md](./RAILWAY_DB_SETUP.md) for comprehensive deployment guides.
 
 ### Key Steps
 
-1. **Set up environment variables** in Vercel Dashboard
-2. **Enable Vercel Blob Storage** for file uploads
-3. **Configure domain** (rant.zone) in Vercel
-4. **Update Google OAuth** redirect URIs
+1. **Add PostgreSQL database** (Railway/Hostinger/any PostgreSQL)
+2. **Set up environment variables** (NEXTAUTH_SECRET, NEXTAUTH_URL, DATABASE_URL)
+3. **Run database setup**: `npm run setup-db`
+4. **Update Google OAuth** redirect URIs (if using Google login)
 5. **Test all features** after deployment
 

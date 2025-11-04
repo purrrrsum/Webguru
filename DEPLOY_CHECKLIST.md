@@ -1,4 +1,4 @@
-# Pre-Deployment Checklist for rant.zone
+# Pre-Deployment Checklist for thesupport.agency
 
 Use this checklist before deploying to ensure everything works correctly.
 
@@ -19,103 +19,107 @@ openssl rand -base64 32
 ```
 
 **Required Variables:**
-- [ ] `NEXTAUTH_SECRET` - Generated
-- [ ] `NEXTAUTH_URL` - Set to `https://rant.zone`
-- [ ] `GOOGLE_CLIENT_ID` - From Google Cloud Console
-- [ ] `GOOGLE_CLIENT_SECRET` - From Google Cloud Console
-- [ ] `RESEND_API_KEY` - From Resend Dashboard
-- [ ] `BLOB_READ_WRITE_TOKEN` - From Vercel Blob Storage
+- [ ] `NEXTAUTH_SECRET` - Generated (`openssl rand -base64 32`)
+- [ ] `NEXTAUTH_URL` - Set to your app URL (e.g., `https://your-app.railway.app`)
+- [ ] `DATABASE_URL` - PostgreSQL connection string (auto-provided by Railway)
+- [ ] `GOOGLE_CLIENT_ID` - Optional (for Google login)
+- [ ] `GOOGLE_CLIENT_SECRET` - Optional (for Google login)
+- [ ] `RESEND_API_KEY` - Optional (for OTP emails)
 - [ ] `ADMIN_EMAIL` - Optional (default: agent@thesupport.in)
 - [ ] `ADMIN_PASSWORD` - Optional (default: Support123!)
 
 ### 3. Google OAuth Configuration
 
-- [ ] Created OAuth 2.0 Client ID in Google Cloud Console
+- [ ] Created OAuth 2.0 Client ID in Google Cloud Console (optional)
 - [ ] Added authorized redirect URIs:
-  - `https://rant.zone/api/auth/callback/google`
-  - `https://www.rant.zone/api/auth/callback/google`
+  - `https://your-domain.com/api/auth/callback/google`
+  - `https://your-app.railway.app/api/auth/callback/google`
   - `http://localhost:3000/api/auth/callback/google` (for local dev)
 
 ### 4. Resend Email Setup
 
 - [ ] Created Resend account
 - [ ] Generated API key
-- [ ] (Optional) Verified domain `rant.zone` for production emails
+- [ ] (Optional) Verified domain for production emails
 - [ ] Tested OTP email sending
 
-### 5. Vercel Blob Storage
+### 5. Database Setup
 
-- [ ] Created Vercel account
-- [ ] Enabled Blob Storage in Vercel Dashboard
-- [ ] Copied `BLOB_READ_WRITE_TOKEN`
-- [ ] Verified storage is accessible
+- [ ] PostgreSQL database created (Railway/Hostinger)
+- [ ] Database connection string (`DATABASE_URL`) is set
+- [ ] Database schema initialized (`npm run setup-db`)
+- [ ] Test users and agents created
+- [ ] Verified database connection works
 
-### 6. Domain Configuration (rant.zone)
+### 6. Domain Configuration (Optional)
 
-- [ ] Domain `rant.zone` is accessible
-- [ ] DNS access (to add Vercel records)
-- [ ] SSL certificate will be auto-provisioned by Vercel
+- [ ] Domain is accessible
+- [ ] DNS configured (if using custom domain)
+- [ ] SSL certificate configured (auto by Railway/Hostinger)
 
 ---
 
 ## 🚀 Deployment Steps
 
-### Step 1: Deploy to Vercel
+### Step 1: Deploy to Railway
 
 ```bash
-# Install Vercel CLI (if not installed)
-npm i -g vercel
+# Install Railway CLI (if not installed)
+npm i -g @railway/cli
 
-# Login to Vercel
-vercel login
+# Login to Railway
+railway login
 
-# Deploy (follow prompts)
-vercel
+# Link project
+railway link
+
+# Deploy
+railway up
 ```
 
-When prompted:
-- **Set up and deploy?** → Yes
-- **Which scope?** → Your account
-- **Link to existing project?** → No (first time) or Yes (if exists)
-- **Project name?** → `thesupport-in` or your choice
-- **Directory?** → `./`
+Or use Railway Dashboard:
+1. Go to https://railway.app
+2. New Project → Deploy from GitHub
+3. Select your repository
 
-### Step 2: Configure Environment Variables
+### Step 2: Add PostgreSQL Database
 
-1. Go to Vercel Dashboard
-2. Select your project
-3. Go to **Settings** → **Environment Variables**
-4. Add all variables listed above
-5. Select environments: **Production**, **Preview**, **Development**
+1. Railway Dashboard → Your Project
+2. Click **"+ New"** → **"Database"** → **"Add PostgreSQL"**
+3. Railway automatically sets `DATABASE_URL`
 
-### Step 3: Enable Blob Storage
+### Step 3: Configure Environment Variables
 
-1. Vercel Dashboard → Your Project
-2. Go to **Storage** tab
-3. Click **Create Database** → Select **Blob**
-4. Copy the token (if not auto-added to env vars)
+1. Railway Dashboard → Your Service
+2. Go to **Variables** tab
+3. Add all required variables (see above)
+4. Railway automatically redeploys
 
-### Step 4: Configure Domain
+### Step 4: Setup Database
 
-1. Vercel Dashboard → Your Project → **Settings** → **Domains**
-2. Add domain: `rant.zone`
-3. Add domain: `www.rant.zone`
-4. Follow DNS instructions:
-   - Add A record or CNAME pointing to Vercel
-   - Wait for DNS propagation (can take up to 48 hours)
+1. Railway Dashboard → Your Service
+2. Click **"Deployments"** → **"..."** → **"Run Command"**
+3. Enter: `npm run setup-db`
+4. Click **"Run"**
 
-### Step 5: Update Google OAuth
+### Step 5: Configure Domain (Optional)
+
+1. Railway Dashboard → Your Service → **Settings** → **Domains**
+2. Add your custom domain
+3. Follow DNS configuration instructions
+
+### Step 6: Update Google OAuth (if using Google login)
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. **APIs & Services** → **Credentials**
 3. Edit OAuth 2.0 Client ID
 4. Add to **Authorized redirect URIs**:
    ```
-   https://rant.zone/api/auth/callback/google
-   https://www.rant.zone/api/auth/callback/google
+   https://your-domain.com/api/auth/callback/google
+   https://your-app.railway.app/api/auth/callback/google
    ```
 
-### Step 6: Redeploy
+### Step 7: Redeploy
 
 After adding environment variables:
 1. Go to **Deployments** tab
@@ -131,7 +135,7 @@ vercel --prod
 
 ## ✅ Post-Deployment Testing
 
-Test each feature on `https://rant.zone`:
+Test each feature on your deployed URL:
 
 ### Authentication
 - [ ] User can sign in with Google OAuth
@@ -179,8 +183,8 @@ npm run build
 - Redeploy after adding variables
 
 ### If file upload fails:
-- Verify `BLOB_READ_WRITE_TOKEN` is correct
-- Check Vercel Blob storage is enabled
+- Verify `public/uploads` directory exists and is writable
+- Check file permissions on server
 - Verify file size is ≤20MB
 
 ### If OTP emails don't send:
@@ -192,7 +196,7 @@ npm run build
 ### If Google OAuth fails:
 - Verify redirect URI matches exactly
 - Check `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
-- Ensure `NEXTAUTH_URL` is `https://rant.zone`
+- Ensure `NEXTAUTH_URL` matches your deployment URL
 
 ---
 
@@ -200,44 +204,32 @@ npm run build
 
 ### Data Persistence
 
-**⚠️ Important:** JSON files in `/data` directory will NOT persist across deployments on Vercel.
-
-**Solutions:**
-1. **Use a database** (recommended for production):
-   - Replace JSON files with PostgreSQL, MongoDB, or Supabase
-   - Update `lib/utils.ts` to use database instead of file system
-
-2. **Use Vercel KV or Redis** (for simple data):
-   - Store user/job data in Redis
-   - Update API routes accordingly
-
-3. **Use environment variables for initial data** (quick fix):
-   - Store initial data in env vars
-   - Seed on first request (not ideal, but works for small data)
-
-**For MVP/Testing:** Current JSON approach works for testing, but data resets on each deployment.
+**✅ This project uses PostgreSQL for data storage:**
+- All data is stored in PostgreSQL database
+- Data persists across deployments
+- Run `npm run setup-db` to initialize schema and test data
 
 ---
 
 ## 🎯 Next Steps After Deployment
 
-1. **Monitor Performance**: Check Vercel Analytics
+1. **Monitor Performance**: Check Railway/Hostinger analytics
 2. **Set up Error Tracking**: Add Sentry or similar
-3. **Add Analytics**: Google Analytics or Vercel Analytics
-4. **Backup Strategy**: Implement database backup (if migrated from JSON)
+3. **Add Analytics**: Google Analytics or similar
+4. **Backup Strategy**: Implement database backup (Railway/Hostinger usually provide this)
 5. **Security Review**: Enable rate limiting, review auth flows
-6. **Domain SSL**: Vercel handles this automatically
+6. **Domain SSL**: Railway/Hostinger handles this automatically
 
 ---
 
 ## 📞 Quick Reference
 
-- **Vercel Dashboard**: https://vercel.com/dashboard
+- **Railway Dashboard**: https://railway.app
 - **Google Cloud Console**: https://console.cloud.google.com
 - **Resend Dashboard**: https://resend.com/dashboard
-- **Project Repo**: (Your Git repository URL)
+- **Project Repo**: https://github.com/purrrrsum/Webguru
 
 ---
 
-**Ready to deploy?** Follow the steps above and refer to [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+**Ready to deploy?** Follow the steps above and refer to [RAILWAY_DB_SETUP.md](./RAILWAY_DB_SETUP.md) for detailed instructions.
 

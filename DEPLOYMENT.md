@@ -1,20 +1,20 @@
-# Deployment Guide for rant.zone
+# Deployment Guide for thesupport.agency
 
 ## Prerequisites
 
 Before deploying, make sure you have:
 
 1. ✅ All environment variables ready
-2. ✅ Google OAuth credentials configured
-3. ✅ Resend account for OTP emails
-4. ✅ Vercel account (for Blob storage)
-5. ✅ Domain configured (rant.zone)
+2. ✅ PostgreSQL database (Railway/Hostinger/any PostgreSQL)
+3. ✅ Google OAuth credentials configured (optional)
+4. ✅ Resend account for OTP emails (optional)
+5. ✅ Domain configured (your domain)
 
 ## Step-by-Step Deployment
 
-### Option 1: Deploy to Vercel (Recommended)
+### Option 1: Deploy to Railway (Recommended)
 
-Vercel is the recommended platform since this app uses Vercel Blob storage.
+Railway provides easy PostgreSQL setup and automatic deployments.
 
 #### 1. Prepare Your Code
 
@@ -61,59 +61,45 @@ Go to your project settings → Environment Variables and add:
 
 ```env
 NEXTAUTH_SECRET=your_generated_secret_here
-NEXTAUTH_URL=https://rant.zone
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-RESEND_API_KEY=your_resend_api_key
-BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
-ADMIN_EMAIL=agent@thesupport.in
-ADMIN_PASSWORD=Support123!
+NEXTAUTH_URL=https://your-app.railway.app
+DATABASE_URL=postgresql://... (auto-provided by Railway)
+GOOGLE_CLIENT_ID=your_google_client_id (optional)
+GOOGLE_CLIENT_SECRET=your_google_client_secret (optional)
+RESEND_API_KEY=your_resend_api_key (optional)
+ADMIN_EMAIL=agent@thesupport.in (optional)
+ADMIN_PASSWORD=Support123! (optional)
 ```
 
 **Important Notes:**
-- `NEXTAUTH_URL` should be `https://rant.zone` (or `https://your-domain.vercel.app` if using Vercel domain)
+- `NEXTAUTH_URL` should be your Railway app URL (e.g., `https://your-app.railway.app`)
 - Generate `NEXTAUTH_SECRET` with: `openssl rand -base64 32`
-- `BLOB_READ_WRITE_TOKEN` is available in Vercel Dashboard → Storage → Blob
+- `DATABASE_URL` is automatically set by Railway when you add PostgreSQL
 
-#### 4. Enable Vercel Storage
+#### 4. Setup Database
 
-**Vercel Blob Storage (for files):**
-1. In Vercel Dashboard → Storage
-2. Click "Create Database" → Select "Blob"
-3. This automatically sets up `BLOB_READ_WRITE_TOKEN`
-4. Copy the token to your environment variables
+1. Railway automatically creates `DATABASE_URL` when you add PostgreSQL
+2. Run database setup script:
+   ```bash
+   railway run npm run setup-db
+   ```
+   Or use Railway Dashboard → Run Command → `npm run setup-db`
 
-**Vercel Postgres (for database):**
-1. In Vercel Dashboard → Storage
-2. Click "Create Database" → Select "Postgres"
-3. Choose a name and region
-4. Environment variables are automatically set
-5. Go to SQL Editor and run the schema from `lib/db-schema.sql`
+#### 5. Configure Domain (Optional)
 
-#### 5. Configure Domain (rant.zone)
+1. Go to Railway Dashboard → Your Service → Settings → Domains
+2. Add your custom domain
+3. Follow DNS configuration instructions
 
-1. Go to Vercel Dashboard → Your Project → Settings → Domains
-2. Add `rant.zone` and `www.rant.zone`
-3. Follow DNS configuration instructions:
-   - Add A record or CNAME as instructed by Vercel
-   - DNS records will be provided by Vercel
-
-#### 6. Update Google OAuth Redirect URIs
+#### 6. Update Google OAuth Redirect URIs (if using Google login)
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. Navigate to APIs & Services → Credentials
 3. Edit your OAuth 2.0 Client ID
 4. Add authorized redirect URIs:
-   - `https://rant.zone/api/auth/callback/google`
-   - `https://www.rant.zone/api/auth/callback/google`
+   - `https://your-domain.com/api/auth/callback/google`
+   - `https://your-app.railway.app/api/auth/callback/google`
 
-#### 7. Update Resend Domain (if needed)
-
-1. Go to [Resend Dashboard](https://resend.com)
-2. Add/verify `rant.zone` domain (for production emails)
-3. Update sender email in `lib/otp.ts` if needed
-
-#### 8. Redeploy
+#### 7. Redeploy
 
 After setting environment variables:
 - Vercel automatically redeploys, OR
@@ -123,44 +109,22 @@ After setting environment variables:
 
 ### Option 2: Deploy to Other Platforms
 
-#### Railway
+#### Vercel
 
 ```bash
-# Install Railway CLI
-npm i -g @railway/cli
+# Install Vercel CLI
+npm i -g vercel
 
-# Login
-railway login
-
-# Initialize project
-railway init
-
-# Add environment variables
-railway variables
-
-# Deploy
-railway up
+# Login and deploy
+vercel login
+vercel --prod
 ```
 
-#### Netlify
+**Note:** Vercel requires additional setup for file storage. Consider using Railway or Hostinger for easier deployment.
 
-```bash
-# Install Netlify CLI
-npm i -g netlify-cli
+#### Hostinger
 
-# Login
-netlify login
-
-# Initialize
-netlify init
-
-# Deploy
-netlify deploy --prod
-```
-
-**Note:** Netlify doesn't support Vercel Blob. You'll need to:
-- Replace Vercel Blob with another storage (AWS S3, Cloudflare R2, etc.)
-- Update `app/api/upload/route.ts` accordingly
+See [DEPLOY_HOSTINGER.md](./DEPLOY_HOSTINGER.md) for detailed Hostinger VPS deployment guide.
 
 #### Docker + Any Hosting
 
@@ -206,7 +170,7 @@ const nextConfig = {
 - [ ] Test profile editing
 - [ ] Verify job counter increments
 - [ ] Check mobile responsiveness
-- [ ] Test on actual domain (rant.zone)
+- [ ] Test on actual domain
 
 ---
 
@@ -215,11 +179,11 @@ const nextConfig = {
 | Variable | Required | Description | How to Get |
 |----------|----------|-------------|------------|
 | `NEXTAUTH_SECRET` | ✅ | Secret for NextAuth | Generate: `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | ✅ | Your app URL | `https://rant.zone` |
-| `GOOGLE_CLIENT_ID` | ✅ | Google OAuth Client ID | [Google Cloud Console](https://console.cloud.google.com) |
-| `GOOGLE_CLIENT_SECRET` | ✅ | Google OAuth Secret | [Google Cloud Console](https://console.cloud.google.com) |
-| `RESEND_API_KEY` | ✅ | Resend API key | [Resend Dashboard](https://resend.com) |
-| `BLOB_READ_WRITE_TOKEN` | ✅ | Vercel Blob token | Vercel Dashboard → Storage → Blob |
+| `NEXTAUTH_URL` | ✅ | Your app URL | `https://your-app.railway.app` |
+| `DATABASE_URL` | ✅ | PostgreSQL connection | Auto-provided by Railway/Hostinger |
+| `GOOGLE_CLIENT_ID` | ⚪ | Google OAuth Client ID (optional) | [Google Cloud Console](https://console.cloud.google.com) |
+| `GOOGLE_CLIENT_SECRET` | ⚪ | Google OAuth Secret (optional) | [Google Cloud Console](https://console.cloud.google.com) |
+| `RESEND_API_KEY` | ⚪ | Resend API key (optional) | [Resend Dashboard](https://resend.com) |
 | `ADMIN_EMAIL` | ⚪ | Admin email (optional) | Default: `agent@thesupport.in` |
 | `ADMIN_PASSWORD` | ⚪ | Admin password (optional) | Default: `Support123!` |
 
@@ -244,9 +208,9 @@ npm run build
 
 ### File Upload Fails
 
-- Verify `BLOB_READ_WRITE_TOKEN` is correct
-- Check Vercel Blob storage is enabled
-- Verify file size is ≤20MB
+- Verify `public/uploads` directory exists and is writable
+- Check file size is ≤20MB
+- Verify file storage permissions on server
 
 ### OTP Emails Not Sending
 
@@ -272,14 +236,14 @@ npm install
 # 2. Build locally (test)
 npm run build
 
-# 3. Deploy to Vercel
-vercel --prod
+# 3. Deploy to Railway
+railway up
 
-# 4. View logs
-vercel logs
+# 4. Setup database
+railway run npm run setup-db
 
-# 5. Open deployment
-vercel open
+# 5. View logs
+railway logs
 ```
 
 ---
@@ -287,8 +251,9 @@ vercel open
 ## Support
 
 If you encounter issues:
-1. Check Vercel deployment logs
+1. Check Railway/Hostinger deployment logs
 2. Check browser console for errors
 3. Verify all environment variables are set
-4. Ensure all API services (Google, Resend, Vercel Blob) are configured correctly
+4. Ensure database is set up: `npm run setup-db`
+5. Verify PostgreSQL connection is working
 

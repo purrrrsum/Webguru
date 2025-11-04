@@ -73,9 +73,7 @@
 - ✅ `public/uploads/.gitkeep` - Uploads directory placeholder
 
 ### Data Files (`data/`)
-- ✅ `data/users.json` - Initial user data (legacy)
-- ✅ `data/jobs.json` - Initial job data (legacy)
-- ✅ `data/files.json` - Initial file data (legacy)
+- ✅ Directory exists for legacy compatibility (now using PostgreSQL)
 
 ### Documentation Files
 - ✅ `README.md` - Main project documentation
