@@ -1,21 +1,35 @@
 # Quick Fix: Database Not Configured
 
-## Error: "Database not configured"
+## ⚠️ Error: "Database not configured"
 
 This means `DATABASE_URL` environment variable is not set in Railway.
 
-## ✅ Solution: Add PostgreSQL Database
+**Your Error Message:**
+```
+Database not configured: DATABASE_URL environment variable is not set. 
+Please configure your database connection.
+
+💡 Add PostgreSQL database in Railway or set DATABASE_URL environment variable
+```
+
+## ✅ Solution: Add PostgreSQL Database in Railway
+
+**Follow these exact steps:**
 
 ### Step 1: Add PostgreSQL in Railway
 
-1. Go to **Railway Dashboard**: https://railway.app
-2. Select your project
-3. Click **"+ New"** button (top right)
-4. Select **"Database"** → **"Add PostgreSQL"**
-5. Railway will automatically:
-   - Create the database
-   - Set `DATABASE_URL` environment variable
-   - Make it available to your app
+1. **Go to Railway Dashboard**: https://railway.app
+2. **Select your project** (click on your project name)
+3. **Click "+ New"** button (top right corner of the screen)
+4. **Select "Database"** from the dropdown menu
+5. **Click "Add PostgreSQL"**
+6. **Wait 30-60 seconds** for Railway to provision the database
+
+**What Railway does automatically:**
+- ✅ Creates the PostgreSQL database
+- ✅ Sets `DATABASE_URL` environment variable in your app service
+- ✅ Links the database to your app
+- ✅ Makes it available automatically
 
 ### Step 2: Verify Database is Connected
 
