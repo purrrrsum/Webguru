@@ -12,10 +12,20 @@ if (!process.env.NEXTAUTH_SECRET) {
   console.error('   Generate one with: openssl rand -base64 32');
 }
 
-// NEXTAUTH_URL is optional during build - will be set at runtime
-if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️  WARNING: NEXTAUTH_URL is not set. Will use default or infer from request.');
-}
+// NEXTAUTH_URL is auto-set by Railway using RAILWAY_PUBLIC_DOMAIN
+// Or can be set manually in Railway Variables (NOT as a secret)
+const getNextAuthUrl = () => {
+  // Railway automatically sets this via railway.json: https://${{RAILWAY_PUBLIC_DOMAIN}}
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
+  }
+  // Fallback: Use RAILWAY_PUBLIC_DOMAIN if available
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  // Development fallback
+  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+};
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
