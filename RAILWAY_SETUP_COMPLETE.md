@@ -25,6 +25,11 @@ Go to **Railway Dashboard → Your Service (webguru) → Variables** tab:
 - ✅ Already configured automatically by Railway
 - No need to add manually - Railway sets it when you add PostgreSQL
 
+### 4. DB_TIMEZONE (OPTIONAL)
+- **Set timezone for database connections**
+- **Add to Railway:** Variable name = `DB_TIMEZONE`, Value = `Asia/Kolkata`
+- **Or:** Set in database directly: `SET TIME ZONE 'Asia/Kolkata';`
+
 ## 📋 Checklist
 
 - [x] PostgreSQL database added in Railway

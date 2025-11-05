@@ -25,6 +25,19 @@ function getPool(): Pool {
       connectionTimeoutMillis: 2000,
     });
 
+    // Set timezone on new connections (optional, defaults to server timezone)
+    // You can set DB_TIMEZONE env var to 'Asia/Kolkata' or any timezone
+    const timezone = process.env.DB_TIMEZONE || process.env.TZ;
+    if (timezone) {
+      pool.on('connect', async (client) => {
+        try {
+          await client.query(`SET TIME ZONE '${timezone}'`);
+        } catch (err) {
+          console.warn('Failed to set database timezone:', err);
+        }
+      });
+    }
+
     pool.on('error', (err) => {
       console.error('Unexpected error on idle client', err);
     });

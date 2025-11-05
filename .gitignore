@@ -36,7 +36,18 @@ public/uploads/*
 # vercel
 .vercel
 
+# railway
+.railway
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# secrets and credentials (NEVER commit these!)
+*.pem
+*.key
+secrets/
+credentials/
+config/secrets.json
+railway-secrets.json
 
