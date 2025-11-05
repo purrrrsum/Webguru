@@ -44,3 +44,40 @@ export interface Message {
   readByAgent: boolean;
 }
 
+export interface Admin {
+  id: string;
+  username: string;
+  email: string;
+  password?: string;
+  fullName: string;
+  role: 'admin' | 'sub_admin';
+  canCreate: boolean;
+  canDelete: boolean;
+  canManageUsers: boolean;
+  canManageAgents: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLogin?: string;
+}
+
+export interface PasswordResetRequest {
+  id: string;
+  userId: string;
+  requesterId: string;
+  requesterType: 'user' | 'agent';
+  message?: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  adminId?: string;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export interface JobStats {
+  totalJobs: number;
+  jobsByUser: { userId: string; userName: string; count: number }[];
+  jobsByAgent: { agentId: string; agentName: string; count: number }[];
+  userAgentMappings: { jobId: string; userId: string; userName: string; agentId: string; agentName: string; createdAt: string }[];
+}
+
