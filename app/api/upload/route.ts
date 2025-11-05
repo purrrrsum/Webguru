@@ -42,10 +42,12 @@ export async function POST(request: NextRequest) {
     
     // Get full URL (for production)
     // Railway auto-sets NEXTAUTH_URL via RAILWAY_PUBLIC_DOMAIN
+    const host = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
     const baseUrl = process.env.NEXTAUTH_URL 
       || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null)
       || process.env.NEXT_PUBLIC_BASE_URL 
-      || (request.headers.get('host') ? `https://${request.headers.get('host')}` : 'http://localhost:3000');
+      || (host ? `${protocol}://${host}` : 'http://localhost:3000');
     const fullUrl = `${baseUrl}${savedFileUrl}`;
 
     // Save file metadata to PostgreSQL
