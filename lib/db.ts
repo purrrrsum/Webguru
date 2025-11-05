@@ -147,10 +147,11 @@ export async function incrementUserJobCount(userId: string): Promise<void> {
 
 export async function getAllUsers(): Promise<User[]> {
   try {
-    const result = await sql`SELECT * FROM users`;
+    const result = await sql`SELECT * FROM users ORDER BY created_at DESC`;
     return result.rows.map(mapUserRow);
-  } catch (error) {
-    console.error('Error fetching users:', error);
+  } catch (error: any) {
+    console.error('Error fetching all users:', error);
+    console.error('Error details:', error.message, error.code);
     return [];
   }
 }
@@ -173,8 +174,9 @@ export async function getJobsByUserId(userId: string): Promise<Job[]> {
       SELECT * FROM jobs WHERE user_id = ${userId} ORDER BY created_at DESC
     `;
     return result.rows.map(mapJobRow);
-  } catch (error) {
-    console.error('Error fetching jobs:', error);
+  } catch (error: any) {
+    console.error('Error fetching jobs by user ID:', error);
+    console.error('Error details:', error.message, error.code);
     return [];
   }
 }
@@ -185,8 +187,9 @@ export async function getJobsByAgentId(agentId: string): Promise<Job[]> {
       SELECT * FROM jobs WHERE agent_id = ${agentId} ORDER BY created_at DESC
     `;
     return result.rows.map(mapJobRow);
-  } catch (error) {
-    console.error('Error fetching jobs:', error);
+  } catch (error: any) {
+    console.error('Error fetching jobs by agent ID:', error);
+    console.error('Error details:', error.message, error.code);
     return [];
   }
 }
