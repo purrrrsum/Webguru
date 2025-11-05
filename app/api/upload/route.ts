@@ -31,7 +31,11 @@ export async function POST(request: NextRequest) {
     const fileUrl = await saveFile(file, file.name);
     
     // Get full URL (for production)
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // Railway auto-sets NEXTAUTH_URL via RAILWAY_PUBLIC_DOMAIN
+    const baseUrl = process.env.NEXTAUTH_URL 
+      || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null)
+      || process.env.NEXT_PUBLIC_BASE_URL 
+      || (request.headers.get('host') ? `https://${request.headers.get('host')}` : 'http://localhost:3000');
     const fullUrl = `${baseUrl}${fileUrl}`;
 
     // Save file metadata to PostgreSQL
