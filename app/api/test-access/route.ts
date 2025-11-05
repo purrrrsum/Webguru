@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByEmail, createUser, getAllUsers, getJobsByUserId, getJobsByAgentId, createJob } from '@/lib/db';
+import { User } from '@/lib/utils';
 import { hash } from 'bcryptjs';
 import { nanoid } from 'nanoid';
 
@@ -150,6 +151,14 @@ export async function POST(request: NextRequest) {
       user = await getUserByEmail(email);
     }
 
+    // Ensure user exists after all creation/update logic
+    if (!user) {
+      return NextResponse.json({ 
+        error: 'Failed to create or retrieve user',
+        details: `Could not create or find ${type} user: ${email}`
+      }, { status: 500 });
+    }
+
     // For users: Get or create a job
     // For agents: Get existing job or create one with a test user
     let jobId: string | null = null;
@@ -161,7 +170,7 @@ export async function POST(request: NextRequest) {
       } else {
         // Create a new job - find or create an agent
         const allUsers = await getAllUsers();
-        let agent = allUsers.find(u => u.role === 'agent');
+        let agent: User | null = allUsers.find(u => u.role === 'agent') || null;
         
         if (!agent) {
           // Create default agent if none exists
@@ -204,6 +213,13 @@ export async function POST(request: NextRequest) {
             }
           }
         }
+        
+        if (!agent) {
+          return NextResponse.json({ 
+            error: 'Failed to create or retrieve agent',
+            details: 'Could not create or find agent for job creation'
+          }, { status: 500 });
+        }
 
         const newJob = await createJob({
           userId: user.id,
@@ -221,7 +237,7 @@ export async function POST(request: NextRequest) {
       } else {
         // Create a job with a test user
         const allUsers = await getAllUsers();
-        let testUser = allUsers.find(u => u.role === 'user' && u.email === 'sampletest@thesupport.in');
+        let testUser: User | null = allUsers.find(u => u.role === 'user' && u.email === 'sampletest@thesupport.in') || null;
         
         if (!testUser) {
           const hashedUserPassword = await hash('Test123!', 10);
@@ -262,6 +278,13 @@ export async function POST(request: NextRequest) {
               throw userError;
             }
           }
+        }
+        
+        if (!testUser) {
+          return NextResponse.json({ 
+            error: 'Failed to create or retrieve test user',
+            details: 'Could not create or find test user for job creation'
+          }, { status: 500 });
         }
 
         const newJob = await createJob({
