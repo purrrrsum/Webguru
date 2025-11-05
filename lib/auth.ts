@@ -12,8 +12,9 @@ if (!process.env.NEXTAUTH_SECRET) {
   console.error('   Generate one with: openssl rand -base64 32');
 }
 
-if (!process.env.NEXTAUTH_URL) {
-  console.warn('⚠️  WARNING: NEXTAUTH_URL is not set. Using default.');
+// NEXTAUTH_URL is optional during build - will be set at runtime
+if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️  WARNING: NEXTAUTH_URL is not set. Will use default or infer from request.');
 }
 
 export const authOptions: NextAuthOptions = {
