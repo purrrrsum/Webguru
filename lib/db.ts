@@ -61,8 +61,10 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       SELECT * FROM users WHERE email = ${email}
     `;
     return result.rows[0] ? mapUserRow(result.rows[0]) : null;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching user by email:', error);
+    console.error('Error details:', error.message, error.code);
+    // Return null instead of throwing to prevent crashes
     return null;
   }
 }

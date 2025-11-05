@@ -26,7 +26,22 @@ export default function SignInPage() {
     setError(null);
     
     try {
-      // Log in as sample test user
+      // Step 1: Setup user and job via test-access API
+      const setupRes = await fetch('/api/test-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'user' }),
+      });
+
+      const setupData = await setupRes.json();
+
+      if (!setupRes.ok) {
+        setError(setupData.error || 'Setup failed: ' + (setupData.details || 'Unknown error'));
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Now sign in with NextAuth
       const result = await signIn('credentials', {
         email: 'sampletest@thesupport.in',
         otp: 'Test123!',
@@ -34,39 +49,29 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
-        setError('Login failed. Please check database.');
-        setLoading(false);
-        return;
+        // If NextAuth fails, try test-login-bypass
+        const bypassResult = await signIn('credentials', {
+          email: 'sampletest@thesupport.in',
+          otp: 'test-login-bypass',
+          redirect: false,
+        });
+
+        if (bypassResult?.error) {
+          setError('Login failed. Database may not be connected. Error: ' + result.error);
+          setLoading(false);
+          return;
+        }
       }
 
-      // Get or create a job and redirect to chat
-      try {
-        const jobsRes = await fetch('/api/jobs');
-        if (jobsRes.ok) {
-          const jobsData = await jobsRes.json();
-          const jobs = jobsData.jobs || [];
-          
-          if (jobs.length > 0) {
-            // Use existing job
-            router.push(`/chat/${jobs[0].id}`);
-          } else {
-            // Create new job
-            const createRes = await fetch('/api/jobs', { method: 'POST' });
-            if (createRes.ok) {
-              const jobData = await createRes.json();
-              router.push(`/chat/${jobData.job.id}`);
-            } else {
-              router.push('/dashboard');
-            }
-          }
-        } else {
-          router.push('/dashboard');
-        }
-      } catch (err) {
+      // Step 3: Redirect to chat or dashboard
+      if (setupData.jobId) {
+        router.push(`/chat/${setupData.jobId}`);
+      } else {
         router.push('/dashboard');
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
+    } catch (err: any) {
+      console.error('Direct user access error:', err);
+      setError('Access failed: ' + (err.message || 'Unknown error'));
       setLoading(false);
     }
   };
@@ -76,41 +81,52 @@ export default function SignInPage() {
     setError(null);
     
     try {
-      // Log in as agent1
-      const result = await signIn('credentials', {
-        email: 'agent1@thesupport.in',
-        otp: 'Agent123!',
-        redirect: false,
+      // Step 1: Setup agent and job via test-access API
+      const setupRes = await fetch('/api/test-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'agent' }),
       });
 
-      if (result?.error) {
-        setError('Login failed. Please check database.');
+      const setupData = await setupRes.json();
+
+      if (!setupRes.ok) {
+        setError(setupData.error || 'Setup failed: ' + (setupData.details || 'Unknown error'));
         setLoading(false);
         return;
       }
 
-      // Get existing job and redirect to chat
-      try {
-        const jobsRes = await fetch('/api/jobs');
-        if (jobsRes.ok) {
-          const jobsData = await jobsRes.json();
-          const jobs = jobsData.jobs || [];
-          
-          if (jobs.length > 0) {
-            // Use first available job
-            router.push(`/chat/${jobs[0].id}`);
-          } else {
-            // No jobs yet, go to dashboard
-            router.push('/dashboard');
-          }
-        } else {
-          router.push('/dashboard');
+      // Step 2: Sign in with admin-login bypass
+      const result = await signIn('credentials', {
+        email: 'agent1@thesupport.in',
+        otp: 'admin-login',
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // Fallback to password login
+        const passwordResult = await signIn('credentials', {
+          email: 'agent1@thesupport.in',
+          otp: 'Agent123!',
+          redirect: false,
+        });
+
+        if (passwordResult?.error) {
+          setError('Login failed. Database may not be connected. Error: ' + result.error);
+          setLoading(false);
+          return;
         }
-      } catch (err) {
+      }
+
+      // Step 3: Redirect to chat or dashboard
+      if (setupData.jobId) {
+        router.push(`/chat/${setupData.jobId}`);
+      } else {
         router.push('/dashboard');
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
+    } catch (err: any) {
+      console.error('Direct agent access error:', err);
+      setError('Access failed: ' + (err.message || 'Unknown error'));
       setLoading(false);
     }
   };
