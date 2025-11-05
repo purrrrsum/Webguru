@@ -7,8 +7,9 @@ import { getUserByEmail, createUser } from './db';
 import { compare } from 'bcryptjs';
 
 // Validate required environment variables (runtime only, not during build)
-if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production' || process.env.NEXTAUTH_SECRET) {
-  if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === 'production') {
+// Only check in production runtime, never during build
+if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  if (!process.env.NEXTAUTH_SECRET) {
     console.error('⚠️  WARNING: NEXTAUTH_SECRET is not set. Authentication will not work properly.');
     console.error('   Generate one with: openssl rand -base64 32');
   }
