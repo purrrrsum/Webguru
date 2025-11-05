@@ -1,8 +1,10 @@
 # Railway ignore file
-# This prevents Railway from treating certain files as secrets
+# Prevent Railway from treating these as secrets
 
-node_modules
-.next
-.env.local
-.env*.local
+secrets/
+*.secret
+.env*
 
+# These are runtime variables, not build-time secrets
+NEXTAUTH_URL
+NEXT_PUBLIC_*

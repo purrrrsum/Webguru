@@ -6,16 +6,25 @@ import { verifyOTP } from './otp';
 import { getUserByEmail, createUser } from './db';
 import { compare } from 'bcryptjs';
 
-// Validate required environment variables
-if (!process.env.NEXTAUTH_SECRET) {
-  console.error('⚠️  WARNING: NEXTAUTH_SECRET is not set. Authentication will not work properly.');
-  console.error('   Generate one with: openssl rand -base64 32');
+// Validate required environment variables (runtime only, not during build)
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production' || process.env.NEXTAUTH_SECRET) {
+  if (!process.env.NEXTAUTH_SECRET && process.env.NODE_ENV === 'production') {
+    console.error('⚠️  WARNING: NEXTAUTH_SECRET is not set. Authentication will not work properly.');
+    console.error('   Generate one with: openssl rand -base64 32');
+  }
 }
 
-// NEXTAUTH_URL is auto-set by Railway using RAILWAY_PUBLIC_DOMAIN
-// Or can be set manually in Railway Variables (NOT as a secret)
+// NEXTAUTH_URL is runtime-only, never accessed during build
+// Railway auto-sets it via RAILWAY_PUBLIC_DOMAIN at runtime
+// This function is only called at runtime, never during build
 const getNextAuthUrl = () => {
-  // Railway automatically sets this via railway.json: https://${{RAILWAY_PUBLIC_DOMAIN}}
+  // Only access at runtime, not during build
+  if (typeof window !== 'undefined') {
+    // Client-side: use window location
+    return window.location.origin;
+  }
+  
+  // Server-side runtime: Railway automatically sets this
   if (process.env.NEXTAUTH_URL) {
     return process.env.NEXTAUTH_URL;
   }
