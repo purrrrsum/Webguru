@@ -36,7 +36,19 @@ export default function SignInPage() {
       const setupData = await setupRes.json();
 
       if (!setupRes.ok) {
-        setError(setupData.error || 'Setup failed: ' + (setupData.details || 'Unknown error'));
+        const errorMsg = setupData.error || 'Setup failed';
+        const details = setupData.details || '';
+        const hint = setupData.hint || '';
+        const fullError = setupData.fullError || '';
+        
+        let displayError = errorMsg;
+        if (details) displayError += `: ${details}`;
+        if (hint) displayError += `\n\n💡 ${hint}`;
+        if (fullError && process.env.NODE_ENV === 'development') {
+          displayError += `\n\nTechnical: ${fullError}`;
+        }
+        
+        setError(displayError);
         setLoading(false);
         return;
       }
@@ -91,7 +103,19 @@ export default function SignInPage() {
       const setupData = await setupRes.json();
 
       if (!setupRes.ok) {
-        setError(setupData.error || 'Setup failed: ' + (setupData.details || 'Unknown error'));
+        const errorMsg = setupData.error || 'Setup failed';
+        const details = setupData.details || '';
+        const hint = setupData.hint || '';
+        const fullError = setupData.fullError || '';
+        
+        let displayError = errorMsg;
+        if (details) displayError += `: ${details}`;
+        if (hint) displayError += `\n\n💡 ${hint}`;
+        if (fullError && process.env.NODE_ENV === 'development') {
+          displayError += `\n\nTechnical: ${fullError}`;
+        }
+        
+        setError(displayError);
         setLoading(false);
         return;
       }
