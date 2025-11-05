@@ -74,24 +74,80 @@ export async function POST(request: NextRequest) {
     if (!user) {
       console.log(`Creating ${role} user: ${email}`);
       const hashedPassword = await hash(password, 10);
-      user = await createUser({
-        id: type === 'user' ? 'sampletest' : 'agent1',
-        email,
+      
+      // Check if user with that ID already exists (might have different email)
+      const { getUserById } = await import('@/lib/db');
+      const existingById = await getUserById(type === 'user' ? 'sampletest' : 'agent1');
+      
+      if (existingById) {
+        // User exists with this ID but different email - update it
+        console.log(`Updating existing user ID with new email: ${email}`);
+        const { updateUser } = await import('@/lib/db');
+        const hashedPassword = await hash(password, 10);
+        await updateUser(existingById.id, {
+          email,
+          name: type === 'user' ? 'Sample Test User' : 'Support Agent One',
+          company: type === 'user' ? 'Test Company' : 'TheSupport.in',
+          address: 'Test Address',
+          phone: '+919999999999',
+          role: role as 'user' | 'agent',
+          password: hashedPassword,
+        });
+        user = await getUserByEmail(email);
+      } else {
+        // Create new user
+        try {
+          user = await createUser({
+            id: type === 'user' ? 'sampletest' : 'agent1',
+            email,
+            name: type === 'user' ? 'Sample Test User' : 'Support Agent One',
+            company: type === 'user' ? 'Test Company' : 'TheSupport.in',
+            address: 'Test Address',
+            phone: '+919999999999',
+            jobCount: 0,
+            role: role as 'user' | 'agent',
+            password: hashedPassword,
+          });
+        } catch (createError: any) {
+          // If creation fails due to duplicate key, try to get existing user
+          if (createError.code === '23505' || createError.message.includes('duplicate')) {
+            console.log(`User with ID exists, fetching by email instead`);
+            user = await getUserByEmail(email);
+            if (!user) {
+              // Try to get by ID and update
+              const existingUser = await getUserById(type === 'user' ? 'sampletest' : 'agent1');
+              if (existingUser) {
+                const { updateUser } = await import('@/lib/db');
+                const hashedPassword = await hash(password, 10);
+                await updateUser(existingUser.id, {
+                  email,
+                  name: type === 'user' ? 'Sample Test User' : 'Support Agent One',
+                  company: type === 'user' ? 'Test Company' : 'TheSupport.in',
+                  address: 'Test Address',
+                  phone: '+919999999999',
+                  role: role as 'user' | 'agent',
+                  password: hashedPassword,
+                });
+                user = await getUserByEmail(email);
+              }
+            }
+          } else {
+            throw createError;
+          }
+        }
+      }
+    } else {
+      // User exists - update password if it's missing
+      const { updateUser } = await import('@/lib/db');
+      const hashedPassword = await hash(password, 10);
+      await updateUser(user.id, { 
+        password: hashedPassword,
         name: type === 'user' ? 'Sample Test User' : 'Support Agent One',
         company: type === 'user' ? 'Test Company' : 'TheSupport.in',
-        address: 'Test Address',
-        phone: '+919999999999',
-        jobCount: 0,
         role: role as 'user' | 'agent',
-        password: hashedPassword,
       });
-    } else {
-      // Update password if it's missing or different
-      if (!user.password) {
-        const hashedPassword = await hash(password, 10);
-        const { updateUser } = await import('@/lib/db');
-        await updateUser(user.id, { password: hashedPassword });
-      }
+      // Refresh user data
+      user = await getUserByEmail(email);
     }
 
     // For users: Get or create a job
@@ -110,17 +166,43 @@ export async function POST(request: NextRequest) {
         if (!agent) {
           // Create default agent if none exists
           const hashedAgentPassword = await hash('Agent123!', 10);
-          agent = await createUser({
-            id: 'agent1',
-            email: 'agent1@thesupport.in',
-            name: 'Support Agent One',
-            company: 'TheSupport.in',
-            address: 'Delhi, India',
-            phone: '+919900112231',
-            jobCount: 0,
-            role: 'agent',
-            password: hashedAgentPassword,
-          });
+          try {
+            agent = await createUser({
+              id: 'agent1',
+              email: 'agent1@thesupport.in',
+              name: 'Support Agent One',
+              company: 'TheSupport.in',
+              address: 'Delhi, India',
+              phone: '+919900112231',
+              jobCount: 0,
+              role: 'agent',
+              password: hashedAgentPassword,
+            });
+          } catch (agentError: any) {
+            // If agent with ID exists, get it by email
+            if (agentError.code === '23505' || agentError.message.includes('duplicate')) {
+              agent = await getUserByEmail('agent1@thesupport.in');
+              if (!agent) {
+                // Try to get by ID and update
+                const { getUserById, updateUser } = await import('@/lib/db');
+                const existingAgent = await getUserById('agent1');
+                if (existingAgent) {
+                  await updateUser('agent1', {
+                    email: 'agent1@thesupport.in',
+                    name: 'Support Agent One',
+                    company: 'TheSupport.in',
+                    address: 'Delhi, India',
+                    phone: '+919900112231',
+                    role: 'agent',
+                    password: hashedAgentPassword,
+                  });
+                  agent = await getUserByEmail('agent1@thesupport.in');
+                }
+              }
+            } else {
+              throw agentError;
+            }
+          }
         }
 
         const newJob = await createJob({
@@ -143,17 +225,43 @@ export async function POST(request: NextRequest) {
         
         if (!testUser) {
           const hashedUserPassword = await hash('Test123!', 10);
-          testUser = await createUser({
-            id: 'sampletest',
-            email: 'sampletest@thesupport.in',
-            name: 'Sample Test User',
-            company: 'Test Company',
-            address: 'Test Address',
-            phone: '+919999999999',
-            jobCount: 0,
-            role: 'user',
-            password: hashedUserPassword,
-          });
+          try {
+            testUser = await createUser({
+              id: 'sampletest',
+              email: 'sampletest@thesupport.in',
+              name: 'Sample Test User',
+              company: 'Test Company',
+              address: 'Test Address',
+              phone: '+919999999999',
+              jobCount: 0,
+              role: 'user',
+              password: hashedUserPassword,
+            });
+          } catch (userError: any) {
+            // If user with ID exists, get it by email
+            if (userError.code === '23505' || userError.message.includes('duplicate')) {
+              testUser = await getUserByEmail('sampletest@thesupport.in');
+              if (!testUser) {
+                // Try to get by ID and update
+                const { getUserById, updateUser } = await import('@/lib/db');
+                const existingUser = await getUserById('sampletest');
+                if (existingUser) {
+                  await updateUser('sampletest', {
+                    email: 'sampletest@thesupport.in',
+                    name: 'Sample Test User',
+                    company: 'Test Company',
+                    address: 'Test Address',
+                    phone: '+919999999999',
+                    role: 'user',
+                    password: hashedUserPassword,
+                  });
+                  testUser = await getUserByEmail('sampletest@thesupport.in');
+                }
+              }
+            } else {
+              throw userError;
+            }
+          }
         }
 
         const newJob = await createJob({
