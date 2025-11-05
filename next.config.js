@@ -6,11 +6,8 @@ const nextConfig = {
     },
   },
   output: 'standalone', // For Hostinger deployment
-  // Make NEXTAUTH_URL optional during build
-  env: {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL || '',
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || '',
-  },
+  // NEXTAUTH_URL is NOT needed during build - it's runtime only
+  // Railway will set it automatically via RAILWAY_PUBLIC_DOMAIN at runtime
 }
 
 module.exports = nextConfig
