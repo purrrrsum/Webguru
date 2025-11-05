@@ -95,20 +95,37 @@ export const authOptions: NextAuthOptions = {
         // Password login for users and agents
         // If OTP field contains a password-like string (not 6 digits), try password login
         if (credentials.otp && credentials.otp.length > 6 && !/^\d{6}$/.test(credentials.otp)) {
-          const user = await getUserByEmail(credentials.email);
-          if (!user || !user.password) {
-            return null;
-          }
+          try {
+            const user = await getUserByEmail(credentials.email);
+            if (!user) {
+              console.error(`User not found: ${credentials.email}`);
+              return null;
+            }
+            
+            if (!user.password) {
+              console.error(`User ${credentials.email} has no password set`);
+              return null;
+            }
 
-          // Verify password
-          const passwordMatch = await compare(credentials.otp, user.password);
-          if (passwordMatch) {
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-            };
+            // Verify password
+            const passwordMatch = await compare(credentials.otp, user.password);
+            if (passwordMatch) {
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+              };
+            } else {
+              console.error(`Password mismatch for user: ${credentials.email}`);
+            }
+          } catch (error: any) {
+            console.error('Password login error:', error.message);
+            // Re-throw database errors so they're handled properly
+            if (error.message?.includes('connection') || error.message?.includes('database')) {
+              throw new Error('Database connection error: ' + error.message);
+            }
+            throw error;
           }
           return null;
         }

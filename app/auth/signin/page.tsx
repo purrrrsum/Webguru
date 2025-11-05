@@ -182,6 +182,12 @@ export default function SignInPage() {
     setLoading(true);
     setError(null);
 
+    if (!email || !password) {
+      setError('Please enter both email and password.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await signIn('credentials', {
         email,
@@ -190,12 +196,23 @@ export default function SignInPage() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password. Please try again.');
-      } else {
+        console.error('Login error:', result.error);
+        // Provide more specific error messages
+        if (result.error.includes('database') || result.error.includes('connection')) {
+          setError('Database connection error. Please check if the database is configured.');
+        } else if (result.error.includes('not found')) {
+          setError('User not found. Please check your email address.');
+        } else {
+          setError('Invalid email or password. Please try again.');
+        }
+      } else if (result?.ok) {
         router.push('/dashboard');
+      } else {
+        setError('Login failed. Please try again.');
       }
-    } catch (err) {
-      setError('Login failed. Please try again.');
+    } catch (err: any) {
+      console.error('Login exception:', err);
+      setError('Login failed: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
