@@ -34,3 +34,13 @@ export interface FileData {
   agentTick: boolean;
 }
 
+export interface Message {
+  id: string;
+  jobId: string;
+  senderId: string;
+  message: string;
+  createdAt: string;
+  readByUser: boolean;
+  readByAgent: boolean;
+}
+

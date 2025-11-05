@@ -1,5 +1,6 @@
 import sql, { query } from './db-client';
-import { User, Job, FileData } from './utils';
+import { User, Job, FileData, Message } from './utils';
+import { nanoid } from 'nanoid';
 
 // Database client using standard PostgreSQL (pg library)
 // Maps database column names (snake_case) to TypeScript interface (camelCase)
@@ -195,7 +196,33 @@ export async function getJobsByAgentId(agentId: string): Promise<Job[]> {
 }
 
 export async function createJob(job: Omit<Job, 'id'> & { id?: string }): Promise<Job> {
-  const jobId = job.id || `job${Date.now()}`;
+  let jobId = job.id;
+  
+  // Generate sequential job ID if not provided
+  if (!jobId) {
+    try {
+      // Get the highest job number
+      const result = await sql`
+        SELECT id FROM jobs 
+        WHERE id LIKE 'job%' 
+        ORDER BY CAST(SUBSTRING(id FROM 4) AS INTEGER) DESC 
+        LIMIT 1
+      `;
+      
+      if (result.rows.length > 0) {
+        const lastId = result.rows[0].id;
+        const lastNumber = parseInt(lastId.replace('job', '')) || 0;
+        jobId = `job${String(lastNumber + 1).padStart(6, '0')}`;
+      } else {
+        jobId = 'job000001';
+      }
+    } catch (error) {
+      // Fallback to timestamp if sequential fails
+      console.warn('Sequential ID generation failed, using timestamp:', error);
+      jobId = `job${Date.now()}`;
+    }
+  }
+  
   const now = new Date().toISOString();
   try {
     const result = await sql`
@@ -330,6 +357,68 @@ export async function getAllFiles(): Promise<FileData[]> {
   } catch (error) {
     console.error('Error fetching files:', error);
     return [];
+  }
+}
+
+// Message functions
+function mapMessageRow(row: any): Message {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    senderId: row.sender_id,
+    message: row.message,
+    createdAt: row.created_at,
+    readByUser: row.read_by_user || false,
+    readByAgent: row.read_by_agent || false,
+  };
+}
+
+export async function getMessagesByJobId(jobId: string): Promise<Message[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM messages 
+      WHERE job_id = ${jobId} 
+      ORDER BY created_at ASC
+    `;
+    return result.rows.map(mapMessageRow);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    return [];
+  }
+}
+
+export async function createMessage(message: Omit<Message, 'id'> & { id?: string }): Promise<Message> {
+  const messageId = message.id || nanoid();
+  try {
+    const result = await sql`
+      INSERT INTO messages (id, job_id, sender_id, message, created_at, read_by_user, read_by_agent)
+      VALUES (${messageId}, ${message.jobId}, ${message.senderId}, ${message.message}, ${message.createdAt}, ${message.readByUser || false}, ${message.readByAgent || false})
+      RETURNING *
+    `;
+    return mapMessageRow(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating message:', error);
+    throw error;
+  }
+}
+
+export async function markMessagesAsRead(jobId: string, userId: string, isUser: boolean): Promise<void> {
+  try {
+    if (isUser) {
+      await sql`
+        UPDATE messages 
+        SET read_by_user = TRUE 
+        WHERE job_id = ${jobId} AND sender_id != ${userId}
+      `;
+    } else {
+      await sql`
+        UPDATE messages 
+        SET read_by_agent = TRUE 
+        WHERE job_id = ${jobId} AND sender_id != ${userId}
+      `;
+    }
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
   }
 }
 

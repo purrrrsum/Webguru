@@ -39,6 +39,10 @@ const getNextAuthUrl = () => {
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  // Use request headers to determine base URL dynamically
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  // Trust proxy headers for correct URL generation
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',

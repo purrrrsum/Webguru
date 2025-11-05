@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getJobById, getFilesByJobId, getUserById } from '@/lib/db';
+import { getJobById, getFilesByJobId, getUserById, getMessagesByJobId } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -29,6 +29,7 @@ export async function GET(
     }
 
     const jobFiles = await getFilesByJobId(jobId);
+    const messages = await getMessagesByJobId(jobId);
 
     // Get user info for display
     const otherUserId =
@@ -38,6 +39,7 @@ export async function GET(
     return NextResponse.json({
       job,
       files: jobFiles,
+      messages: messages,
       otherUser: otherUser
         ? { id: otherUser.id, name: otherUser.name, role: otherUser.role }
         : null,

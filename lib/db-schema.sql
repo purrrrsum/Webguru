@@ -39,12 +39,26 @@ CREATE TABLE IF NOT EXISTS files (
   agent_tick BOOLEAN DEFAULT FALSE
 );
 
+-- Messages table for text messages
+CREATE TABLE IF NOT EXISTS messages (
+  id VARCHAR(255) PRIMARY KEY,
+  job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  sender_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  read_by_user BOOLEAN DEFAULT FALSE,
+  read_by_agent BOOLEAN DEFAULT FALSE
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_agent_id ON jobs(agent_id);
 CREATE INDEX IF NOT EXISTS idx_files_job_id ON files(job_id);
 CREATE INDEX IF NOT EXISTS idx_files_uploaded_by ON files(uploaded_by);
+CREATE INDEX IF NOT EXISTS idx_messages_job_id ON messages(job_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 
 -- Insert default agent user
 -- Note: Password hash is for "Support123!" - admin login uses plain text comparison from env vars

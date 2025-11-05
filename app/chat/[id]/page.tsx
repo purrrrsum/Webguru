@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import ChatBubble from '@/components/ChatBubble';
 import FileUploader from '@/components/FileUploader';
-import { FileData } from '@/lib/utils';
+import { FileData, Message } from '@/lib/utils';
 
 interface ChatData {
   job: {
@@ -17,6 +17,7 @@ interface ChatData {
     updatedAt: string;
   };
   files: FileData[];
+  messages: Message[];
   otherUser: {
     id: string;
     name: string;
@@ -32,6 +33,8 @@ export default function ChatPage() {
   const [chatData, setChatData] = useState<ChatData | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function ChatPage() {
   useEffect(() => {
     // Scroll to bottom when new messages arrive
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatData?.files]);
+  }, [chatData?.files, chatData?.messages]);
 
   const fetchChatData = async () => {
     try {
@@ -129,6 +132,38 @@ export default function ChatPage() {
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim() || !session?.user || sendingMessage) return;
+
+    setSendingMessage(true);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId, message: messageText.trim() }),
+      });
+
+      if (res.ok) {
+        setMessageText('');
+        await fetchChatData(); // Refresh chat data
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Send message error:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  // Combine files and messages, sort by timestamp
+  const allItems = [
+    ...(chatData?.files.map(f => ({ type: 'file' as const, data: f, timestamp: f.uploadedAt })) || []),
+    ...(chatData?.messages.map(m => ({ type: 'message' as const, data: m, timestamp: m.createdAt })) || [])
+  ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-whatsapp-gray-light">
@@ -182,34 +217,87 @@ export default function ChatPage() {
       </header>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20">
+      <div className="flex-1 overflow-y-auto p-4 pb-32">
         <div className="max-w-4xl mx-auto">
-          {chatData.files.length === 0 ? (
+          {allItems.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-lg mb-2">No files yet</p>
-              <p className="text-sm">Upload a file to get started</p>
+              <p className="text-lg mb-2">No messages yet</p>
+              <p className="text-sm">Send a message or upload a file to get started</p>
             </div>
           ) : (
-            chatData.files.map((file) => (
-              <ChatBubble
-                key={file.id}
-                file={file}
-                isOwn={file.uploadedBy === session.user.id}
-                currentUserId={session.user.id}
-                currentUserRole={session.user.role}
-                onTick={handleTick}
-                onDelete={handleDelete}
-              />
-            ))
+            allItems.map((item) => {
+              if (item.type === 'file') {
+                const file = item.data as FileData;
+                return (
+                  <ChatBubble
+                    key={`file-${file.id}`}
+                    file={file}
+                    isOwn={file.uploadedBy === session.user.id}
+                    currentUserId={session.user.id}
+                    currentUserRole={session.user.role}
+                    onTick={handleTick}
+                    onDelete={handleDelete}
+                  />
+                );
+              } else {
+                const message = item.data as Message;
+                const isOwn = message.senderId === session.user.id;
+                return (
+                  <div
+                    key={`message-${message.id}`}
+                    className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                        isOwn
+                          ? 'bg-whatsapp-green text-white'
+                          : 'bg-white text-gray-800 shadow-sm'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          isOwn ? 'text-white/70' : 'text-gray-500'
+                        }`}
+                      >
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+            })
           )}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Upload Area */}
+      {/* Input Area */}
       <div className="bg-white border-t border-gray-200 p-4 sticky bottom-0">
         <div className="max-w-4xl mx-auto">
-          <FileUploader onUpload={handleUpload} />
+          <form onSubmit={handleSendMessage} className="flex gap-2">
+            <input
+              type="text"
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
+              disabled={sendingMessage}
+            />
+            <button
+              type="submit"
+              disabled={!messageText.trim() || sendingMessage}
+              className="px-6 py-2 bg-whatsapp-green text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {sendingMessage ? 'Sending...' : 'Send'}
+            </button>
+          </form>
+          <div className="mt-2">
+            <FileUploader onUpload={handleUpload} />
+          </div>
         </div>
       </div>
     </div>
