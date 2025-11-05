@@ -6,11 +6,9 @@ This error means the redirect URI in Google Console doesn't match what your app 
 
 ### Step 1: Get Your Exact Railway URL
 
-1. Go to **Railway Dashboard**: https://railway.app
-2. Your Project → Your Service (webguru)
-3. Click **"Settings"** tab
-4. Find **"Public URL"** or check **"Domains"** section
-5. **Copy the EXACT URL** (e.g., `https://thesupport-in-production.up.railway.app`)
+**Our public Railway URI is:** `https://www.thesupport.agency`
+
+Use this exact URL for all Google OAuth configuration.
 
 ### Step 2: Update Google Cloud Console
 
@@ -24,8 +22,7 @@ In **"Authorized redirect URIs"** section:
 
 1. **Remove** any existing Railway redirect URIs (if incorrect)
 2. Click **"+ ADD URI"**
-3. Add exactly: `https://YOUR-RAILWAY-URL.up.railway.app/api/auth/callback/google`
-   - Replace `YOUR-RAILWAY-URL` with your actual Railway URL
+3. Add exactly: `https://www.thesupport.agency/api/auth/callback/google`
    - **Must be:** `https://` (not `http://`)
    - **Must end with:** `/api/auth/callback/google`
    - **No trailing slash!**
@@ -35,7 +32,7 @@ In **"Authorized redirect URIs"** section:
 In **"Authorized JavaScript origins"** section:
 
 1. Click **"+ ADD URI"**
-2. Add exactly: `https://YOUR-RAILWAY-URL.up.railway.app`
+2. Add exactly: `https://www.thesupport.agency`
    - **No trailing slash!**
    - **Must be:** `https://`
 
@@ -68,20 +65,18 @@ In **"Authorized JavaScript origins"** section:
 
 ## ✅ Correct Format
 
-**Your Railway URL:** `https://thesupport-in-production.up.railway.app`
+**Our Railway URL:** `https://www.thesupport.agency`
 
 **Authorized JavaScript origins:**
 ```
 http://localhost:3000
 https://www.thesupport.agency
-https://thesupport-in-production.up.railway.app
 ```
 
 **Authorized redirect URIs:**
 ```
 http://localhost:3000/api/auth/callback/google
 https://www.thesupport.agency/api/auth/callback/google
-https://thesupport-in-production.up.railway.app/api/auth/callback/google
 ```
 
 **Important:**
@@ -155,7 +150,7 @@ If it still doesn't work:
 
 **The redirect URI NextAuth sends is:**
 ```
-https://YOUR-RAILWAY-URL/api/auth/callback/google
+https://www.thesupport.agency/api/auth/callback/google
 ```
 
 **This must match EXACTLY in Google Console!**

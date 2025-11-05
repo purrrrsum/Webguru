@@ -6,7 +6,7 @@ This is a **step-by-step guide** with **all manual steps** required to enable Go
 
 - Google account (Gmail or Google Workspace)
 - Access to Railway dashboard
-- Your Railway app URL (e.g., `https://thesupport-in-production.up.railway.app`)
+- Your Railway app URL: `https://www.thesupport.agency` (our public Railway URI)
 
 ---
 
@@ -124,7 +124,7 @@ https://thesupport-in-production.up.railway.app
 ```
 http://localhost:3000/api/auth/callback/google
 https://www.thesupport.agency/api/auth/callback/google
-https://thesupport-in-production.up.railway.app/api/auth/callback/google
+https://www.thesupport.agency/api/auth/callback/google
 ```
 **Again, replace with your actual Railway URL!**
 
@@ -148,7 +148,7 @@ https://thesupport-in-production.up.railway.app/api/auth/callback/google
 2. Click on your project
 3. Click on your service (webguru)
 4. Go to **"Settings"** tab
-5. Find your **public URL** (e.g., `https://thesupport-in-production.up.railway.app`)
+5. Our **public Railway URI** is: `https://www.thesupport.agency`
 6. **Copy this URL** - you'll need it!
 
 ### 5.2 Add Environment Variables
@@ -189,13 +189,13 @@ Your Railway Variables tab should now show:
 ### 6.2 Add Railway URL to Authorized Origins
 
 1. In **"Authorized JavaScript origins"**, click **"+ ADD URI"**
-2. Add: `https://your-railway-url.up.railway.app` (replace with your actual Railway URL)
+2. Add: `https://www.thesupport.agency`
 3. Click outside the input box
 
 ### 6.3 Add Railway URL to Redirect URIs
 
 1. In **"Authorized redirect URIs"**, click **"+ ADD URI"**
-2. Add: `https://your-railway-url.up.railway.app/api/auth/callback/google` (replace with your actual Railway URL)
+2. Add: `https://www.thesupport.agency/api/auth/callback/google`
 3. Click outside the input box
 
 ### 6.4 Save Changes
@@ -227,7 +227,7 @@ NEXTAUTH_SECRET=your_nextauth_secret_here
 
 1. Railway will auto-redeploy after you add the variables
 2. Wait for deployment to complete (check Railway dashboard)
-3. Go to your Railway URL: `https://your-app.up.railway.app/auth/signin`
+3. Go to your Railway URL: `https://www.thesupport.agency/auth/signin`
 4. Click **"Continue with Google"**
 5. Sign in with your Google account
 6. Should redirect to dashboard
@@ -261,7 +261,7 @@ After setup, verify:
 
 **Solution:**
 1. Check your Railway URL exactly (including `https://`)
-2. Make sure redirect URI is: `https://your-url.up.railway.app/api/auth/callback/google`
+2. Make sure redirect URI is: `https://www.thesupport.agency/api/auth/callback/google`
 3. Copy-paste the exact URL from Railway (don't type it manually)
 4. Save in Google Console
 5. Wait 1-2 minutes for changes to propagate
@@ -311,8 +311,8 @@ After setup, verify:
 - Variables: Railway → Your Service → Variables tab
 
 **Your App:**
-- Sign In: `https://your-railway-url.up.railway.app/auth/signin`
-- Callback URL: `https://your-railway-url.up.railway.app/api/auth/callback/google`
+- Sign In: `https://www.thesupport.agency/auth/signin`
+- Callback URL: `https://www.thesupport.agency/api/auth/callback/google`
 
 ---
 
