@@ -32,10 +32,17 @@ export async function GET(request: NextRequest) {
     const isUser = session.user.role === 'user';
     await markMessagesAsRead(jobId, session.user.id, isUser);
 
-    return NextResponse.json({ messages });
+    const response = NextResponse.json({ messages });
+    // Add no-cache headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   } catch (error) {
     console.error('Error fetching messages:', error);
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    const errorResponse = NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
+    errorResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return errorResponse;
   }
 }
 
@@ -71,10 +78,27 @@ export async function POST(request: NextRequest) {
       readByAgent: session.user.role === 'agent',
     });
 
-    return NextResponse.json({ success: true, message: newMessage });
-  } catch (error) {
+    const response = NextResponse.json({ success: true, message: newMessage });
+    // Add no-cache headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
+  } catch (error: any) {
     console.error('Error sending message:', error);
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });
+    // Log detailed error for debugging
+    if (error.message) {
+      console.error('Message error details:', error.message);
+      if (error.code) {
+        console.error('Database error code:', error.code);
+      }
+    }
+    const errorResponse = NextResponse.json({ 
+      error: 'Failed to send message',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
+    errorResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return errorResponse;
   }
 }
 

@@ -36,7 +36,7 @@ export async function GET(
       session.user.role === 'user' ? job.agentId : job.userId;
     const otherUser = await getUserById(otherUserId);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       job,
       files: jobFiles,
       messages: messages,
@@ -44,8 +44,17 @@ export async function GET(
         ? { id: otherUser.id, name: otherUser.name, role: otherUser.role }
         : null,
     });
+    
+    // Add no-cache headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error('Error fetching chat:', error);
-    return NextResponse.json({ error: 'Failed to fetch chat' }, { status: 500 });
+    const errorResponse = NextResponse.json({ error: 'Failed to fetch chat' }, { status: 500 });
+    errorResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    return errorResponse;
   }
 }

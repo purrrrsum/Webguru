@@ -381,8 +381,12 @@ export async function getMessagesByJobId(jobId: string): Promise<Message[]> {
       ORDER BY created_at ASC
     `;
     return result.rows.map(mapMessageRow);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching messages:', error);
+    if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+      console.error('⚠️  Messages table does not exist! Run: npm run setup-db');
+      throw new Error('Messages table not found. Please run database setup.');
+    }
     return [];
   }
 }
@@ -396,8 +400,16 @@ export async function createMessage(message: Omit<Message, 'id'> & { id?: string
       RETURNING *
     `;
     return mapMessageRow(result.rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating message:', error);
+    if (error.message?.includes('relation') && error.message?.includes('does not exist')) {
+      console.error('⚠️  Messages table does not exist! Run: npm run setup-db');
+      throw new Error('Messages table not found. Please run database setup.');
+    }
+    if (error.code === '23503') {
+      console.error('⚠️  Foreign key constraint violation - check job_id and sender_id exist');
+      throw new Error('Invalid job or sender. Please check the job exists and user has access.');
+    }
     throw error;
   }
 }

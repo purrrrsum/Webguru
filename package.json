@@ -14,7 +14,8 @@
     "verify-db": "npx tsx scripts/verify-db.ts",
     "init-db": "npx tsx scripts/init-db.ts",
     "create-users": "npx tsx scripts/create-test-users.ts",
-    "setup-db": "npx tsx scripts/setup-database.ts"
+    "setup-db": "npx tsx scripts/setup-database.ts",
+    "check-messages": "npx tsx scripts/check-messages-table.ts"
   },
   "dependencies": {
     "next": "^14.0.0",
