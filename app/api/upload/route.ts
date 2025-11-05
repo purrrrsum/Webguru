@@ -43,11 +43,19 @@ export async function POST(request: NextRequest) {
     // Get full URL (for production)
     // Railway auto-sets NEXTAUTH_URL via RAILWAY_PUBLIC_DOMAIN
     const host = request.headers.get('host');
-    const protocol = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
     const baseUrl = process.env.NEXTAUTH_URL 
       || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null)
       || process.env.NEXT_PUBLIC_BASE_URL 
-      || (host ? `${protocol}://${host}` : 'http://localhost:3000');
+      || (process.env.NODE_ENV === 'production' ? 'https://www.thesupport.agency' : null)
+      || (host ? `${protocol}://${host}` : null);
+    
+    if (!baseUrl) {
+      return NextResponse.json({ 
+        error: 'Base URL not configured',
+        details: 'NEXTAUTH_URL or NEXT_PUBLIC_BASE_URL must be set'
+      }, { status: 500 });
+    }
     const fullUrl = `${baseUrl}${savedFileUrl}`;
 
     // Save file metadata to PostgreSQL

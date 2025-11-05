@@ -43,7 +43,14 @@ const checkGoogleOAuth = () => {
   console.log('\n🔗 Expected Redirect URI:');
   console.log('─────────────────────────────────────');
   
-  const baseUrl = nextAuthUrl || (railwayDomain ? `https://${railwayDomain}` : 'http://localhost:3000');
+  let baseUrl = nextAuthUrl 
+    || (railwayDomain ? `https://${railwayDomain}` : null)
+    || (process.env.NODE_ENV === 'production' ? 'https://www.thesupport.agency' : null);
+  
+  if (!baseUrl) {
+    console.error('❌ ERROR: NEXTAUTH_URL or RAILWAY_PUBLIC_DOMAIN must be set');
+    process.exit(1);
+  }
   const callbackUrl = `${baseUrl}/api/auth/callback/google`;
   
   console.log('Base URL:', baseUrl);

@@ -33,8 +33,15 @@ const getNextAuthUrl = () => {
   if (process.env.RAILWAY_PUBLIC_DOMAIN) {
     return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   }
-  // Development fallback
-  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  // Production fallback: use our public Railway URI
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://www.thesupport.agency';
+  }
+  // Development: use NEXT_PUBLIC_BASE_URL or throw error
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    return process.env.NEXT_PUBLIC_BASE_URL;
+  }
+  throw new Error('NEXTAUTH_URL or NEXT_PUBLIC_BASE_URL must be set in development');
 };
 
 export const authOptions: NextAuthOptions = {
