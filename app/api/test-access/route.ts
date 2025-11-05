@@ -14,14 +14,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid type. Use "user" or "agent"' }, { status: 400 });
     }
 
+    // Check if DATABASE_URL is set
+    const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    if (!dbUrl) {
+      console.error('DATABASE_URL is not set');
+      return NextResponse.json({ 
+        error: 'Database not configured',
+        details: 'DATABASE_URL environment variable is not set. Please configure your database connection.',
+        hint: 'Add PostgreSQL database in Railway or set DATABASE_URL environment variable'
+      }, { status: 500 });
+    }
+
     // Test database connection first
     try {
       await getAllUsers();
     } catch (dbError: any) {
       console.error('Database connection error:', dbError);
+      console.error('Error code:', dbError.code);
+      console.error('Error message:', dbError.message);
+      
+      // Check if it's a table doesn't exist error
+      if (dbError.message?.includes('relation') && dbError.message?.includes('does not exist')) {
+        return NextResponse.json({ 
+          error: 'Database tables not found',
+          details: 'Database schema not initialized. Tables do not exist.',
+          hint: 'Run: npm run setup-db or execute lib/db-schema.sql in your database',
+          errorCode: dbError.code,
+          fullError: dbError.message
+        }, { status: 500 });
+      }
+      
+      // Check if it's a connection error
+      if (dbError.code === 'ECONNREFUSED' || dbError.message?.includes('connection')) {
+        return NextResponse.json({ 
+          error: 'Database connection refused',
+          details: 'Cannot connect to database server. Check DATABASE_URL and ensure database is running.',
+          errorCode: dbError.code,
+          fullError: dbError.message
+        }, { status: 500 });
+      }
+      
       return NextResponse.json({ 
         error: 'Database connection failed',
-        details: dbError.message 
+        details: dbError.message,
+        errorCode: dbError.code,
+        fullError: process.env.NODE_ENV === 'development' ? dbError.message : undefined
       }, { status: 500 });
     }
 

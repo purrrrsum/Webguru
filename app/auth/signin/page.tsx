@@ -244,7 +244,7 @@ export default function SignInPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
+          <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm whitespace-pre-wrap">
             {error}
           </div>
         )}
