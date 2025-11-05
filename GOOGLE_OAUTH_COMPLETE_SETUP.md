@@ -116,17 +116,13 @@ Fill in the form:
 ```
 http://localhost:3000
 https://www.thesupport.agency
-https://thesupport-in-production.up.railway.app
 ```
-**Replace `thesupport-in-production.up.railway.app` with your actual Railway URL!**
 
 **Authorized redirect URIs**: Click **"+ ADD URI"** and add these one by one:
 ```
 http://localhost:3000/api/auth/callback/google
 https://www.thesupport.agency/api/auth/callback/google
-https://www.thesupport.agency/api/auth/callback/google
 ```
-**Again, replace with your actual Railway URL!**
 
 ### 4.4 Create and Copy Credentials
 
