@@ -5,7 +5,7 @@ const nextConfig = {
       bodySizeLimit: '20mb',
     },
   },
-  output: 'standalone', // For Hostinger deployment
+  output: 'standalone', // For Railway deployment
   // NEXTAUTH_URL is NOT needed during build - it's runtime only
   // Railway will set it automatically via RAILWAY_PUBLIC_DOMAIN at runtime
   
@@ -34,6 +34,11 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  
+  // Ensure standalone output includes all necessary files
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./**/*'],
   },
 }
 
