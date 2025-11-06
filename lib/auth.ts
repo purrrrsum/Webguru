@@ -79,15 +79,32 @@ const getNextAuthUrl = () => {
   throw new Error('NEXTAUTH_URL or NEXT_PUBLIC_BASE_URL must be set in development');
 };
 
+// Check if Google OAuth is configured
+const isGoogleOAuthConfigured = () => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  return !!(clientId && clientSecret && clientId.trim() !== '' && clientSecret.trim() !== '');
+};
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   // Use request headers to determine base URL dynamically
   useSecureCookies: process.env.NODE_ENV === 'production',
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
+    // Only add Google Provider if credentials are configured
+    ...(isGoogleOAuthConfigured() ? [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        authorization: {
+          params: {
+            prompt: "consent",
+            access_type: "offline",
+            response_type: "code"
+          }
+        }
+      })
+    ] : []),
     CredentialsProvider({
       name: 'OTP',
       credentials: {
