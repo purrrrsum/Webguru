@@ -15,33 +15,7 @@ export default function AgentLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = () => {
-    // Temporarily disabled for testing
-    // signIn('google', { callbackUrl: '/agent-verify' });
-    alert('Google login temporarily disabled. Use test login below.');
-  };
-
-  const handleTestLogin = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Direct login as test agent
-      const result = await signIn('credentials', {
-        email: 'agent@thesupport.in',
-        otp: 'admin-login',
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError('Test login failed. Please check database.');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError('Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    signIn('google', { callbackUrl: '/dashboard' });
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
@@ -109,27 +83,6 @@ export default function AgentLoginPage() {
               {error}
             </div>
           )}
-
-          {/* Test Login Button - Temporarily enabled for testing */}
-          <button
-            onClick={handleTestLogin}
-            disabled={loading}
-            className="w-full mb-4 px-4 py-3 bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition-colors flex items-center justify-center gap-3 disabled:opacity-50 font-medium"
-          >
-            🧪 Test Login (Agent)
-          </button>
-          <p className="text-xs text-gray-500 mb-4 text-center">
-            Login as: agent@thesupport.in (Test Mode)
-          </p>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">OR</span>
-            </div>
-          </div>
 
           <form onSubmit={handlePasswordLogin}>
             <div className="mb-4">
