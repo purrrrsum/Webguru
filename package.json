@@ -17,6 +17,7 @@
     "setup-db": "npx tsx scripts/setup-database.ts",
     "check-messages": "npx tsx scripts/check-messages-table.ts",
     "setup-admin-db": "npx tsx scripts/setup-admin-database.ts",
+    "setup-complete-db": "npx tsx scripts/setup-complete-database.ts",
     "create-admin": "npx tsx scripts/create-admin.ts"
   },
   "dependencies": {

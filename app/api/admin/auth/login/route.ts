@@ -44,6 +44,24 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error in admin login:', error);
+    
+    // Provide specific error messages
+    if (error.message?.includes('does not exist')) {
+      return NextResponse.json({ 
+        error: 'Database table not found',
+        details: 'Admins table does not exist. Please run database setup.',
+        hint: 'Run: npm run setup-admin-db or npm run setup-complete-db'
+      }, { status: 500 });
+    }
+    
+    if (error.message?.includes('connection') || error.code === 'ECONNREFUSED') {
+      return NextResponse.json({ 
+        error: 'Database connection failed',
+        details: 'Cannot connect to database. Please check DATABASE_URL.',
+        hint: 'Check Railway PostgreSQL service status'
+      }, { status: 500 });
+    }
+    
     return NextResponse.json({ 
       error: 'Login failed',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
