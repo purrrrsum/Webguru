@@ -178,7 +178,7 @@ npx tsx scripts/init-db.ts
 
 5. **Install Dependencies:**
    ```bash
-   npm install --production
+   npm install --omit=dev
    ```
 
 6. **Build Application:**
