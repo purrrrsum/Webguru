@@ -93,23 +93,37 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Password login for users and agents
-        // If OTP field contains a password-like string (not 6 digits), try password login
-        if (credentials.otp && credentials.otp.length > 6 && !/^\d{6}$/.test(credentials.otp)) {
+        // Try password login if OTP field doesn't look like a 6-digit OTP
+        // Check: not exactly 6 digits, or longer than 6 characters
+        const isLikelyPassword = credentials.otp && (
+          credentials.otp.length > 6 || 
+          (credentials.otp.length >= 4 && !/^\d{6}$/.test(credentials.otp))
+        );
+
+        if (isLikelyPassword) {
           try {
             const user = await getUserByEmail(credentials.email);
             if (!user) {
-              console.error(`User not found: ${credentials.email}`);
-              return null;
+              console.error(`[AUTH] User not found: ${credentials.email}`);
+              throw new Error('User not found. Please check your email address.');
             }
             
             if (!user.password) {
-              console.error(`User ${credentials.email} has no password set`);
-              return null;
+              console.error(`[AUTH] User ${credentials.email} has no password set`);
+              throw new Error('No password set for this account. Please contact administrator.');
             }
 
             // Verify password
-            const passwordMatch = await compare(credentials.otp, user.password);
+            let passwordMatch = false;
+            try {
+              passwordMatch = await compare(credentials.otp, user.password);
+            } catch (compareError: any) {
+              console.error(`[AUTH] Password comparison error for ${credentials.email}:`, compareError.message);
+              throw new Error('Password verification failed. Please try again.');
+            }
+
             if (passwordMatch) {
+              console.log(`[AUTH] Password login successful for ${credentials.email}`);
               return {
                 id: user.id,
                 email: user.email,
@@ -117,17 +131,21 @@ export const authOptions: NextAuthOptions = {
                 role: user.role,
               };
             } else {
-              console.error(`Password mismatch for user: ${credentials.email}`);
+              console.error(`[AUTH] Password mismatch for user: ${credentials.email}`);
+              throw new Error('Invalid email or password. Please check your credentials.');
             }
           } catch (error: any) {
-            console.error('Password login error:', error.message);
-            // Re-throw database errors so they're handled properly
-            if (error.message?.includes('connection') || error.message?.includes('database')) {
-              throw new Error('Database connection error: ' + error.message);
+            console.error('[AUTH] Password login error:', error.message);
+            // Re-throw with clear error message
+            if (error.message?.includes('connection') || error.message?.includes('database') || error.code === 'ECONNREFUSED') {
+              throw new Error('Database connection error. Please check if the database is configured.');
             }
-            throw error;
+            // Re-throw our custom errors
+            if (error.message && !error.message.includes('Database connection')) {
+              throw error;
+            }
+            throw new Error('Authentication failed. Please try again.');
           }
-          return null;
         }
 
         if (!verifyOTP(credentials.email, credentials.otp)) {
