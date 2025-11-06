@@ -73,14 +73,47 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 export async function createUser(user: Omit<User, 'id'> & { id?: string }): Promise<User> {
   const userId = user.id || `user${Date.now()}`;
   try {
+    // Check if user already exists by email
+    const existing = await getUserByEmail(user.email);
+    if (existing) {
+      // Update existing user instead of creating new one
+      return await updateUser(existing.id, {
+        name: user.name,
+        company: user.company,
+        address: user.address,
+        phone: user.phone,
+        role: user.role,
+        password: user.password,
+      }) || existing;
+    }
+
     const result = await sql`
       INSERT INTO users (id, email, name, company, address, phone, job_count, role, password)
       VALUES (${userId}, ${user.email}, ${user.name}, ${user.company || ''}, ${user.address || ''}, ${user.phone || ''}, ${user.jobCount || 0}, ${user.role || 'user'}, ${user.password || null})
       RETURNING *
     `;
     return mapUserRow(result.rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating user:', error);
+    
+    // Provide more helpful error messages
+    if (error.code === '23505') {
+      // Unique constraint violation - try to get existing user
+      const existing = await getUserByEmail(user.email);
+      if (existing) {
+        return existing;
+      }
+      throw new Error(`User with email ${user.email} already exists`);
+    }
+    
+    if (error.message?.includes('does not exist') || error.message?.includes('relation')) {
+      throw new Error('Database tables not initialized. Run: npm run setup-db');
+    }
+    
+    if (error.message?.includes('DATABASE_URL') || error.code === 'ECONNREFUSED') {
+      throw new Error('Database not configured. Add PostgreSQL in Railway Dashboard.');
+    }
+    
     throw error;
   }
 }
