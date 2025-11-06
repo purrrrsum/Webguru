@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserByEmail } from '@/lib/db';
+
+// Simple character matching function
+function simpleCharacterMatch(username: string, password: string): boolean {
+  const normalizedUsername = username.toLowerCase().trim();
+  const normalizedPassword = password.toLowerCase().trim();
+  
+  // Direct match
+  if (normalizedUsername === normalizedPassword) {
+    return true;
+  }
+  
+  // Check if password contains all characters from username
+  const usernameChars = normalizedUsername.split('').filter(c => c !== '@' && c !== '.' && c !== ' ');
+  const passwordChars = normalizedPassword.split('');
+  
+  // Check if all username characters exist in password
+  const allCharsMatch = usernameChars.every(char => passwordChars.includes(char));
+  
+  return allCharsMatch;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,27 +28,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    // Check hardcoded admin credentials
-    const adminEmail = process.env.ADMIN_EMAIL || 'agent@thesupport.in';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Support123!';
+    // Extract username from email (part before @)
+    const username = email.split('@')[0];
 
-    if (email !== adminEmail || password !== adminPassword) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    // Use simple character matching instead of hardcoded credentials
+    if (!simpleCharacterMatch(username, password)) {
+      return NextResponse.json({ error: 'Invalid credentials. Username and password must have matching characters.' }, { status: 401 });
     }
 
-    // Find agent user in database
-    const agent = await getUserByEmail(email);
+    // Create simple agent user object without database
+    const agentUser = {
+      id: `agent_${email.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`,
+      email: email,
+      name: username.charAt(0).toUpperCase() + username.slice(1),
+      role: 'agent' as const,
+      company: '',
+      address: '',
+      phone: '',
+      jobCount: 0,
+    };
 
-    if (!agent || agent.role !== 'agent') {
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
-    }
-
-    // Return agent info (password verification already done above)
-    const { password: _, ...agentWithoutPassword } = agent;
     return NextResponse.json({
       success: true,
-      user: agentWithoutPassword,
-      email: agent.email,
+      user: agentUser,
+      email: agentUser.email,
     });
   } catch (error) {
     console.error('Error in admin login:', error);

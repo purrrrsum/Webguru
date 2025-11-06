@@ -3,8 +3,43 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { User } from './utils';
 import { verifyOTP } from './otp';
-import { getUserByEmail, createUser } from './db';
-import { compare } from 'bcryptjs';
+
+// Simple character matching function
+// Checks if username and password have matching characters
+function simpleCharacterMatch(username: string, password: string): boolean {
+  // Normalize both strings (lowercase, remove spaces)
+  const normalizedUsername = username.toLowerCase().trim();
+  const normalizedPassword = password.toLowerCase().trim();
+  
+  // Direct match
+  if (normalizedUsername === normalizedPassword) {
+    return true;
+  }
+  
+  // Check if password contains all characters from username
+  const usernameChars = normalizedUsername.split('').filter(c => c !== '@' && c !== '.' && c !== ' ');
+  const passwordChars = normalizedPassword.split('');
+  
+  // Check if all username characters exist in password
+  const allCharsMatch = usernameChars.every(char => passwordChars.includes(char));
+  
+  return allCharsMatch;
+}
+
+// Generate a simple user object without database
+function createSimpleUser(email: string, role: 'user' | 'agent' = 'user'): User {
+  const username = email.split('@')[0];
+  return {
+    id: `user_${email.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`,
+    email: email,
+    name: username.charAt(0).toUpperCase() + username.slice(1),
+    company: '',
+    address: '',
+    phone: '',
+    jobCount: 0,
+    role: role,
+  };
+}
 
 // Validate required environment variables (runtime only, not during build)
 // Only check in production runtime, never during build
@@ -64,32 +99,22 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Check for admin bypass
+        // Extract username from email (part before @)
+        const username = credentials.email.split('@')[0];
+        const password = credentials.otp;
+
+        // Check for admin bypass (special case for admin login)
         if (credentials.otp === 'admin-login') {
-          const agent = await getUserByEmail(credentials.email);
-          if (agent && agent.role === 'agent') {
-            return {
-              id: agent.id,
-              email: agent.email,
-              name: agent.name,
-              role: agent.role,
-            };
+          // For admin login, check if email matches admin pattern
+          if (credentials.email.includes('agent') || credentials.email.includes('admin')) {
+            return createSimpleUser(credentials.email, 'agent');
           }
           return null;
         }
 
         // Test login bypass - temporarily enabled for testing
         if (credentials.otp === 'test-login-bypass') {
-          const user = await getUserByEmail(credentials.email);
-          if (user && user.role === 'user') {
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-            };
-          }
-          return null;
+          return createSimpleUser(credentials.email, 'user');
         }
 
         // Password login for users and agents
@@ -101,105 +126,39 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (isLikelyPassword) {
-          try {
-            const user = await getUserByEmail(credentials.email);
-            if (!user) {
-              console.error(`[AUTH] User not found: ${credentials.email}`);
-              throw new Error('User not found. Please check your email address.');
-            }
-            
-            if (!user.password) {
-              console.error(`[AUTH] User ${credentials.email} has no password set`);
-              throw new Error('No password set for this account. Please contact administrator.');
-            }
-
-            // Verify password
-            let passwordMatch = false;
-            try {
-              passwordMatch = await compare(credentials.otp, user.password);
-            } catch (compareError: any) {
-              console.error(`[AUTH] Password comparison error for ${credentials.email}:`, compareError.message);
-              throw new Error('Password verification failed. Please try again.');
-            }
-
-            if (passwordMatch) {
-              console.log(`[AUTH] Password login successful for ${credentials.email}`);
-              return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-              };
-            } else {
-              console.error(`[AUTH] Password mismatch for user: ${credentials.email}`);
-              throw new Error('Invalid email or password. Please check your credentials.');
-            }
-          } catch (error: any) {
-            console.error('[AUTH] Password login error:', error.message);
-            // Re-throw with clear error message
-            if (error.message?.includes('connection') || error.message?.includes('database') || error.code === 'ECONNREFUSED') {
-              throw new Error('Database connection error. Please check if the database is configured.');
-            }
-            // Re-throw our custom errors
-            if (error.message && !error.message.includes('Database connection')) {
-              throw error;
-            }
-            throw new Error('Authentication failed. Please try again.');
+          // Use simple character matching
+          if (simpleCharacterMatch(username, password)) {
+            console.log(`[AUTH] Password login successful for ${credentials.email} using character matching`);
+            // Determine role based on email pattern
+            const role = (credentials.email.includes('agent') || credentials.email.includes('admin')) 
+              ? 'agent' 
+              : 'user';
+            return createSimpleUser(credentials.email, role);
+          } else {
+            console.error(`[AUTH] Password mismatch for user: ${credentials.email}`);
+            throw new Error('Invalid email or password. Username and password must have matching characters.');
           }
         }
 
+        // OTP verification (keep existing OTP logic)
         if (!verifyOTP(credentials.email, credentials.otp)) {
           return null;
         }
 
-        // Find or create user
-        let user = await getUserByEmail(credentials.email);
-
-        if (!user) {
-          // Create new user
-          user = await createUser({
-            email: credentials.email,
-            name: credentials.email.split('@')[0],
-            company: '',
-            address: '',
-            phone: '',
-            jobCount: 0,
-            role: 'user',
-          });
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
+        // Create user without database
+        return createSimpleUser(credentials.email, 'user');
       },
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
-        // Find or create user (always as 'user' role for Google login)
-        let dbUser = await getUserByEmail(user.email || '');
-
-        if (!dbUser && user.email) {
-          dbUser = await createUser({
-            email: user.email,
-            name: user.name || user.email.split('@')[0],
-            company: '',
-            address: '',
-            phone: '',
-            jobCount: 0,
-            role: 'user', // Google login always creates regular users
-          });
-        }
-
-        if (dbUser) {
-          // Update user object with database user info
-          user.id = dbUser.id;
-          user.name = dbUser.name;
-          (user as any).role = dbUser.role;
+        // Create user without database for Google login
+        if (user.email) {
+          const simpleUser = createSimpleUser(user.email, 'user');
+          user.id = simpleUser.id;
+          user.name = simpleUser.name;
+          (user as any).role = simpleUser.role;
         }
       }
       return true;

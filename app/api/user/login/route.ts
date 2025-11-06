@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserByEmail } from '@/lib/db';
-import { compare } from 'bcryptjs';
+
+// Simple character matching function
+function simpleCharacterMatch(username: string, password: string): boolean {
+  const normalizedUsername = username.toLowerCase().trim();
+  const normalizedPassword = password.toLowerCase().trim();
+  
+  // Direct match
+  if (normalizedUsername === normalizedPassword) {
+    return true;
+  }
+  
+  // Check if password contains all characters from username
+  const usernameChars = normalizedUsername.split('').filter(c => c !== '@' && c !== '.' && c !== ' ');
+  const passwordChars = normalizedPassword.split('');
+  
+  // Check if all username characters exist in password
+  const allCharsMatch = usernameChars.every(char => passwordChars.includes(char));
+  
+  return allCharsMatch;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,30 +28,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
     }
 
-    // Find user in database
-    const user = await getUserByEmail(email);
+    // Extract username from email (part before @)
+    const username = email.split('@')[0];
 
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    // Use simple character matching instead of database lookup
+    if (!simpleCharacterMatch(username, password)) {
+      return NextResponse.json({ error: 'Invalid credentials. Username and password must have matching characters.' }, { status: 401 });
     }
 
-    // Check if user has a password
-    if (!user.password) {
-      return NextResponse.json({ error: 'Password not set for this account' }, { status: 401 });
-    }
+    // Create simple user object without database
+    const user = {
+      id: `user_${email.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`,
+      email: email,
+      name: username.charAt(0).toUpperCase() + username.slice(1),
+      role: 'user' as const,
+      company: '',
+      address: '',
+      phone: '',
+      jobCount: 0,
+    };
 
-    // Verify password
-    const passwordMatch = await compare(password, user.password);
-
-    if (!passwordMatch) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-    }
-
-    // Return user info (without password)
-    const { password: _, ...userWithoutPassword } = user;
     return NextResponse.json({
       success: true,
-      user: userWithoutPassword,
+      user: user,
       email: user.email,
     });
   } catch (error) {
