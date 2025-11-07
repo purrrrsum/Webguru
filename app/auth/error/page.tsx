@@ -21,6 +21,10 @@ function ErrorContent() {
   });
 
   useEffect(() => {
+    if (!searchParams) {
+      return;
+    }
+
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
     const errorCode = searchParams.get('error_code');

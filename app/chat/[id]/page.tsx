@@ -27,9 +27,18 @@ interface ChatData {
 
 export default function ChatPage() {
   const { data: session } = useSession();
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const jobId = params.id as string;
+  const jobId = params?.id;
+
+  if (!jobId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Invalid chat ID. Please check the link and try again.</p>
+      </div>
+    );
+  }
+
   const [chatData, setChatData] = useState<ChatData | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
