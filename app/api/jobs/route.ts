@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
 
     const title = rawTitle.length > 0 ? rawTitle.slice(0, 120) : null;
     const tags = rawTags
-      .filter((tag) => typeof tag === 'string')
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0)
+      .filter((tag: unknown): tag is string => typeof tag === 'string')
+      .map((tag: string) => tag.trim())
+      .filter((tag: string) => tag.length > 0)
       .slice(0, 3);
 
     // Find first agent (or use agent1 as default)
