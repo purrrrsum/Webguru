@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { User } from '@/lib/utils';
 
 interface ProfileFormProps {
-  initialData?: Partial<User>;
-  onSave: (data: Partial<User>) => Promise<void>;
+  initialData?: Partial<User> & { warning?: string };
+  onSave: (data: Partial<User>) => Promise<(Partial<User> & { warning?: string }) | void>;
 }
 
 export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
@@ -37,8 +37,12 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
     setMessage(null);
 
     try {
-      await onSave(formData);
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      const result = await onSave(formData);
+      if (result && 'warning' in result && result.warning) {
+        setMessage({ type: 'error', text: result.warning });
+      } else {
+        setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
     } finally {

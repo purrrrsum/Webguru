@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { User } from './utils';
 import { verifyOTP } from './otp';
+import { ensureDatabaseSetup, createLoginLog } from './db';
 
 // Simple character matching function
 // Checks if username and password have matching characters
@@ -169,6 +170,20 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      try {
+        await ensureDatabaseSetup();
+        if (user?.id) {
+          await createLoginLog({
+            userId: user.id,
+            email: user.email,
+            role: (user as any).role || 'user',
+            provider: account?.provider || 'credentials',
+          });
+        }
+      } catch (error) {
+        console.warn('Database setup/logging skipped during sign-in:', (error as any)?.message || error);
+      }
+
       if (account?.provider === 'google') {
         // Create user without database for Google login
         if (user.email) {

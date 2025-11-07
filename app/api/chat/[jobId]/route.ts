@@ -6,18 +6,8 @@ import {
   getFilesByJobId,
   getUserById,
   getMessagesByJobId,
+  isDatabaseError,
 } from '@/lib/db';
-
-function isDatabaseError(error: any) {
-  if (!error) return false;
-  const message = String(error.message || '').toLowerCase();
-  return (
-    message.includes('database') ||
-    message.includes('connection') ||
-    message.includes('relation') ||
-    error.code === 'ECONNREFUSED'
-  );
-}
 
 export async function GET(
   request: NextRequest,

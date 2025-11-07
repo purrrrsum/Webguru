@@ -2,6 +2,112 @@ import sql, { query } from './db-client';
 import { User, Job, FileData, Message } from './utils';
 import { nanoid } from 'nanoid';
 
+export function isDatabaseError(error: any): boolean {
+  if (!error) return false;
+  const message = String(error.message || '').toLowerCase();
+  return (
+    message.includes('database') ||
+    message.includes('relation') ||
+    message.includes('connection') ||
+    message.includes('sql') ||
+    error.code === 'ECONNREFUSED'
+  );
+}
+
+export async function ensureDatabaseSetup() {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(255) PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        company VARCHAR(255) DEFAULT '',
+        address TEXT DEFAULT '',
+        phone VARCHAR(50) DEFAULT '',
+        job_count INTEGER DEFAULT 0,
+        role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'agent')),
+        password VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS jobs (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        agent_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS files (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        filename VARCHAR(255) NOT NULL,
+        size BIGINT NOT NULL,
+        type VARCHAR(100) NOT NULL,
+        uploaded_by VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        user_tick BOOLEAN DEFAULT FALSE,
+        agent_tick BOOLEAN DEFAULT FALSE
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS messages (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        sender_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        read_by_user BOOLEAN DEFAULT FALSE,
+        read_by_agent BOOLEAN DEFAULT FALSE
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_login_logs (
+        id SERIAL PRIMARY KEY,
+        user_id VARCHAR(255),
+        email VARCHAR(255),
+        role VARCHAR(20),
+        provider VARCHAR(50),
+        action VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+  } catch (error) {
+    if (isDatabaseError(error)) {
+      console.warn('Database setup skipped (connection unavailable).');
+    } else {
+      console.warn('Database setup warning:', error);
+    }
+  }
+}
+
+export async function createLoginLog(log: {
+  userId?: string;
+  email?: string | null;
+  role?: string | null;
+  provider?: string | null;
+  action?: string;
+}) {
+  try {
+    await sql`
+      INSERT INTO user_login_logs (user_id, email, role, provider, action)
+      VALUES (${log.userId || null}, ${log.email || null}, ${log.role || null}, ${log.provider || null}, ${log.action || 'login'})
+    `;
+  } catch (error) {
+    if (!isDatabaseError(error)) {
+      console.warn('Failed to write login log:', error);
+    }
+  }
+}
+
 // Database client using standard PostgreSQL (pg library)
 // Maps database column names (snake_case) to TypeScript interface (camelCase)
 
@@ -73,23 +179,27 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 export async function createUser(user: Omit<User, 'id'> & { id?: string }): Promise<User> {
   const userId = user.id || `user${Date.now()}`;
   try {
+    const intendedRole = user.role || 'user';
     // Check if user already exists by email
     const existing = await getUserByEmail(user.email);
     if (existing) {
+      if (existing.role !== intendedRole) {
+        throw new Error('This email is already registered with a different role.');
+      }
       // Update existing user instead of creating new one
       return await updateUser(existing.id, {
         name: user.name,
         company: user.company,
         address: user.address,
         phone: user.phone,
-        role: user.role,
+        role: intendedRole,
         password: user.password,
       }) || existing;
     }
 
     const result = await sql`
       INSERT INTO users (id, email, name, company, address, phone, job_count, role, password)
-      VALUES (${userId}, ${user.email}, ${user.name}, ${user.company || ''}, ${user.address || ''}, ${user.phone || ''}, ${user.jobCount || 0}, ${user.role || 'user'}, ${user.password || null})
+      VALUES (${userId}, ${user.email}, ${user.name}, ${user.company || ''}, ${user.address || ''}, ${user.phone || ''}, ${user.jobCount || 0}, ${intendedRole}, ${user.password || null})
       RETURNING *
     `;
     return mapUserRow(result.rows[0]);
@@ -120,6 +230,16 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
 
 export async function updateUser(id: string, updates: Partial<User>): Promise<User | null> {
   try {
+    if (updates.email) {
+      const existing = await getUserByEmail(updates.email);
+      if (existing && existing.id !== id) {
+        const newRole = updates.role || existing.role;
+        if (existing.role !== newRole) {
+          throw new Error('Email already in use by another account with a different role.');
+        }
+      }
+    }
+
     const fields: string[] = [];
     const values: any[] = [];
     

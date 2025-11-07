@@ -31,6 +31,9 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+        if (data.warning) {
+          console.warn(data.warning);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -47,11 +50,13 @@ export default function ProfilePage() {
     });
 
     if (!res.ok) {
-      throw new Error('Failed to update profile');
+      const errorData = await res.json().catch(() => ({ error: 'Failed to update profile' }));
+      throw new Error(errorData.error || 'Failed to update profile');
     }
 
     const updated = await res.json();
     setUser(updated);
+    return updated;
   };
 
   if (status === 'loading' || loading) {

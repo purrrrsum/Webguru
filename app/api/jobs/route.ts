@@ -7,20 +7,9 @@ import {
   createJob,
   getFilesByJobId,
   getAllUsers,
+  isDatabaseError,
 } from '@/lib/db';
 import { nanoid } from 'nanoid';
-
-function isDatabaseError(error: any) {
-  if (!error) return false;
-  const message = String(error.message || '').toLowerCase();
-  return (
-    message.includes('database') ||
-    message.includes('connection') ||
-    message.includes('relation') ||
-    message.includes('sql') ||
-    error.code === 'ECONNREFUSED'
-  );
-}
 
 export async function GET() {
   const session = await getServerSession(authOptions);
