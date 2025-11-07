@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getJobById, getFilesByJobId, getUserById, getMessagesByJobId } from '@/lib/db';
+import {
+  getJobById,
+  getFilesByJobId,
+  getUserById,
+  getMessagesByJobId,
+} from '@/lib/db';
+
+function isDatabaseError(error: any) {
+  if (!error) return false;
+  const message = String(error.message || '').toLowerCase();
+  return (
+    message.includes('database') ||
+    message.includes('connection') ||
+    message.includes('relation') ||
+    error.code === 'ECONNREFUSED'
+  );
+}
 
 export async function GET(
   request: NextRequest,
@@ -53,6 +69,37 @@ export async function GET(
     return response;
   } catch (error) {
     console.error('Error fetching chat:', error);
+    const session = await getServerSession(authOptions);
+    const { jobId } = await params;
+
+    if (isDatabaseError(error) && session?.user) {
+      const fallbackJob = {
+        id: jobId,
+        userId: session.user.role === 'agent' ? 'user-temp' : session.user.id,
+        agentId: session.user.role === 'agent' ? session.user.id : 'agent-temp',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const otherUser =
+        session.user.role === 'agent'
+          ? { id: fallbackJob.userId, name: 'User', role: 'user' as const }
+          : {
+              id: fallbackJob.agentId,
+              name: 'Support Agent',
+              role: 'agent' as const,
+            };
+
+      return NextResponse.json({
+        job: fallbackJob,
+        files: [],
+        messages: [],
+        otherUser,
+        warning:
+          'Database is not configured. Showing a temporary chat view without stored messages.',
+      });
+    }
+
     const errorResponse = NextResponse.json({ error: 'Failed to fetch chat' }, { status: 500 });
     errorResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     return errorResponse;

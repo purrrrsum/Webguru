@@ -39,6 +39,9 @@ export default function DashboardPage() {
       if (res.ok) {
         const data = await res.json();
         setJobs(data.jobs || []);
+        if (data.warning) {
+          console.warn(data.warning);
+        }
       }
     } catch (error) {
       console.error('Error fetching jobs:', error);
@@ -64,10 +67,17 @@ export default function DashboardPage() {
       const res = await fetch('/api/jobs', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
+        if (data.warning) {
+          alert(data.warning);
+        }
         router.push(`/chat/${data.job.id}`);
+      } else {
+        const errorData = await res.json().catch(() => ({ error: 'Failed to create job.' }));
+        alert(errorData.error || 'Failed to create job.');
       }
     } catch (error) {
       console.error('Error creating job:', error);
+      alert('Failed to create job.');
     }
   };
 
