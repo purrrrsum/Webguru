@@ -7,6 +7,7 @@ import {
   createJob,
   getFilesByJobId,
   getAllUsers,
+  ensureDatabaseSetup,
   isDatabaseError,
 } from '@/lib/db';
 import { nanoid } from 'nanoid';
@@ -17,6 +18,8 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await ensureDatabaseSetup();
 
     // Get jobs based on user role
     let userJobs;
@@ -67,6 +70,8 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    await ensureDatabaseSetup();
 
     // Find first agent (or use agent1 as default)
     const users = await getAllUsers();

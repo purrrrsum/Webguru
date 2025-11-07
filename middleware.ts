@@ -61,12 +61,14 @@ export const config = {
     '/dashboard/:path*',
     '/chat/:path*',
     '/profile/:path*',
+    '/support/:path*',
     '/api/upload/:path*',
     '/api/tick/:path*',
     '/api/delete/:path*',
     '/api/profile/:path*',
     '/api/jobs/:path*',
     '/api/chat/:path*',
+    '/api/support/:path*',
   ],
 };
 

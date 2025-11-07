@@ -1,5 +1,5 @@
 import sql, { query } from './db-client';
-import { User, Job, FileData, Message } from './utils';
+import { User, Job, FileData, Message, SupportTicket } from './utils';
 import { nanoid } from 'nanoid';
 
 export function isDatabaseError(error: any): boolean {
@@ -79,6 +79,33 @@ export async function ensureDatabaseSetup() {
         action VARCHAR(50),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS support_tickets (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+        email VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'agent')),
+        subject VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'open',
+        priority VARCHAR(20) DEFAULT 'normal',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        unread_for_admin BOOLEAN DEFAULT TRUE
+      )
+    `;
+
+    await sql`
+      ALTER TABLE support_tickets
+      ADD COLUMN IF NOT EXISTS unread_for_admin BOOLEAN DEFAULT TRUE
+    `;
+
+    await sql`
+      UPDATE support_tickets
+      SET unread_for_admin = TRUE
+      WHERE unread_for_admin IS NULL
     `;
   } catch (error) {
     if (isDatabaseError(error)) {
@@ -266,6 +293,14 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
     if (updates.jobCount !== undefined) {
       fields.push('job_count');
       values.push(updates.jobCount);
+    }
+    if (updates.role !== undefined) {
+      fields.push('role');
+      values.push(updates.role);
+    }
+    if (updates.password !== undefined) {
+      fields.push('password');
+      values.push(updates.password);
     }
 
     if (fields.length === 0) {
@@ -584,6 +619,171 @@ export async function markMessagesAsRead(jobId: string, userId: string, isUser: 
     }
   } catch (error) {
     console.error('Error marking messages as read:', error);
+  }
+}
+
+function mapSupportTicketRow(row: any): SupportTicket {
+  return {
+    id: row.id,
+    userId: row.user_id || undefined,
+    email: row.email,
+    role: row.role,
+    subject: row.subject,
+    description: row.description,
+    status: row.status,
+    priority: row.priority || 'normal',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    unreadForAdmin: row.unread_for_admin !== false,
+  };
+}
+
+async function generateSupportTicketId(): Promise<string> {
+  try {
+    const result = await sql`
+      SELECT id FROM support_tickets 
+      WHERE id LIKE 'ticket%' 
+      ORDER BY CAST(SUBSTRING(id FROM 7) AS INTEGER) DESC 
+      LIMIT 1
+    `;
+
+    if (result.rows.length > 0) {
+      const lastId = result.rows[0].id;
+      const lastNumber = parseInt(lastId.replace('ticket', '')) || 0;
+      return `ticket${String(lastNumber + 1).padStart(6, '0')}`;
+    }
+
+    return 'ticket000001';
+  } catch (error) {
+    console.warn('Sequential support ticket ID generation failed, using nanoid:', error);
+    return `ticket-${nanoid(10)}`;
+  }
+}
+
+export async function createSupportTicket(ticket: {
+  userId?: string;
+  email: string;
+  role: 'user' | 'agent';
+  subject: string;
+  description: string;
+  priority?: 'low' | 'normal' | 'high';
+}): Promise<SupportTicket> {
+  const now = new Date().toISOString();
+  const ticketId = await generateSupportTicketId();
+
+  const result = await sql`
+    INSERT INTO support_tickets (id, user_id, email, role, subject, description, status, priority, created_at, updated_at, unread_for_admin)
+    VALUES (
+      ${ticketId},
+      ${ticket.userId || null},
+      ${ticket.email},
+      ${ticket.role},
+      ${ticket.subject},
+      ${ticket.description},
+      'open',
+      ${ticket.priority || 'normal'},
+      ${now},
+      ${now},
+      TRUE
+    )
+    RETURNING *
+  `;
+
+  return mapSupportTicketRow(result.rows[0]);
+}
+
+export async function getSupportTicketsByUser(userId: string): Promise<SupportTicket[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM support_tickets
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+    `;
+
+    return result.rows.map(mapSupportTicketRow);
+  } catch (error) {
+    console.error('Error fetching support tickets by user:', error);
+    return [];
+  }
+}
+
+export async function getAllSupportTickets(): Promise<SupportTicket[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM support_tickets
+      ORDER BY status, created_at DESC
+    `;
+
+    return result.rows.map(mapSupportTicketRow);
+  } catch (error) {
+    console.error('Error fetching support tickets:', error);
+    return [];
+  }
+}
+
+export async function updateSupportTicketStatus(
+  id: string,
+  updates: { status?: 'open' | 'in_progress' | 'resolved'; priority?: 'low' | 'normal' | 'high' }
+): Promise<SupportTicket | null> {
+  if (!updates.status && !updates.priority) {
+    return null;
+  }
+
+  const fields: string[] = [];
+  const values: any[] = [id];
+
+  if (updates.status) {
+    fields.push('status');
+    values.push(updates.status);
+  }
+
+  if (updates.priority) {
+    fields.push('priority');
+    values.push(updates.priority);
+  }
+
+  fields.push('unread_for_admin');
+  values.push(false);
+
+  fields.push('updated_at');
+  values.push(new Date().toISOString());
+
+  const setClause = fields
+    .map((field, index) => `${field} = $${index + 2}`)
+    .join(', ');
+
+  const result = await query(
+    `UPDATE support_tickets SET ${setClause} WHERE id = $1 RETURNING *`,
+    values
+  );
+
+  if (!result.rows[0]) {
+    return null;
+  }
+
+  return mapSupportTicketRow(result.rows[0]);
+}
+
+export async function markSupportTicketsAsRead(options: { ticketId?: string } = {}): Promise<void> {
+  try {
+    const now = new Date().toISOString();
+    if (options.ticketId) {
+      await sql`
+        UPDATE support_tickets
+        SET unread_for_admin = FALSE,
+            updated_at = ${now}
+        WHERE id = ${options.ticketId}
+      `;
+    } else {
+      await sql`
+        UPDATE support_tickets
+        SET unread_for_admin = FALSE,
+            updated_at = ${now}
+        WHERE unread_for_admin = TRUE
+      `;
+    }
+  } catch (error) {
+    console.error('Error marking support tickets as read:', error);
   }
 }
 

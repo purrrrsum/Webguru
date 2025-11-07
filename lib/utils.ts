@@ -81,3 +81,17 @@ export interface JobStats {
   userAgentMappings: { jobId: string; userId: string; userName: string; agentId: string; agentName: string; createdAt: string }[];
 }
 
+export interface SupportTicket {
+  id: string;
+  userId?: string;
+  email: string;
+  role: 'user' | 'agent';
+  subject: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved';
+  priority: 'low' | 'normal' | 'high';
+  createdAt: string;
+  updatedAt: string;
+  unreadForAdmin: boolean;
+}
+

@@ -16,11 +16,16 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Affordable Proofreading<br />for Design Agencies
+            AI-Assisted Proofreading for Design, Marketing & LLM Teams
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Professional proofreading and content correction services at unbeatable prices. 
-            Perfect for social media posts, videos with subtitles, books, website content, and technical documents.
+            Level up every visual, subtitle and paragraph with a dedicated proofreading squad that understands
+            <strong> brand voice, multilingual publishing, SEO copywriting and large language model (LLM) outputs</strong>.
+            We combine human editors with AI QA to deliver conversion-ready content across campaigns, websites and technical documents.
+          </p>
+          <p className="text-lg text-gray-700 mb-8 max-w-4xl mx-auto">
+            Whether you are polishing Figma mockups, refining ChatGPT or Claude drafts, or shipping multi-lingual reels,
+            our specialists remove grammar slips, factual drifts and tone mismatches so your content builds trust and authority.
           </p>
           <div className="flex justify-center space-x-4">
             {session ? (
@@ -42,6 +47,47 @@ export default function HomePage() {
             <p className="text-whatsapp-green font-semibold text-lg">
               🎉 Special Offer: Get 40% discount if no errors are found!
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* LLM + Proofreading SEO Section */}
+      <div className="bg-white py-16 border-t border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">Why Proofreading Is Non-Negotiable in the LLM Era</h2>
+          <p className="text-lg text-gray-700 text-center mb-8">
+            Generative AI speeds up copy production but also introduces hallucinations, broken tone and localisation misses.
+            Our proofreading workflows catch those hidden issues before your audience does.
+          </p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">SEO & Brand Consistency</h3>
+              <p className="text-gray-600">
+                Search engines reward clear intent, structured formatting and error-free messaging. We optimise LLM drafts with
+                keyword-rich headings, CTA alignment and metadata-friendly copy so your campaigns rank and convert.
+              </p>
+            </div>
+            <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Trust Across Languages & Channels</h3>
+              <p className="text-gray-600">
+                From Tamil captions and Hindi product pages to English press kits, every typo damages credibility.
+                Our proofreaders validate translations, typography, numbers and brand terminology for pixels, PDFs and code blocks alike.
+              </p>
+            </div>
+            <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">LLM Alignment & Hallucination Checks</h3>
+              <p className="text-gray-600">
+                We review AI-generated responses for factual accuracy, inclusive language, regulatory wording and style guide compliance.
+                Every delivery includes editor notes so your team can retrain prompts and maintain governance.
+              </p>
+            </div>
+            <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Production-Ready Assets</h3>
+              <p className="text-gray-600">
+                Upload screenshots, PDFs or raw transcripts—our workflow supports copy-paste, annotated markups and version control.
+                Approved files come back ready for publishing across social, product, eLearning and documentation stacks.
+              </p>
+            </div>
           </div>
         </div>
       </div>

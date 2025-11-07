@@ -100,6 +100,12 @@ export default function DashboardPage() {
               Profile
             </Link>
             <Link
+              href="/support"
+              className="px-4 py-2 bg-white/20 rounded-md hover:bg-white/30 transition-colors text-sm"
+            >
+              Support
+            </Link>
+            <Link
               href="/api/auth/signout"
               className="px-4 py-2 bg-white/20 rounded-md hover:bg-white/30 transition-colors text-sm"
             >

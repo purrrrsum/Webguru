@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ClipboardEvent as ReactClipboardEvent } from 'react';
 import ChatBubble from '@/components/ChatBubble';
 import FileUploader from '@/components/FileUploader';
 import { FileData, Message } from '@/lib/utils';
@@ -167,6 +167,36 @@ export default function ChatPage() {
     }
   };
 
+  const handlePasteImage = async (event: ReactClipboardEvent<HTMLInputElement>) => {
+    const items = event.clipboardData?.items;
+    if (!items?.length) {
+      return;
+    }
+
+    const imageItems = Array.from(items).filter((item) => item.type.startsWith('image/'));
+    if (imageItems.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+
+    for (const item of imageItems) {
+      const blob = item.getAsFile();
+      if (!blob) {
+        continue;
+      }
+
+      const extension = blob.type.split('/')[1] || 'png';
+      const filename = `pasted-${Date.now()}.${extension}`;
+      const file = new File([blob], filename, { type: blob.type });
+      try {
+        await handleUpload(file);
+      } catch (error) {
+        console.error('Failed to upload pasted image:', error);
+      }
+    }
+  };
+
   // Combine files and messages, sort by timestamp
   const allItems = [
     ...(chatData?.files.map(f => ({ type: 'file' as const, data: f, timestamp: f.uploadedAt })) || []),
@@ -292,6 +322,7 @@ export default function ChatPage() {
               type="text"
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
+              onPaste={handlePasteImage}
               placeholder="Type a message..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
               disabled={sendingMessage}

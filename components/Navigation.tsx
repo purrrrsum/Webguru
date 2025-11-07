@@ -3,10 +3,50 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Navigation() {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [supportBadge, setSupportBadge] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    let interval: NodeJS.Timeout | null = null;
+
+    const fetchSupportSummary = async () => {
+      if (!session?.user || session.user.role !== 'agent') {
+        if (isMounted) {
+          setSupportBadge(0);
+        }
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/support?summary=true', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && typeof data.unreadCount === 'number') {
+          setSupportBadge(data.unreadCount);
+        }
+      } catch (error) {
+        console.error('Failed to load support summary:', error);
+      }
+    };
+
+    fetchSupportSummary();
+
+    if (session?.user?.role === 'agent') {
+      interval = setInterval(fetchSupportSummary, 60000);
+    }
+
+    return () => {
+      isMounted = false;
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [session?.user?.role, pathname]);
 
   return (
     <nav className="bg-white shadow-md">
@@ -76,6 +116,17 @@ export default function Navigation() {
                   className="bg-whatsapp-green text-white px-4 py-2 rounded-md hover:bg-whatsapp-green-dark text-sm font-medium"
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/support"
+                  className="text-gray-700 hover:text-whatsapp-green px-3 py-2 text-sm font-medium relative flex items-center"
+                >
+                  <span>Support</span>
+                  {session.user.role === 'agent' && supportBadge > 0 && (
+                    <span className="ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
+                      {supportBadge > 9 ? '9+' : supportBadge}
+                    </span>
+                  )}
                 </Link>
                 {session.user.role === 'agent' && (
                   <Link 

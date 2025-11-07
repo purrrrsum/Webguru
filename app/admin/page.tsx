@@ -17,25 +17,16 @@ export default function AdminPage() {
     setError(null);
 
     try {
-      // Verify admin credentials
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn('credentials', {
+        email,
+        otp: password,
+        redirect: false,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        // Sign in with the agent credentials using special admin-login OTP
-        const result = await signIn('credentials', {
-          email: data.email,
-          otp: 'admin-login',
-          redirect: true,
-          callbackUrl: '/',
-        });
+      if (result?.error) {
+        setError(result.error);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Invalid credentials');
+        router.push('/');
       }
     } catch (err) {
       setError('Login failed. Please try again.');

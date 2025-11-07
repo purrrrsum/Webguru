@@ -1,45 +1,66 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 import { User } from './utils';
 import { verifyOTP } from './otp';
-import { ensureDatabaseSetup, createLoginLog } from './db';
+import {
+  ensureDatabaseSetup,
+  createLoginLog,
+  getUserByEmail,
+  createUser,
+  updateUser,
+} from './db';
 
-// Simple character matching function
-// Checks if username and password have matching characters
-function simpleCharacterMatch(username: string, password: string): boolean {
-  // Normalize both strings (lowercase, remove spaces)
-  const normalizedUsername = username.toLowerCase().trim();
-  const normalizedPassword = password.toLowerCase().trim();
-  
-  // Direct match
-  if (normalizedUsername === normalizedPassword) {
-    return true;
-  }
-  
-  // Check if password contains all characters from username
-  const usernameChars = normalizedUsername.split('').filter(c => c !== '@' && c !== '.' && c !== ' ');
-  const passwordChars = normalizedPassword.split('');
-  
-  // Check if all username characters exist in password
-  const allCharsMatch = usernameChars.every(char => passwordChars.includes(char));
-  
-  return allCharsMatch;
+function getNameFromEmail(email: string): string {
+  const username = email.split('@')[0] || 'user';
+  return username
+    .split(/[._-]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
-// Generate a simple user object without database
-function createSimpleUser(email: string, role: 'user' | 'agent' = 'user'): User {
-  const username = email.split('@')[0];
-  return {
-    id: `user_${email.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`,
-    email: email,
-    name: username.charAt(0).toUpperCase() + username.slice(1),
-    company: '',
-    address: '',
-    phone: '',
-    jobCount: 0,
-    role: role,
-  };
+function inferRoleFromEmail(email: string): 'user' | 'agent' {
+  const normalized = email.toLowerCase();
+  if (normalized.includes('agent') || normalized.includes('admin') || normalized.endsWith('@thesupport.in')) {
+    return 'agent';
+  }
+  return 'user';
+}
+
+async function ensureUserAccount(
+  email: string,
+  role: 'user' | 'agent',
+  overrides: Partial<User> = {}
+): Promise<User> {
+  const existing = await getUserByEmail(email);
+  if (existing) {
+    if (overrides.role && existing.role !== overrides.role) {
+      const updated = await updateUser(existing.id, { role: overrides.role });
+      return (updated || existing) as User;
+    }
+    if (existing.role !== role) {
+      const updated = await updateUser(existing.id, { role });
+      return (updated || existing) as User;
+    }
+    if (overrides.password && overrides.password !== existing.password) {
+      const updated = await updateUser(existing.id, { password: overrides.password });
+      return (updated || existing) as User;
+    }
+    return existing;
+  }
+
+  return await createUser({
+    email,
+    name: overrides.name || getNameFromEmail(email),
+    company: overrides.company || '',
+    address: overrides.address || '',
+    phone: overrides.phone || '',
+    jobCount: overrides.jobCount ?? 0,
+    role: overrides.role || role,
+    password: overrides.password,
+  });
 }
 
 // Validate required environment variables (runtime only, not during build)
@@ -117,54 +138,77 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Extract username from email (part before @)
-        const username = credentials.email.split('@')[0];
-        const password = credentials.otp;
+        const email = credentials.email.toLowerCase().trim();
+        const secret = credentials.otp.trim();
 
-        // Check for admin bypass (special case for admin login)
-        if (credentials.otp === 'admin-login') {
-          // For admin login, check if email matches admin pattern
-          if (credentials.email.includes('agent') || credentials.email.includes('admin')) {
-            return createSimpleUser(credentials.email, 'agent');
+        await ensureDatabaseSetup();
+
+        const desiredRole = inferRoleFromEmail(email);
+
+        // Admin bypass is restricted to agent/admin emails
+        if (secret === 'admin-login') {
+          if (desiredRole !== 'agent') {
+            throw new Error('Admin access allowed only for agent accounts.');
           }
-          return null;
+
+          const user = await ensureUserAccount(email, 'agent', {
+            role: 'agent',
+            name: getNameFromEmail(email),
+            company: 'TheSupport.agency',
+            address: '',
+            phone: '',
+          });
+
+          const sanitized = { ...user };
+          delete (sanitized as any).password;
+          return sanitized as any;
         }
 
-        // Test login bypass - temporarily enabled for testing
-        if (credentials.otp === 'test-login-bypass') {
-          return createSimpleUser(credentials.email, 'user');
+        if (secret === 'test-login-bypass') {
+          const user = await ensureUserAccount(email, desiredRole);
+          const sanitized = { ...user };
+          delete (sanitized as any).password;
+          return sanitized as any;
         }
 
-        // Password login for users and agents
-        // Try password login if OTP field doesn't look like a 6-digit OTP
-        // Check: not exactly 6 digits, or longer than 6 characters
-        const isLikelyPassword = credentials.otp && (
-          credentials.otp.length > 6 || 
-          (credentials.otp.length >= 4 && !/^\d{6}$/.test(credentials.otp))
-        );
+        const isOtpCode = /^\d{6}$/.test(secret);
 
-        if (isLikelyPassword) {
-          // Use simple character matching
-          if (simpleCharacterMatch(username, password)) {
-            console.log(`[AUTH] Password login successful for ${credentials.email} using character matching`);
-            // Determine role based on email pattern
-            const role = (credentials.email.includes('agent') || credentials.email.includes('admin')) 
-              ? 'agent' 
-              : 'user';
-            return createSimpleUser(credentials.email, role);
-          } else {
-            console.error(`[AUTH] Password mismatch for user: ${credentials.email}`);
-            throw new Error('Invalid email or password. Username and password must have matching characters.');
+        if (isOtpCode) {
+          if (!verifyOTP(email, secret)) {
+            return null;
           }
+
+          const user = await ensureUserAccount(email, desiredRole);
+          const sanitized = { ...user };
+          delete (sanitized as any).password;
+          return sanitized as any;
         }
 
-        // OTP verification (keep existing OTP logic)
-        if (!verifyOTP(credentials.email, credentials.otp)) {
-          return null;
+        const existingUser = await getUserByEmail(email);
+
+        if (!existingUser) {
+          throw new Error('User not found. Please request an OTP first.');
         }
 
-        // Create user without database
-        return createSimpleUser(credentials.email, 'user');
+        if (!existingUser.password) {
+          throw new Error('Password not set. Use OTP login once to create your account.');
+        }
+
+        let passwordMatch = false;
+        try {
+          passwordMatch = await bcrypt.compare(secret, existingUser.password);
+        } catch (error) {
+          console.warn('Bcrypt comparison failed, trying plaintext comparison:', error);
+          passwordMatch = secret === existingUser.password;
+        }
+
+        if (!passwordMatch) {
+          throw new Error('Invalid email or password.');
+        }
+
+        const sanitized = { ...existingUser };
+        delete (sanitized as any).password;
+        return sanitized as any;
       },
     }),
   ],
@@ -185,12 +229,15 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (account?.provider === 'google') {
-        // Create user without database for Google login
         if (user.email) {
-          const simpleUser = createSimpleUser(user.email, 'user');
-          user.id = simpleUser.id;
-          user.name = simpleUser.name;
-          (user as any).role = simpleUser.role;
+          await ensureDatabaseSetup();
+          const dbUser = await ensureUserAccount(user.email, 'user', {
+            name: user.name || getNameFromEmail(user.email),
+          });
+
+          user.id = dbUser.id;
+          user.name = dbUser.name;
+          (user as any).role = dbUser.role;
         }
       }
       return true;
