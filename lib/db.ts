@@ -38,8 +38,20 @@ export async function ensureDatabaseSetup() {
         user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         agent_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        title TEXT,
+        tags TEXT[] DEFAULT ARRAY[]::text[]
       )
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS title TEXT
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT ARRAY[]::text[]
     `;
 
     await sql`
@@ -159,6 +171,8 @@ function mapJobRow(row: any): Job {
     agentId: row.agent_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    title: row.title || null,
+    tags: Array.isArray(row.tags) ? row.tags : [],
   };
 }
 
@@ -414,8 +428,8 @@ export async function createJob(job: Omit<Job, 'id'> & { id?: string }): Promise
   const now = new Date().toISOString();
   try {
     const result = await sql`
-      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at)
-      VALUES (${jobId}, ${job.userId}, ${job.agentId}, ${now}, ${now})
+      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags)
+      VALUES (${jobId}, ${job.userId}, ${job.agentId}, ${now}, ${now}, ${job.title || null}, ${job.tags && job.tags.length ? job.tags : []})
       RETURNING *
     `;
     return mapJobRow(result.rows[0]);

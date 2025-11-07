@@ -19,6 +19,8 @@ export interface Job {
   agentId: string;
   createdAt: string;
   updatedAt: string;
+  title?: string | null;
+  tags?: string[];
 }
 
 export interface FileData {

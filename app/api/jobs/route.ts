@@ -66,12 +66,24 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
+  let payload: any = {};
   try {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await ensureDatabaseSetup();
+
+    payload = await request.json().catch(() => ({}));
+    const rawTitle = typeof payload.title === 'string' ? payload.title.trim() : '';
+    const rawTags = Array.isArray(payload.tags) ? payload.tags : [];
+
+    const title = rawTitle.length > 0 ? rawTitle.slice(0, 120) : null;
+    const tags = rawTags
+      .filter((tag) => typeof tag === 'string')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0)
+      .slice(0, 3);
 
     // Find first agent (or use agent1 as default)
     const users = await getAllUsers();
@@ -95,6 +107,8 @@ export async function POST(request: NextRequest) {
         agentId: defaultAgent.id,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        title,
+        tags,
       });
       return NextResponse.json({ job: newJob });
     }
@@ -104,6 +118,8 @@ export async function POST(request: NextRequest) {
       agentId: agent.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      title,
+      tags,
     });
 
     return NextResponse.json({ job: newJob });
@@ -119,6 +135,10 @@ export async function POST(request: NextRequest) {
             : 'agent-temp',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        title: payload?.title || null,
+        tags: Array.isArray(payload?.tags)
+          ? payload.tags.slice(0, 3)
+          : [],
       };
 
       return NextResponse.json({

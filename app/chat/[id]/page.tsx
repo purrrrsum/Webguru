@@ -15,6 +15,8 @@ interface ChatData {
     agentId: string;
     createdAt: string;
     updatedAt: string;
+    title?: string | null;
+    tags?: string[];
   };
   files: FileData[];
   messages: Message[];
@@ -215,8 +217,16 @@ export default function ChatPage() {
     return null;
   }
 
-  const otherUserName =
-    session.user.role === 'user' ? chatData.otherUser?.name : chatData.otherUser?.name;
+  const jobTitle = chatData.job.title && chatData.job.title.trim().length > 0
+    ? chatData.job.title
+    : `Job ${chatData.job.id.slice(0, 8)}`;
+
+  const counterpartName =
+    session.user.role === 'user'
+      ? chatData.otherUser?.name || 'Support Agent'
+      : chatData.otherUser?.name || 'Client';
+
+  const counterpartRole = session.user.role === 'user' ? 'Agent' : 'User';
 
   return (
     <div className="min-h-screen bg-whatsapp-gray-light flex flex-col">
@@ -238,11 +248,21 @@ export default function ChatPage() {
               </svg>
             </Link>
             <div>
-              <h1 className="text-lg font-bold">
-                {otherUserName || (session.user.role === 'user' ? 'Support Agent' : 'User')}
-              </h1>
+              <h1 className="text-lg font-bold">{jobTitle}</h1>
               <p className="text-xs text-white/80">
-                {session.user.role === 'user' ? 'Agent' : 'User'}
+                {counterpartRole}: {counterpartName}
+              </p>
+              {chatData.job.tags && chatData.job.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {chatData.job.tags.map((tag) => (
+                    <span key={`${chatData.job.id}-${tag}`} className="text-[10px] uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-white/80">
+                Created {new Date(chatData.job.createdAt).toLocaleString()}
               </p>
             </div>
           </div>

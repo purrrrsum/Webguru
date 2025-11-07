@@ -16,16 +16,15 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            AI-Assisted Proofreading for Design, Marketing & LLM Teams
+            Human Proofreaders for Design & Marketing Teams
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Level up every visual, subtitle and paragraph with a dedicated proofreading squad that understands
-            <strong> brand voice, multilingual publishing, SEO copywriting and large language model (LLM) outputs</strong>.
-            We combine human editors with AI QA to deliver conversion-ready content across campaigns, websites and technical documents.
+            Work directly with experienced editors who understand brand voice, multilingual publishing and campaign deadlines.
+            Every caption, subtitle and document is reviewed manually to keep messaging sharp and on-brand.
           </p>
           <p className="text-lg text-gray-700 mb-8 max-w-4xl mx-auto">
-            Whether you are polishing Figma mockups, refining ChatGPT or Claude drafts, or shipping multi-lingual reels,
-            our specialists remove grammar slips, factual drifts and tone mismatches so your content builds trust and authority.
+            We dive into the details—spotting typos in artwork, correcting tone in website copy and flagging inconsistencies across deliverables—
+            so your team can ship polished work with complete confidence.
           </p>
           <div className="flex justify-center space-x-4">
             {session ? (
@@ -51,41 +50,37 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* LLM + Proofreading SEO Section */}
+      {/* Human Proofreading Benefits Section */}
       <div className="bg-white py-16 border-t border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">Why Proofreading Is Non-Negotiable in the LLM Era</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-6">Why Human Proofreading Matters</h2>
           <p className="text-lg text-gray-700 text-center mb-8">
-            Generative AI speeds up copy production but also introduces hallucinations, broken tone and localisation misses.
-            Our proofreading workflows catch those hidden issues before your audience does.
+            Automatic spell-checkers miss context. Our editors read every asset start to finish, verifying tone, terminology and localisation
+            before it goes live.
           </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">SEO & Brand Consistency</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Protect Your Brand Voice</h3>
               <p className="text-gray-600">
-                Search engines reward clear intent, structured formatting and error-free messaging. We optimise LLM drafts with
-                keyword-rich headings, CTA alignment and metadata-friendly copy so your campaigns rank and convert.
+                We check for tonal accuracy, compliant terminology and the tiny slips that erode trust in high-visibility campaigns.
               </p>
             </div>
             <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Trust Across Languages & Channels</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Consistent Across Languages</h3>
               <p className="text-gray-600">
-                From Tamil captions and Hindi product pages to English press kits, every typo damages credibility.
-                Our proofreaders validate translations, typography, numbers and brand terminology for pixels, PDFs and code blocks alike.
+                From Tamil captions and Hindi product pages to English press kits, we cross-check translations, typography choices and numerical data.
               </p>
             </div>
             <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">LLM Alignment & Hallucination Checks</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Manual Fact & Detail Checks</h3>
               <p className="text-gray-600">
-                We review AI-generated responses for factual accuracy, inclusive language, regulatory wording and style guide compliance.
-                Every delivery includes editor notes so your team can retrain prompts and maintain governance.
+                Our reviewers validate names, numbers, dates and legal copy—catching mistakes that automated tools overlook.
               </p>
             </div>
             <div className="p-6 bg-whatsapp-gray-light rounded-lg border border-gray-200">
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Production-Ready Assets</h3>
               <p className="text-gray-600">
-                Upload screenshots, PDFs or raw transcripts—our workflow supports copy-paste, annotated markups and version control.
-                Approved files come back ready for publishing across social, product, eLearning and documentation stacks.
+                Upload screenshots, PDFs or raw transcripts—our workflow supports comments, revisions and approvals so you publish with ease.
               </p>
             </div>
           </div>
