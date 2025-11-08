@@ -3,12 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import {
   getJobsByUserId,
-  getJobsByAgentId,
   createJob,
   getFilesByJobId,
   getAllUsers,
   ensureDatabaseSetup,
   isDatabaseError,
+  getAllJobsWithUsers,
+  getUserById,
 } from '@/lib/db';
 import { nanoid } from 'nanoid';
 
@@ -26,7 +27,7 @@ export async function GET() {
     if (session.user.role === 'user') {
       userJobs = await getJobsByUserId(session.user.id);
     } else if (session.user.role === 'agent') {
-      userJobs = await getJobsByAgentId(session.user.id);
+      userJobs = await getAllJobsWithUsers();
     } else {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
@@ -35,6 +36,11 @@ export async function GET() {
     const jobsWithFiles = await Promise.all(
       userJobs.map(async (job) => {
         const jobFiles = await getFilesByJobId(job.id);
+        let userName = job.userName || null;
+        if (!userName && session.user.role === 'agent') {
+          const jobUser = await getUserById(job.userId);
+          userName = jobUser?.name || null;
+        }
         
         let hasUnread = false;
         if (session.user.role === 'user') {
@@ -47,6 +53,7 @@ export async function GET() {
           ...job,
           fileCount: jobFiles.length,
           hasUnread,
+          userName,
         };
       })
     );
@@ -110,7 +117,12 @@ export async function POST(request: NextRequest) {
         title,
         tags,
       });
-      return NextResponse.json({ job: newJob });
+      return NextResponse.json({
+        job: {
+          ...newJob,
+          userName: session.user.name || null,
+        },
+      });
     }
 
     const newJob = await createJob({
@@ -122,7 +134,12 @@ export async function POST(request: NextRequest) {
       tags,
     });
 
-    return NextResponse.json({ job: newJob });
+    return NextResponse.json({
+      job: {
+        ...newJob,
+        userName: session.user.name || null,
+      },
+    });
   } catch (error) {
     console.error('Error creating job:', error);
     if (isDatabaseError(error)) {
@@ -139,6 +156,10 @@ export async function POST(request: NextRequest) {
         tags: Array.isArray(payload?.tags)
           ? payload.tags.slice(0, 3)
           : [],
+        userName:
+          session?.user?.role === 'agent'
+            ? 'User'
+            : session?.user?.name || null,
       };
 
       return NextResponse.json({

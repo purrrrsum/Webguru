@@ -30,9 +30,7 @@ export async function GET(
     if (session.user.role === 'user' && job.userId !== session.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
-    if (session.user.role === 'agent' && job.agentId !== session.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    // Agents can access all user conversations
 
     const jobFiles = await getFilesByJobId(jobId);
     const messages = await getMessagesByJobId(jobId);
@@ -42,8 +40,17 @@ export async function GET(
       session.user.role === 'user' ? job.agentId : job.userId;
     const otherUser = await getUserById(otherUserId);
 
+    const jobWithName = {
+      ...job,
+      userName:
+        job.userName ||
+        (session.user.role === 'agent'
+          ? otherUser?.name || null
+          : session.user.name || null),
+    };
+
     const response = NextResponse.json({
-      job,
+      job: jobWithName,
       files: jobFiles,
       messages: messages,
       otherUser: otherUser
@@ -69,6 +76,12 @@ export async function GET(
         agentId: session.user.role === 'agent' ? session.user.id : 'agent-temp',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        title: `Job ${jobId.slice(0, 8)}`,
+        tags: [],
+        userName:
+          session.user.role === 'agent'
+            ? 'User'
+            : session.user.name || null,
       };
 
       const otherUser =

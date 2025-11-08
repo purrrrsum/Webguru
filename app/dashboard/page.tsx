@@ -15,6 +15,7 @@ interface Job {
   hasUnread: boolean;
   title?: string | null;
   tags?: string[];
+  userName?: string | null;
 }
 
 export default function DashboardPage() {
@@ -69,6 +70,10 @@ export default function DashboardPage() {
     return null;
   }
 
+  const isAgent = session.user.role === 'agent';
+  const headerClass = isAgent ? 'bg-slate-900 text-slate-100' : 'bg-whatsapp-green text-white';
+  const pageBgClass = isAgent ? 'bg-slate-900/70' : 'bg-whatsapp-gray-light';
+
   const handleNewJobSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!jobTitle.trim()) {
@@ -119,15 +124,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-whatsapp-gray-light">
+    <div className={`min-h-screen ${pageBgClass}`}>
       {/* Header */}
-      <header className="bg-whatsapp-green text-white p-4 shadow-md">
+      <header className={`${headerClass} p-4 shadow-md`}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-white hover:underline">
+            <Link href="/" className="hover:underline">
               ← Back to Home
             </Link>
-            <h1 className="text-xl font-bold">Dashboard</h1>
+            <h1 className="text-xl font-bold">
+              {isAgent ? 'Agent Queue' : 'Dashboard'}
+            </h1>
           </div>
           <div className="flex items-center gap-4">
             <Link
@@ -157,7 +164,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-800">
-              {session.user.role === 'user' ? 'Your Jobs' : 'Active Jobs'}
+              {session.user.role === 'user' ? 'Your Jobs' : 'All User Conversations'}
             </h2>
             {session.user.role === 'user' && (
               <button
@@ -222,6 +229,15 @@ export default function DashboardPage() {
             </form>
           )}
 
+          {isAgent && (
+            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-slate-700">
+              <p className="text-sm font-semibold">Agent view</p>
+              <p className="mt-1 text-sm">
+                You can open any active job to review messages and files. Tags highlight the content type and status shared by the user.
+              </p>
+            </div>
+          )}
+
           {jobs.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg mb-2">No jobs yet</p>
@@ -247,6 +263,9 @@ export default function DashboardPage() {
                           <span className="w-2 h-2 bg-whatsapp-green rounded-full"></span>
                         )}
                       </div>
+                      {isAgent && job.userName && (
+                        <p className="text-xs text-gray-500 mt-1">Client: {job.userName}</p>
+                      )}
                       <p className="text-sm text-gray-500 mt-1">
                         {job.fileCount} file{job.fileCount !== 1 ? 's' : ''} •{' '}
                         {new Date(job.createdAt).toLocaleDateString()}

@@ -16,7 +16,7 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard' });
+    signIn('google', { callbackUrl: '/dashboard', role: 'user' });
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -59,6 +59,7 @@ export default function SignInPage() {
         email,
         otp: password, // Using OTP field for password (auth handles it)
         redirect: false,
+        role: 'user',
       });
 
       if (result?.error) {
@@ -94,6 +95,7 @@ export default function SignInPage() {
         email,
         otp,
         redirect: false,
+        role: 'user',
       });
 
       if (result?.error) {

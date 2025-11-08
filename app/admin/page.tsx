@@ -21,6 +21,7 @@ export default function AdminPage() {
         email,
         otp: password,
         redirect: false,
+        role: 'agent',
       });
 
       if (result?.error) {

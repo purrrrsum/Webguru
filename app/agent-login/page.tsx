@@ -15,7 +15,7 @@ export default function AgentLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard' });
+    signIn('google', { callbackUrl: '/dashboard', role: 'agent' });
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
@@ -28,6 +28,7 @@ export default function AgentLoginPage() {
         email,
         otp: password,
         redirect: false,
+        role: 'agent',
       });
 
       if (result?.error) {

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user has access (either the user or agent of this job)
-    if (job.userId !== session.user.id && job.agentId !== session.user.id) {
+    if (session.user.role === 'user' && job.userId !== session.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

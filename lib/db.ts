@@ -173,6 +173,7 @@ function mapJobRow(row: any): Job {
     updatedAt: row.updated_at,
     title: row.title || null,
     tags: Array.isArray(row.tags) ? row.tags : [],
+    userName: typeof row.user_name === 'string' ? row.user_name : null,
   };
 }
 
@@ -392,6 +393,22 @@ export async function getJobsByAgentId(agentId: string): Promise<Job[]> {
     return result.rows.map(mapJobRow);
   } catch (error: any) {
     console.error('Error fetching jobs by agent ID:', error);
+    console.error('Error details:', error.message, error.code);
+    return [];
+  }
+}
+
+export async function getAllJobsWithUsers(): Promise<Job[]> {
+  try {
+    const result = await sql`
+      SELECT jobs.*, users.name AS user_name
+      FROM jobs
+      LEFT JOIN users ON users.id = jobs.user_id
+      ORDER BY jobs.created_at DESC
+    `;
+    return result.rows.map(mapJobRow);
+  } catch (error: any) {
+    console.error('Error fetching all jobs with users:', error);
     console.error('Error details:', error.message, error.code);
     return [];
   }

@@ -32,22 +32,41 @@ function inferRoleFromEmail(email: string): 'user' | 'agent' {
 async function ensureUserAccount(
   email: string,
   role: 'user' | 'agent',
-  overrides: Partial<User> = {}
+  overrides: Partial<User> = {},
+  existingAccount?: User | null
 ): Promise<User> {
-  const existing = await getUserByEmail(email);
+  const targetRole = overrides.role || role;
+  const existing = existingAccount ?? (await getUserByEmail(email));
   if (existing) {
-    if (overrides.role && existing.role !== overrides.role) {
-      const updated = await updateUser(existing.id, { role: overrides.role });
-      return (updated || existing) as User;
+    if (existing.role !== targetRole) {
+      throw new Error(
+        `This email is already registered as ${existing.role}. Please sign in using the ${existing.role === 'agent' ? 'agent' : 'user'} portal.`
+      );
     }
-    if (existing.role !== role) {
-      const updated = await updateUser(existing.id, { role });
-      return (updated || existing) as User;
+
+    const updates: Partial<User> = {};
+
+    if (overrides.name && overrides.name !== existing.name) {
+      updates.name = overrides.name;
+    }
+    if (overrides.company && overrides.company !== existing.company) {
+      updates.company = overrides.company;
+    }
+    if (overrides.address && overrides.address !== existing.address) {
+      updates.address = overrides.address;
+    }
+    if (overrides.phone && overrides.phone !== existing.phone) {
+      updates.phone = overrides.phone;
     }
     if (overrides.password && overrides.password !== existing.password) {
-      const updated = await updateUser(existing.id, { password: overrides.password });
+      updates.password = overrides.password;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      const updated = await updateUser(existing.id, updates);
       return (updated || existing) as User;
     }
+
     return existing;
   }
 
@@ -58,7 +77,7 @@ async function ensureUserAccount(
     address: overrides.address || '',
     phone: overrides.phone || '',
     jobCount: overrides.jobCount ?? 0,
-    role: overrides.role || role,
+    role: targetRole,
     password: overrides.password,
   });
 }
@@ -132,6 +151,7 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         otp: { label: 'OTP', type: 'text' },
+        role: { label: 'Role', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.otp) {
@@ -143,11 +163,21 @@ export const authOptions: NextAuthOptions = {
 
         await ensureDatabaseSetup();
 
-        const desiredRole = inferRoleFromEmail(email);
+        const requestedRole =
+          credentials.role === 'agent' || credentials.role === 'user'
+            ? credentials.role
+            : inferRoleFromEmail(email);
+
+        const existingAccount = await getUserByEmail(email);
+        if (existingAccount && existingAccount.role !== requestedRole) {
+          throw new Error(
+            `This email is registered as ${existingAccount.role}. Please use the ${existingAccount.role === 'agent' ? 'agent' : 'user'} login.`
+          );
+        }
 
         // Admin bypass is restricted to agent/admin emails
         if (secret === 'admin-login') {
-          if (desiredRole !== 'agent') {
+          if (requestedRole !== 'agent') {
             throw new Error('Admin access allowed only for agent accounts.');
           }
 
@@ -157,7 +187,7 @@ export const authOptions: NextAuthOptions = {
             company: 'TheSupport.agency',
             address: '',
             phone: '',
-          });
+          }, existingAccount || undefined);
 
           const sanitized = { ...user };
           delete (sanitized as any).password;
@@ -165,7 +195,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (secret === 'test-login-bypass') {
-          const user = await ensureUserAccount(email, desiredRole);
+          const user = await ensureUserAccount(email, requestedRole, {}, existingAccount || undefined);
           const sanitized = { ...user };
           delete (sanitized as any).password;
           return sanitized as any;
@@ -178,35 +208,33 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          const user = await ensureUserAccount(email, desiredRole);
+          const user = await ensureUserAccount(email, requestedRole, {}, existingAccount || undefined);
           const sanitized = { ...user };
           delete (sanitized as any).password;
           return sanitized as any;
         }
 
-        const existingUser = await getUserByEmail(email);
-
-        if (!existingUser) {
+        if (!existingAccount) {
           throw new Error('User not found. Please request an OTP first.');
         }
 
-        if (!existingUser.password) {
+        if (!existingAccount.password) {
           throw new Error('Password not set. Use OTP login once to create your account.');
         }
 
         let passwordMatch = false;
         try {
-          passwordMatch = await bcrypt.compare(secret, existingUser.password);
+          passwordMatch = await bcrypt.compare(secret, existingAccount.password);
         } catch (error) {
           console.warn('Bcrypt comparison failed, trying plaintext comparison:', error);
-          passwordMatch = secret === existingUser.password;
+          passwordMatch = secret === existingAccount.password;
         }
 
         if (!passwordMatch) {
           throw new Error('Invalid email or password.');
         }
 
-        const sanitized = { ...existingUser };
+        const sanitized = { ...existingAccount };
         delete (sanitized as any).password;
         return sanitized as any;
       },
@@ -231,7 +259,8 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'google') {
         if (user.email) {
           await ensureDatabaseSetup();
-          const dbUser = await ensureUserAccount(user.email, 'user', {
+          const inferredRole = inferRoleFromEmail(user.email);
+          const dbUser = await ensureUserAccount(user.email, inferredRole, {
             name: user.name || getNameFromEmail(user.email),
           });
 

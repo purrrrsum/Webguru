@@ -21,6 +21,7 @@ export interface Job {
   updatedAt: string;
   title?: string | null;
   tags?: string[];
+  userName?: string | null;
 }
 
 export interface FileData {

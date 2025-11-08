@@ -17,6 +17,7 @@ interface ChatData {
     updatedAt: string;
     title?: string | null;
     tags?: string[];
+    userName?: string | null;
   };
   files: FileData[];
   messages: Message[];
