@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [showJobForm, setShowJobForm] = useState(false);
   const [jobTitle, setJobTitle] = useState('');
   const [jobTagsInput, setJobTagsInput] = useState('');
+  const [jobDueAt, setJobDueAt] = useState('');
   const [jobFormError, setJobFormError] = useState<string | null>(null);
   const [creatingJob, setCreatingJob] = useState(false);
 
@@ -97,7 +98,11 @@ export default function DashboardPage() {
       const res = await fetch('/api/jobs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: jobTitle.trim(), tags }),
+        body: JSON.stringify({
+          title: jobTitle.trim(),
+          tags,
+          dueAt: jobDueAt ? new Date(jobDueAt).toISOString() : null,
+        }),
       });
 
       if (res.ok) {
@@ -107,6 +112,7 @@ export default function DashboardPage() {
         }
         setJobTitle('');
         setJobTagsInput('');
+        setJobDueAt('');
         setShowJobForm(false);
         setLoading(true);
         await fetchJobs();
@@ -214,6 +220,22 @@ export default function DashboardPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">Example: brochure, campaign, client-name</p>
               </div>
+              <div>
+                <label htmlFor="job-due" className="block text-sm font-medium text-gray-700 mb-1">
+                  Due date & time (optional)
+                </label>
+                <input
+                  id="job-due"
+                  type="datetime-local"
+                  value={jobDueAt}
+                  onChange={(e) => setJobDueAt(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Set expectations so agents can plan and automations can alert on delays.
+                </p>
+              </div>
               {jobFormError && (
                 <p className="text-sm text-red-600">{jobFormError}</p>
               )}
@@ -277,6 +299,30 @@ export default function DashboardPage() {
                               {tag}
                             </span>
                           ))}
+                        </div>
+                      )}
+                      {job.dueAt && (
+                        <div className="mt-2 flex items-center gap-2 text-xs">
+                          <span className="font-semibold text-gray-600">
+                            Due: {new Date(job.dueAt).toLocaleString()}
+                          </span>
+                          {job.slaStatus && (
+                            <span
+                              className={`px-2 py-1 rounded-full ${
+                                job.slaStatus === 'overdue'
+                                  ? 'bg-red-100 text-red-700'
+                                  : job.slaStatus === 'due_soon'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-green-100 text-green-700'
+                              }`}
+                            >
+                              {job.slaStatus === 'overdue'
+                                ? 'Overdue'
+                                : job.slaStatus === 'due_soon'
+                                ? 'Due soon'
+                                : 'On track'}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>

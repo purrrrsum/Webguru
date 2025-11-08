@@ -10,6 +10,7 @@ import {
   isDatabaseError,
   getAllJobsWithUsers,
   getUserById,
+  evaluateSLAStatuses,
 } from '@/lib/db';
 import { nanoid } from 'nanoid';
 
@@ -21,6 +22,7 @@ export async function GET() {
     }
 
     await ensureDatabaseSetup();
+    await evaluateSLAStatuses();
 
     // Get jobs based on user role
     let userJobs;
@@ -54,6 +56,9 @@ export async function GET() {
           fileCount: jobFiles.length,
           hasUnread,
           userName,
+          dueAt: job.dueAt || null,
+          slaStatus: job.slaStatus || 'pending',
+          escalationLevel: job.escalationLevel || 'none',
         };
       })
     );
@@ -116,6 +121,14 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
         title,
         tags,
+        dueAt: typeof payload?.dueAt === 'string' && payload.dueAt.trim().length
+          ? new Date(payload.dueAt).toISOString()
+          : null,
+        slaStatus:
+          typeof payload?.dueAt === 'string' && payload.dueAt.trim().length
+            ? 'on_track'
+            : 'pending',
+        escalationLevel: 'none',
       });
       return NextResponse.json({
         job: {
@@ -125,6 +138,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const dueAt =
+      typeof payload?.dueAt === 'string' && payload.dueAt.trim().length
+        ? new Date(payload.dueAt).toISOString()
+        : null;
+
     const newJob = await createJob({
       userId: session.user.id,
       agentId: agent.id,
@@ -132,6 +150,9 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
       title,
       tags,
+      dueAt,
+      slaStatus: dueAt ? 'on_track' : 'pending',
+      escalationLevel: 'none',
     });
 
     return NextResponse.json({
@@ -156,6 +177,9 @@ export async function POST(request: NextRequest) {
         tags: Array.isArray(payload?.tags)
           ? payload.tags.slice(0, 3)
           : [],
+        dueAt: payload?.dueAt || null,
+        slaStatus: 'pending',
+        escalationLevel: 'none',
         userName:
           session?.user?.role === 'agent'
             ? 'User'

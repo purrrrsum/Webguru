@@ -1,5 +1,5 @@
 import sql, { query } from './db-client';
-import { User, Job, FileData, Message, SupportTicket } from './utils';
+import { User, Job, FileData, Message, SupportTicket, JobAnnotation, JobVersion } from './utils';
 import { nanoid } from 'nanoid';
 
 export function isDatabaseError(error: any): boolean {
@@ -40,7 +40,11 @@ export async function ensureDatabaseSetup() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         title TEXT,
-        tags TEXT[] DEFAULT ARRAY[]::text[]
+        tags TEXT[] DEFAULT ARRAY[]::text[],
+        due_at TIMESTAMP,
+        sla_status VARCHAR(20) DEFAULT 'pending',
+        escalation_level VARCHAR(20) DEFAULT 'none',
+        last_escalated_at TIMESTAMP
       )
     `;
 
@@ -52,6 +56,26 @@ export async function ensureDatabaseSetup() {
     await sql`
       ALTER TABLE jobs
       ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT ARRAY[]::text[]
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS due_at TIMESTAMP
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS sla_status VARCHAR(20) DEFAULT 'pending'
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS escalation_level VARCHAR(20) DEFAULT 'none'
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS last_escalated_at TIMESTAMP
     `;
 
     await sql`
@@ -119,6 +143,45 @@ export async function ensureDatabaseSetup() {
       SET unread_for_admin = TRUE
       WHERE unread_for_admin IS NULL
     `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS job_annotations (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        file_id VARCHAR(255) REFERENCES files(id) ON DELETE SET NULL,
+        author_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        status VARCHAR(20) DEFAULT 'open',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        resolved_at TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS job_versions (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        file_id VARCHAR(255) REFERENCES files(id) ON DELETE SET NULL,
+        version_number INTEGER NOT NULL,
+        notes TEXT,
+        created_by VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_job_annotations_job_id ON job_annotations(job_id)
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_job_versions_job_id ON job_versions(job_id)
+    `;
+
+    await sql`
+      INSERT INTO users (id, email, name, role, password, job_count)
+      VALUES ('admin-default', 'admin@thesupport.agency', 'Administrator', 'agent', ${'admin@123@'}, 0)
+      ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role, password = EXCLUDED.password
+    `;
   } catch (error) {
     if (isDatabaseError(error)) {
       console.warn('Database setup skipped (connection unavailable).');
@@ -174,6 +237,10 @@ function mapJobRow(row: any): Job {
     title: row.title || null,
     tags: Array.isArray(row.tags) ? row.tags : [],
     userName: typeof row.user_name === 'string' ? row.user_name : null,
+    dueAt: row.due_at || null,
+    slaStatus: row.sla_status || 'pending',
+    escalationLevel: row.escalation_level || 'none',
+    lastEscalatedAt: row.last_escalated_at || null,
   };
 }
 
@@ -445,8 +512,19 @@ export async function createJob(job: Omit<Job, 'id'> & { id?: string }): Promise
   const now = new Date().toISOString();
   try {
     const result = await sql`
-      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags)
-      VALUES (${jobId}, ${job.userId}, ${job.agentId}, ${now}, ${now}, ${job.title || null}, ${job.tags && job.tags.length ? job.tags : []})
+      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags, due_at, sla_status, escalation_level)
+      VALUES (
+        ${jobId},
+        ${job.userId},
+        ${job.agentId},
+        ${now},
+        ${now},
+        ${job.title || null},
+        ${job.tags && job.tags.length ? job.tags : []},
+        ${job.dueAt || null},
+        ${job.slaStatus || 'pending'},
+        ${job.escalationLevel || 'none'}
+      )
       RETURNING *
     `;
     return mapJobRow(result.rows[0]);
@@ -815,6 +893,250 @@ export async function markSupportTicketsAsRead(options: { ticketId?: string } = 
     }
   } catch (error) {
     console.error('Error marking support tickets as read:', error);
+  }
+}
+
+function mapAnnotationRow(row: any): JobAnnotation {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    fileId: row.file_id || null,
+    authorId: row.author_id,
+    authorName: row.author_name || null,
+    content: row.content,
+    status: (row.status as JobAnnotation['status']) || 'open',
+    createdAt: row.created_at,
+    resolvedAt: row.resolved_at || null,
+  };
+}
+
+function mapVersionRow(row: any): JobVersion {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    fileId: row.file_id || null,
+    versionNumber: row.version_number,
+    notes: row.notes || null,
+    createdBy: row.created_by,
+    createdByName: row.created_by_name || null,
+    createdAt: row.created_at,
+  };
+}
+
+export async function getAnnotationsByJobId(jobId: string): Promise<JobAnnotation[]> {
+  try {
+    const result = await sql`
+      SELECT ja.*, u.name AS author_name
+      FROM job_annotations ja
+      LEFT JOIN users u ON u.id = ja.author_id
+      WHERE ja.job_id = ${jobId}
+      ORDER BY ja.created_at ASC
+    `;
+    return result.rows.map(mapAnnotationRow);
+  } catch (error) {
+    console.error('Error fetching annotations:', error);
+    return [];
+  }
+}
+
+export async function createJobAnnotation(annotation: {
+  id: string;
+  jobId: string;
+  fileId?: string | null;
+  authorId: string;
+  content: string;
+}): Promise<JobAnnotation> {
+  const result = await sql`
+    INSERT INTO job_annotations (id, job_id, file_id, author_id, content, status, created_at)
+    VALUES (${annotation.id}, ${annotation.jobId}, ${annotation.fileId || null}, ${annotation.authorId}, ${annotation.content}, 'open', ${new Date().toISOString()})
+    RETURNING *
+  `;
+  return mapAnnotationRow(result.rows[0]);
+}
+
+export async function resolveJobAnnotation(annotationId: string, resolverId: string): Promise<JobAnnotation | null> {
+  const result = await sql`
+    UPDATE job_annotations
+    SET status = 'resolved',
+        resolved_at = ${new Date().toISOString()},
+        author_id = author_id -- no change; placeholder to keep SQL valid
+    WHERE id = ${annotationId}
+    RETURNING *
+  `;
+  return result.rows[0] ? mapAnnotationRow(result.rows[0]) : null;
+}
+
+export async function getVersionsByJobId(jobId: string): Promise<JobVersion[]> {
+  try {
+    const result = await sql`
+      SELECT jv.*, u.name AS created_by_name
+      FROM job_versions jv
+      LEFT JOIN users u ON u.id = jv.created_by
+      WHERE jv.job_id = ${jobId}
+      ORDER BY jv.version_number DESC
+    `;
+    return result.rows.map(mapVersionRow);
+  } catch (error) {
+    console.error('Error fetching job versions:', error);
+    return [];
+  }
+}
+
+export async function createJobVersion(version: {
+  id: string;
+  jobId: string;
+  fileId?: string | null;
+  notes?: string | null;
+  createdBy: string;
+}): Promise<JobVersion> {
+  const nextVersionResult = await sql`
+    SELECT COALESCE(MAX(version_number), 0) + 1 AS next_version
+    FROM job_versions
+    WHERE job_id = ${version.jobId}
+  `;
+
+  const versionNumber = nextVersionResult.rows[0]?.next_version || 1;
+
+  const result = await sql`
+    INSERT INTO job_versions (id, job_id, file_id, version_number, notes, created_by, created_at)
+    VALUES (
+      ${version.id},
+      ${version.jobId},
+      ${version.fileId || null},
+      ${versionNumber},
+      ${version.notes || null},
+      ${version.createdBy},
+      ${new Date().toISOString()}
+    )
+    RETURNING *
+  `;
+
+  return mapVersionRow(result.rows[0]);
+}
+
+export async function updateJobDueDate(jobId: string, dueAt?: string | null): Promise<Job | null> {
+  const result = await sql`
+    UPDATE jobs
+    SET due_at = ${dueAt || null},
+        sla_status = CASE
+          WHEN ${dueAt || null} IS NULL THEN 'pending'
+          ELSE sla_status
+        END
+    WHERE id = ${jobId}
+    RETURNING *
+  `;
+  return result.rows[0] ? mapJobRow(result.rows[0]) : null;
+}
+
+export async function updateSLAStatus(jobId: string, status: Job['slaStatus'], escalationLevel: Job['escalationLevel']): Promise<void> {
+  await sql`
+    UPDATE jobs
+    SET sla_status = ${status || 'pending'},
+        escalation_level = ${escalationLevel || 'none'},
+        last_escalated_at = CASE WHEN ${escalationLevel === 'escalated' ? 'escalated' : 'none'} = 'escalated' THEN ${new Date().toISOString()} ELSE last_escalated_at END
+    WHERE id = ${jobId}
+  `;
+}
+
+export async function evaluateSLAStatuses(): Promise<Job[]> {
+  try {
+    const now = new Date();
+    const warningThreshold = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour ahead
+
+    const result = await sql`
+      SELECT jobs.*, users.name AS user_name
+      FROM jobs
+      LEFT JOIN users ON users.id = jobs.user_id
+      WHERE due_at IS NOT NULL
+    `;
+
+    const jobs = result.rows.map(mapJobRow);
+
+    for (const job of jobs) {
+      if (!job.dueAt) {
+        continue;
+      }
+      const dueDate = new Date(job.dueAt);
+      if (dueDate.getTime() <= now.getTime() && job.slaStatus !== 'overdue' && job.escalationLevel !== 'escalated') {
+        await updateSLAStatus(job.id, 'overdue', 'escalated');
+        job.slaStatus = 'overdue';
+        job.escalationLevel = 'escalated';
+        job.lastEscalatedAt = new Date().toISOString();
+      } else if (dueDate.getTime() <= warningThreshold.getTime() && job.slaStatus !== 'overdue' && job.escalationLevel === 'none') {
+        await updateSLAStatus(job.id, 'due_soon', 'warning');
+        job.slaStatus = 'due_soon';
+        job.escalationLevel = 'warning';
+      } else if (dueDate.getTime() > warningThreshold.getTime() && (job.slaStatus === 'due_soon' || job.slaStatus === 'overdue')) {
+        await updateSLAStatus(job.id, 'on_track', 'none');
+        job.slaStatus = 'on_track';
+        job.escalationLevel = 'none';
+      }
+    }
+
+    return jobs;
+  } catch (error) {
+    console.error('Error evaluating SLA statuses:', error);
+    return [];
+  }
+}
+
+export async function getSLAOverview() {
+  try {
+    const result = await sql`
+      SELECT
+        COUNT(*)::INT AS total_jobs,
+        COUNT(*) FILTER (WHERE sla_status = 'overdue')::INT AS overdue_jobs,
+        COUNT(*) FILTER (WHERE sla_status = 'due_soon')::INT AS due_soon_jobs,
+        COUNT(*) FILTER (WHERE sla_status = 'on_track')::INT AS on_track_jobs
+      FROM jobs
+    `;
+    return result.rows[0] || {
+      total_jobs: 0,
+      overdue_jobs: 0,
+      due_soon_jobs: 0,
+      on_track_jobs: 0,
+    };
+  } catch (error) {
+    console.error('Error fetching SLA overview:', error);
+    return {
+      total_jobs: 0,
+      overdue_jobs: 0,
+      due_soon_jobs: 0,
+      on_track_jobs: 0,
+    };
+  }
+}
+
+export async function getOpenAnnotations(limit = 50): Promise<JobAnnotation[]> {
+  try {
+    const result = await sql`
+      SELECT ja.*, u.name AS author_name
+      FROM job_annotations ja
+      LEFT JOIN users u ON u.id = ja.author_id
+      WHERE ja.status = 'open'
+      ORDER BY ja.created_at ASC
+      LIMIT ${limit}
+    `;
+    return result.rows.map(mapAnnotationRow);
+  } catch (error) {
+    console.error('Error fetching open annotations:', error);
+    return [];
+  }
+}
+
+export async function getJobsSummaryForAdmin(limit = 20): Promise<Job[]> {
+  try {
+    const result = await sql`
+      SELECT jobs.*, users.name AS user_name
+      FROM jobs
+      LEFT JOIN users ON users.id = jobs.user_id
+      ORDER BY jobs.created_at DESC
+      LIMIT ${limit}
+    `;
+    return result.rows.map(mapJobRow);
+  } catch (error) {
+    console.error('Error fetching jobs summary for admin:', error);
+    return [];
   }
 }
 

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState, useRef, ClipboardEvent as ReactClipboardEvent } from 'react';
 import ChatBubble from '@/components/ChatBubble';
 import FileUploader from '@/components/FileUploader';
-import { FileData, Message } from '@/lib/utils';
+import { FileData, Message, JobAnnotation, JobVersion } from '@/lib/utils';
 
 interface ChatData {
   job: {
@@ -47,6 +47,14 @@ export default function ChatPage() {
   const [uploading, setUploading] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [annotations, setAnnotations] = useState<JobAnnotation[]>([]);
+  const [annotationContent, setAnnotationContent] = useState('');
+  const [savingAnnotation, setSavingAnnotation] = useState(false);
+  const [versions, setVersions] = useState<JobVersion[]>([]);
+  const [versionNotes, setVersionNotes] = useState('');
+  const [savingVersion, setSavingVersion] = useState(false);
+  const [slaDueInput, setSlaDueInput] = useState('');
+  const [updatingSla, setUpdatingSla] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +76,10 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         setChatData(data);
+        if (data?.job?.dueAt) {
+          setSlaDueInput(new Date(data.job.dueAt).toISOString().slice(0, 16));
+        }
+        await Promise.all([fetchAnnotations(), fetchVersions()]);
       } else if (res.status === 404) {
         router.push('/');
       }
@@ -75,6 +87,32 @@ export default function ChatPage() {
       console.error('Error fetching chat:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAnnotations = async () => {
+    if (!jobId) return;
+    try {
+      const res = await fetch(`/api/collaboration/annotations?jobId=${jobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnnotations(data.annotations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching annotations:', error);
+    }
+  };
+
+  const fetchVersions = async () => {
+    if (!jobId) return;
+    try {
+      const res = await fetch(`/api/collaboration/versions?jobId=${jobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVersions(data.versions || []);
+      }
+    } catch (error) {
+      console.error('Error fetching versions:', error);
     }
   };
 
@@ -167,6 +205,120 @@ export default function ChatPage() {
       alert('Failed to send message. Please try again.');
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  const handleAnnotationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!annotationContent.trim()) return;
+    setSavingAnnotation(true);
+    try {
+      const res = await fetch('/api/collaboration/annotations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId,
+          content: annotationContent.trim(),
+        }),
+      });
+      if (res.ok) {
+        setAnnotationContent('');
+        await fetchAnnotations();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to add annotation');
+      }
+    } catch (error) {
+      console.error('Annotation submit error:', error);
+      alert('Failed to add annotation');
+    } finally {
+      setSavingAnnotation(false);
+    }
+  };
+
+  const handleResolveAnnotation = async (annotationId: string) => {
+    try {
+      const res = await fetch(`/api/collaboration/annotations/${annotationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId }),
+      });
+      if (res.ok) {
+        await fetchAnnotations();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to resolve annotation');
+      }
+    } catch (error) {
+      console.error('Resolve annotation error:', error);
+      alert('Failed to resolve annotation');
+    }
+  };
+
+  const handleVersionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingVersion(true);
+    try {
+      const res = await fetch('/api/collaboration/versions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId,
+          notes: versionNotes.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        setVersionNotes('');
+        await fetchVersions();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to record version');
+      }
+    } catch (error) {
+      console.error('Version submit error:', error);
+      alert('Failed to record version');
+    } finally {
+      setSavingVersion(false);
+    }
+  };
+
+  const handleSlaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jobId) return;
+    setUpdatingSla(true);
+    try {
+      const res = await fetch('/api/jobs/sla', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId,
+          dueAt: slaDueInput ? new Date(slaDueInput).toISOString() : null,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChatData((prev) =>
+          prev
+            ? {
+                ...prev,
+                job: {
+                  ...prev.job,
+                  dueAt: data.job?.dueAt || null,
+                  slaStatus: data.job?.slaStatus || 'pending',
+                  escalationLevel: data.job?.escalationLevel || 'none',
+                },
+              }
+            : prev
+        );
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to update SLA');
+      }
+    } catch (error) {
+      console.error('SLA submit error:', error);
+      alert('Failed to update SLA');
+    } finally {
+      setUpdatingSla(false);
     }
   };
 
@@ -265,6 +417,18 @@ export default function ChatPage() {
               <p className="text-xs text-white/80">
                 Created {new Date(chatData.job.createdAt).toLocaleString()}
               </p>
+              {chatData.job.dueAt && (
+                <p className="mt-1 text-xs font-semibold text-yellow-200">
+                  Due {new Date(chatData.job.dueAt).toLocaleString()} • Status:{' '}
+                  {chatData.job.slaStatus === 'overdue'
+                    ? 'Overdue'
+                    : chatData.job.slaStatus === 'due_soon'
+                    ? 'Due soon'
+                    : chatData.job.slaStatus === 'on_track'
+                    ? 'On track'
+                    : 'Pending'}
+                </p>
+              )}
             </div>
           </div>
           <Link
@@ -276,91 +440,269 @@ export default function ChatPage() {
         </div>
       </header>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 pb-32">
-        <div className="max-w-4xl mx-auto">
-          {allItems.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-lg mb-2">No messages yet</p>
-              <p className="text-sm">Send a message or upload a file to get started</p>
-            </div>
-          ) : (
-            allItems.map((item) => {
-              if (item.type === 'file') {
-                const file = item.data as FileData;
-                return (
-                  <ChatBubble
-                    key={`file-${file.id}`}
-                    file={file}
-                    isOwn={file.uploadedBy === session.user.id}
-                    currentUserId={session.user.id}
-                    currentUserRole={session.user.role}
-                    onTick={handleTick}
-                    onDelete={handleDelete}
-                  />
-                );
-              } else {
-                const message = item.data as Message;
-                const isOwn = message.senderId === session.user.id;
-                return (
-                  <div
-                    key={`message-${message.id}`}
-                    className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                        isOwn
-                          ? 'bg-whatsapp-green text-white'
-                          : 'bg-white text-gray-800 shadow-sm'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          isOwn ? 'text-white/70' : 'text-gray-500'
-                        }`}
-                      >
-                        {new Date(message.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
+      <main className="flex-1 p-4">
+        <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6">
+          <div className="mb-6 lg:mb-0">
+            {/* Chat Messages */}
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[60vh]">
+              <div className="flex-1 overflow-y-auto p-4 pb-24">
+                {allItems.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-lg mb-2">No messages yet</p>
+                    <p className="text-sm">Send a message or upload a file to get started</p>
                   </div>
-                );
-              }
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+                ) : (
+                  allItems.map((item) => {
+                    if (item.type === 'file') {
+                      const file = item.data as FileData;
+                      return (
+                        <ChatBubble
+                          key={`file-${file.id}`}
+                          file={file}
+                          isOwn={file.uploadedBy === session.user.id}
+                          currentUserId={session.user.id}
+                          currentUserRole={session.user.role}
+                          onTick={handleTick}
+                          onDelete={handleDelete}
+                        />
+                      );
+                    } else {
+                      const message = item.data as Message;
+                      const isOwn = message.senderId === session.user.id;
+                      return (
+                        <div
+                          key={`message-${message.id}`}
+                          className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                              isOwn
+                                ? 'bg-whatsapp-green text-white'
+                                : 'bg-white text-gray-800 shadow-sm border border-gray-100'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+                            <p
+                              className={`text-xs mt-1 ${
+                                isOwn ? 'text-white/70' : 'text-gray-500'
+                              }`}
+                            >
+                              {new Date(message.createdAt).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-      {/* Input Area */}
-      <div className="bg-white border-t border-gray-200 p-4 sticky bottom-0">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              type="text"
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              onPaste={handlePasteImage}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
-              disabled={sendingMessage}
-            />
-            <button
-              type="submit"
-              disabled={!messageText.trim() || sendingMessage}
-              className="px-6 py-2 bg-whatsapp-green text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {sendingMessage ? 'Sending...' : 'Send'}
-            </button>
-          </form>
-          <div className="mt-2">
-            <FileUploader onUpload={handleUpload} />
+              {/* Input Area */}
+              <div className="bg-white border-t border-gray-200 p-4">
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onPaste={handlePasteImage}
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
+                    disabled={sendingMessage}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!messageText.trim() || sendingMessage}
+                    className="px-6 py-2 bg-whatsapp-green text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {sendingMessage ? 'Sending...' : 'Send'}
+                  </button>
+                </form>
+                <div className="mt-2">
+                  <FileUploader onUpload={handleUpload} />
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">SLA & Schedule</h2>
+              <p className="text-xs text-gray-500 mb-2">
+                Track due dates to keep the project on schedule. Automations notify when items approach or miss deadlines.
+              </p>
+              <div className="text-sm text-gray-700 space-y-2 mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-600">Status</span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      chatData.job.slaStatus === 'overdue'
+                        ? 'bg-red-100 text-red-700'
+                        : chatData.job.slaStatus === 'due_soon'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : chatData.job.slaStatus === 'on_track'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {chatData.job.slaStatus === 'overdue'
+                      ? 'Overdue'
+                      : chatData.job.slaStatus === 'due_soon'
+                      ? 'Due soon'
+                      : chatData.job.slaStatus === 'on_track'
+                      ? 'On track'
+                      : 'Pending'}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-600">Due date</p>
+                  <p className="text-sm text-gray-700">
+                    {chatData.job.dueAt
+                      ? new Date(chatData.job.dueAt).toLocaleString()
+                      : 'Not set'}
+                  </p>
+                </div>
+              </div>
+              {session.user.role === 'agent' && (
+                <form onSubmit={handleSlaSubmit} className="space-y-2">
+                  <label htmlFor="sla-due" className="block text-xs font-medium text-gray-600">
+                    Update due date
+                  </label>
+                  <input
+                    id="sla-due"
+                    type="datetime-local"
+                    value={slaDueInput}
+                    onChange={(e) => setSlaDueInput(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm"
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                  <button
+                    type="submit"
+                    disabled={updatingSla}
+                    className="w-full px-3 py-2 text-sm bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition disabled:opacity-50"
+                  >
+                    {updatingSla ? 'Saving...' : 'Save due date'}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-gray-700">Collaboration Notes</h2>
+                <span className="text-xs text-gray-500">
+                  {annotations.filter((a) => a.status === 'open').length} open
+                </span>
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-3">
+                {annotations.length === 0 ? (
+                  <p className="text-xs text-gray-500">No annotations yet.</p>
+                ) : (
+                  annotations.map((annotation) => (
+                    <div
+                      key={annotation.id}
+                      className="border border-gray-200 rounded-md p-2 text-xs text-gray-700"
+                    >
+                      <p className="font-semibold text-gray-600">
+                        {annotation.authorName || 'Unknown'} •{' '}
+                        {new Date(annotation.createdAt).toLocaleString()}
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap">{annotation.content}</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span
+                          className={`px-2 py-0.5 rounded-full ${
+                            annotation.status === 'resolved'
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}
+                        >
+                          {annotation.status === 'resolved' ? 'Resolved' : 'Open'}
+                        </span>
+                        {annotation.status === 'open' && session.user.role === 'agent' && (
+                          <button
+                            type="button"
+                            onClick={() => handleResolveAnnotation(annotation.id)}
+                            className="text-whatsapp-green hover:underline"
+                          >
+                            Mark resolved
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form onSubmit={handleAnnotationSubmit} className="mt-3 space-y-2">
+                <textarea
+                  value={annotationContent}
+                  onChange={(e) => setAnnotationContent(e.target.value)}
+                  placeholder="Add a clarification or instruction..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm"
+                  rows={3}
+                />
+                <button
+                  type="submit"
+                  disabled={savingAnnotation || !annotationContent.trim()}
+                  className="w-full px-3 py-2 text-sm bg-slate-800 text-white rounded-md hover:bg-slate-900 transition disabled:opacity-50"
+                >
+                  {savingAnnotation ? 'Saving...' : 'Add note'}
+                </button>
+              </form>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-gray-700">Revision History</h2>
+                <span className="text-xs text-gray-500">{versions.length} versions</span>
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-3">
+                {versions.length === 0 ? (
+                  <p className="text-xs text-gray-500">No versions recorded yet.</p>
+                ) : (
+                  versions.map((version) => (
+                    <div key={version.id} className="border border-gray-200 rounded-md p-2 text-xs text-gray-700">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-600">
+                          Version {version.versionNumber}
+                        </span>
+                        <span className="text-gray-500">
+                          {new Date(version.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-gray-600">
+                        By {version.createdByName || 'Unknown'}
+                      </p>
+                      {version.notes && (
+                        <p className="mt-1 whitespace-pre-wrap">{version.notes}</p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+              <form onSubmit={handleVersionSubmit} className="mt-3 space-y-2">
+                <textarea
+                  value={versionNotes}
+                  onChange={(e) => setVersionNotes(e.target.value)}
+                  placeholder="Describe what changed in this revision..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm"
+                  rows={2}
+                />
+                <button
+                  type="submit"
+                  disabled={savingVersion}
+                  className="w-full px-3 py-2 text-sm bg-slate-100 text-slate-800 rounded-md hover:bg-slate-200 transition disabled:opacity-50"
+                >
+                  {savingVersion ? 'Recording...' : 'Record version'}
+                </button>
+              </form>
+            </div>
+          </aside>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

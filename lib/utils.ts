@@ -22,6 +22,10 @@ export interface Job {
   title?: string | null;
   tags?: string[];
   userName?: string | null;
+  dueAt?: string | null;
+  slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
+  escalationLevel?: 'none' | 'warning' | 'escalated';
+  lastEscalatedAt?: string | null;
 }
 
 export interface FileData {
@@ -96,5 +100,28 @@ export interface SupportTicket {
   createdAt: string;
   updatedAt: string;
   unreadForAdmin: boolean;
+}
+
+export interface JobAnnotation {
+  id: string;
+  jobId: string;
+  fileId?: string | null;
+  authorId: string;
+  authorName?: string | null;
+  content: string;
+  status: 'open' | 'resolved';
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface JobVersion {
+  id: string;
+  jobId: string;
+  fileId?: string | null;
+  versionNumber: number;
+  notes?: string | null;
+  createdBy: string;
+  createdByName?: string | null;
+  createdAt: string;
 }
 
