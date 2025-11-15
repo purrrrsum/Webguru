@@ -15,6 +15,11 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
     company: '',
     address: '',
     phone: '',
+    upiId: '',
+    bankAccountName: '',
+    bankAccountNumber: '',
+    bankIfsc: '',
+    bankName: '',
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -27,6 +32,11 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
         company: initialData.company || '',
         address: initialData.address || '',
         phone: initialData.phone || '',
+        upiId: initialData.upiId || '',
+        bankAccountName: initialData.bankAccountName || '',
+        bankAccountNumber: initialData.bankAccountNumber || '',
+        bankIfsc: initialData.bankIfsc || '',
+        bankName: initialData.bankName || '',
       });
     }
   }, [initialData]);
@@ -130,6 +140,87 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
         />
       </div>
+
+      {initialData?.role === 'agent' && (
+        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4">
+          <p className="text-sm font-semibold text-gray-700">Payment details (visible only to admins)</p>
+          <p className="text-xs text-gray-500 mb-3">
+            Provide payout information so the finance team can release your earnings.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="upiId" className="block text-sm font-medium text-gray-700 mb-1">
+                UPI ID
+              </label>
+              <input
+                type="text"
+                id="upiId"
+                name="upiId"
+                value={formData.upiId}
+                onChange={handleChange}
+                placeholder="e.g. thesupport@upi"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+              />
+            </div>
+            <div>
+              <label htmlFor="bankAccountName" className="block text-sm font-medium text-gray-700 mb-1">
+                Account holder name
+              </label>
+              <input
+                type="text"
+                id="bankAccountName"
+                name="bankAccountName"
+                value={formData.bankAccountName}
+                onChange={handleChange}
+                placeholder="Name as per bank records"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+              />
+            </div>
+            <div>
+              <label htmlFor="bankAccountNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                Account number
+              </label>
+              <input
+                type="text"
+                id="bankAccountNumber"
+                name="bankAccountNumber"
+                value={formData.bankAccountNumber}
+                onChange={handleChange}
+                placeholder="Enter account number"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+              />
+            </div>
+            <div>
+              <label htmlFor="bankIfsc" className="block text-sm font-medium text-gray-700 mb-1">
+                IFSC code
+              </label>
+              <input
+                type="text"
+                id="bankIfsc"
+                name="bankIfsc"
+                value={formData.bankIfsc}
+                onChange={handleChange}
+                placeholder="e.g. HDFC0001234"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md uppercase focus:ring-whatsapp-green focus:border-whatsapp-green"
+              />
+            </div>
+            <div>
+              <label htmlFor="bankName" className="block text-sm font-medium text-gray-700 mb-1">
+                Bank & branch
+              </label>
+              <input
+                type="text"
+                id="bankName"
+                name="bankName"
+                value={formData.bankName}
+                onChange={handleChange}
+                placeholder="e.g. HDFC Bank, MG Road"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {message && (
         <div

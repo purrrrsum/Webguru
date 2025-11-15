@@ -11,6 +11,11 @@ export interface User {
   jobCount: number;
   role: 'user' | 'agent';
   password?: string;
+  upiId?: string;
+  bankAccountName?: string;
+  bankAccountNumber?: string;
+  bankIfsc?: string;
+  bankName?: string;
 }
 
 export interface Job {

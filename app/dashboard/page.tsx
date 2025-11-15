@@ -167,6 +167,54 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
+        {session.user.role === 'user' && (
+          <div className="mb-6 rounded-lg border border-whatsapp-green/30 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-800">Pay for your proofreading jobs</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Scan the QR or use the UPI details below. Share the payment reference in the chat so our finance team can match it quickly.
+            </p>
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="sm:w-48">
+                <a
+                  href="https://i.imgur.com/TqbKx7b.png"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block overflow-hidden rounded-lg border border-gray-200"
+                >
+                  <img
+                    src="https://i.imgur.com/TqbKx7b.png"
+                    alt="QR code for thesupport.agency payment"
+                    className="w-full"
+                  />
+                </a>
+                <p className="mt-2 text-xs text-gray-500 text-center">
+                  Tap to enlarge QR in a new tab.
+                </p>
+              </div>
+              <div className="flex-1 space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Phone (UPI linked)</p>
+                  <p className="text-lg font-semibold text-gray-900">+91 90000 12345</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">UPI ID</p>
+                  <p className="text-lg font-semibold text-gray-900">thesupport@upi</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Need help?</p>
+                  <p className="text-sm text-gray-600">
+                    Share payment slips in the chat or email{' '}
+                    <a href="mailto:billing@thesupport.agency" className="text-whatsapp-green hover:underline">
+                      billing@thesupport.agency
+                    </a>
+                    .
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow-md p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-800">

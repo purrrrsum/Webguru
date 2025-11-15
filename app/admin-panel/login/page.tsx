@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
       if (response.ok) {
         // Store admin session in localStorage (or use NextAuth for admin)
         localStorage.setItem('admin_session', JSON.stringify(data.admin));
-        router.push('/admin-panel/dashboard');
+        router.push('/admin-panel');
       } else {
         setError(data.error || 'Invalid credentials');
       }

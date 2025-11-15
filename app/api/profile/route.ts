@@ -38,6 +38,11 @@ export async function GET() {
         phone: '',
         jobCount: 0,
         role: session.user.role,
+        upiId: '',
+        bankAccountName: '',
+        bankAccountNumber: '',
+        bankIfsc: '',
+        bankName: '',
         warning: 'Database is not configured. Showing profile from session only.',
       });
     }
@@ -52,7 +57,18 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, company, address, email, phone } = await request.json();
+    const {
+      name,
+      company,
+      address,
+      email,
+      phone,
+      upiId,
+      bankAccountName,
+      bankAccountNumber,
+      bankIfsc,
+      bankName,
+    } = await request.json();
 
     const user = await updateUser(session.user.id, {
       name,
@@ -60,6 +76,11 @@ export async function PUT(request: NextRequest) {
       address,
       email,
       phone,
+      upiId,
+      bankAccountName,
+      bankAccountNumber,
+      bankIfsc,
+      bankName,
     });
 
     if (!user) {
@@ -87,6 +108,11 @@ export async function PUT(request: NextRequest) {
         phone: body.phone || '',
         jobCount: 0,
         role: session.user.role,
+        upiId: body.upiId || '',
+        bankAccountName: body.bankAccountName || '',
+        bankAccountNumber: body.bankAccountNumber || '',
+        bankIfsc: body.bankIfsc || '',
+        bankName: body.bankName || '',
         warning: 'Database is not configured. Changes are not persisted.',
       });
     }

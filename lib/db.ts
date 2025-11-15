@@ -27,9 +27,39 @@ export async function ensureDatabaseSetup() {
         job_count INTEGER DEFAULT 0,
         role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'agent')),
         password VARCHAR(255),
+        upi_id TEXT,
+        bank_account_name TEXT,
+        bank_account_number TEXT,
+        bank_ifsc TEXT,
+        bank_name TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS upi_id TEXT
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS bank_account_name TEXT
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS bank_account_number TEXT
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS bank_ifsc TEXT
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS bank_name TEXT
     `;
 
     await sql`
@@ -224,6 +254,11 @@ function mapUserRow(row: any): User {
     jobCount: row.job_count || 0,
     role: row.role,
     password: row.password,
+    upiId: row.upi_id || '',
+    bankAccountName: row.bank_account_name || '',
+    bankAccountNumber: row.bank_account_number || '',
+    bankIfsc: row.bank_ifsc || '',
+    bankName: row.bank_name || '',
   };
 }
 
@@ -303,12 +338,47 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
         phone: user.phone,
         role: intendedRole,
         password: user.password,
+        upiId: user.upiId,
+        bankAccountName: user.bankAccountName,
+        bankAccountNumber: user.bankAccountNumber,
+        bankIfsc: user.bankIfsc,
+        bankName: user.bankName,
       }) || existing;
     }
 
     const result = await sql`
-      INSERT INTO users (id, email, name, company, address, phone, job_count, role, password)
-      VALUES (${userId}, ${user.email}, ${user.name}, ${user.company || ''}, ${user.address || ''}, ${user.phone || ''}, ${user.jobCount || 0}, ${intendedRole}, ${user.password || null})
+      INSERT INTO users (
+        id,
+        email,
+        name,
+        company,
+        address,
+        phone,
+        job_count,
+        role,
+        password,
+        upi_id,
+        bank_account_name,
+        bank_account_number,
+        bank_ifsc,
+        bank_name
+      )
+      VALUES (
+        ${userId},
+        ${user.email},
+        ${user.name},
+        ${user.company || ''},
+        ${user.address || ''},
+        ${user.phone || ''},
+        ${user.jobCount || 0},
+        ${intendedRole},
+        ${user.password || null},
+        ${user.upiId || null},
+        ${user.bankAccountName || null},
+        ${user.bankAccountNumber || null},
+        ${user.bankIfsc || null},
+        ${user.bankName || null}
+      )
       RETURNING *
     `;
     return mapUserRow(result.rows[0]);
@@ -384,6 +454,26 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
       fields.push('password');
       values.push(updates.password);
     }
+  if (updates.upiId !== undefined) {
+    fields.push('upi_id');
+    values.push(updates.upiId);
+  }
+  if (updates.bankAccountName !== undefined) {
+    fields.push('bank_account_name');
+    values.push(updates.bankAccountName);
+  }
+  if (updates.bankAccountNumber !== undefined) {
+    fields.push('bank_account_number');
+    values.push(updates.bankAccountNumber);
+  }
+  if (updates.bankIfsc !== undefined) {
+    fields.push('bank_ifsc');
+    values.push(updates.bankIfsc);
+  }
+  if (updates.bankName !== undefined) {
+    fields.push('bank_name');
+    values.push(updates.bankName);
+  }
 
     if (fields.length === 0) {
       return await getUserById(id);
