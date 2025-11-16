@@ -18,6 +18,9 @@ interface ChatData {
     title?: string | null;
     tags?: string[];
     userName?: string | null;
+    dueAt?: string | null;
+    slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
+    escalationLevel?: 'none' | 'warning' | 'escalated';
   };
   files: FileData[];
   messages: Message[];
