@@ -11,6 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "package": "node package-for-hosting.js",
+    "railway-setup": "npm run setup-admin-db && ADMIN_USERNAME=\\\"$ADMIN_USERNAME\\\" ADMIN_EMAIL=\\\"$ADMIN_EMAIL\\\" ADMIN_PASSWORD=\\\"$ADMIN_PASSWORD\\\" npm run create-admin-from-env",
+    "railway-start": "npm run railway-setup && next start",
     "create-admin-from-env": "npx tsx scripts/create-admin-from-env.ts",
     "verify-db": "npx tsx scripts/verify-db.ts",
     "init-db": "npx tsx scripts/init-db.ts",
