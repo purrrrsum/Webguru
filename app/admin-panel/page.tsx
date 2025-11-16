@@ -1,3 +1,6 @@
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { adminAuthOptions } from '@/lib/admin-auth';
 import Link from 'next/link';
 import {
   evaluateSLAStatuses,
@@ -6,6 +9,8 @@ import {
   getOpenAnnotations,
 } from '@/lib/db';
 import SlaAutomationButton from '@/components/SlaAutomationButton';
+
+const ADMIN_EMAIL = 'jaffarsadiq1001@gmail.com';
 
 const statusBadgeClasses: Record<string, string> = {
   overdue: 'bg-red-100/20 text-red-300 border border-red-500/40',
@@ -24,6 +29,22 @@ const statusLabel: Record<string, string> = {
 };
 
 export default async function AdminPanelPage() {
+  // Server-side protection: Verify admin access
+  const session = await getServerSession(adminAuthOptions);
+  
+  if (!session?.user) {
+    redirect('/admin-panel/login?error=AccessDenied');
+  }
+
+  const email = session.user.email?.toLowerCase().trim();
+  const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
+  const isAdmin = (session.user as any)?.isAdmin;
+  
+  // STRICT: Only allow jaffarsadiq1001@gmail.com
+  if (!isAdmin || !email || email !== adminEmailLower) {
+    redirect('/admin-panel/login?error=AccessDenied');
+  }
+
   await evaluateSLAStatuses();
   const [slaOverview, jobs, annotations] = await Promise.all([
     getSLAOverview(),

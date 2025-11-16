@@ -25,10 +25,16 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
         router.push('/admin-panel/login');
       }
     } else if (!isLoading && status === 'authenticated') {
-      // Check if user is admin
+      // STRICT: Check if user is admin AND email matches exactly
       const isAdmin = (session?.user as any)?.isAdmin;
-      if (!isAdmin && pathname !== '/admin-panel/login') {
-        router.push('/admin-panel/login?error=AccessDenied');
+      const email = session?.user?.email?.toLowerCase().trim();
+      const adminEmail = 'jaffarsadiq1001@gmail.com'.toLowerCase().trim();
+      
+      // Reject if not admin OR email doesn't match
+      if (!isAdmin || !email || email !== adminEmail) {
+        if (pathname !== '/admin-panel/login') {
+          router.push('/admin-panel/login?error=AccessDenied');
+        }
       }
     }
   }, [status, session, isLoading, pathname, router]);
@@ -54,11 +60,14 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  // Check if user is admin
+  // STRICT: Check if user is admin AND email matches exactly
   const isAdmin = (session?.user as any)?.isAdmin;
+  const email = session?.user?.email?.toLowerCase().trim();
+  const adminEmail = 'jaffarsadiq1001@gmail.com'.toLowerCase().trim();
+  const isAuthorizedAdmin = isAdmin && email === adminEmail;
 
-  // If not authenticated and not on login page, show nothing (redirect will happen)
-  if (!isAdmin) {
+  // If not authorized admin, show nothing (redirect will happen)
+  if (!isAuthorizedAdmin) {
     return null;
   }
 

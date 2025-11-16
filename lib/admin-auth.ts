@@ -31,33 +31,70 @@ export const adminAuthOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Only allow the specific admin email
+      // STRICT: Only allow the specific admin email - reject all others
       if (account?.provider === 'google') {
         const email = user.email?.toLowerCase().trim();
-        if (email !== ADMIN_EMAIL.toLowerCase()) {
+        const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
+        
+        // Strict email check - must match exactly
+        if (!email || email !== adminEmailLower) {
+          console.warn(`Admin login rejected: ${email} is not authorized`);
           return false; // Reject sign-in
         }
-        // Set admin role
+        
+        // Double-check email matches
+        if (email !== adminEmailLower) {
+          return false;
+        }
+        
+        // Set admin role only for authorized email
         (user as any).role = 'admin';
         (user as any).isAdmin = true;
         return true;
       }
-      return false; // Reject all non-Google sign-ins
+      // Reject all non-Google sign-ins
+      return false;
     },
     async jwt({ token, user, account }) {
       if (user) {
+        const email = user.email?.toLowerCase().trim();
+        const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
+        
+        // Verify email on every JWT refresh
+        if (!email || email !== adminEmailLower) {
+          // Clear token if email doesn't match
+          return {};
+        }
+        
         token.id = user.id || user.email || '';
-        token.email = user.email || '';
+        token.email = email;
         token.name = user.name || '';
         token.role = 'admin';
         token.isAdmin = true;
+      } else if (token.email) {
+        // On token refresh, verify email still matches
+        const email = token.email.toLowerCase().trim();
+        const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
+        if (email !== adminEmailLower) {
+          // Clear token if email doesn't match
+          return {};
+        }
       }
       return token;
     },
     async session({ session, token }) {
+      // Verify email matches admin email before creating session
+      const email = token.email?.toLowerCase().trim();
+      const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
+      
+      if (!email || email !== adminEmailLower) {
+        // Return empty session if email doesn't match
+        return session;
+      }
+      
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.email = token.email as string;
+        session.user.email = email;
         session.user.name = token.name as string;
         (session.user as any).role = 'admin';
         (session.user as any).isAdmin = true;
