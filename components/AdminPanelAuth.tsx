@@ -81,13 +81,34 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <h1 className="text-lg font-semibold text-white">thesupport.agency</h1>
           </div>
           <nav className="flex items-center gap-4 text-sm text-slate-300">
-            <Link href="/admin-panel" className="hover:text-white">
+            <Link 
+              href="/admin-panel" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                pathname === '/admin-panel' || pathname === '/admin-panel/'
+                  ? 'bg-slate-800 text-white'
+                  : 'hover:bg-slate-800 hover:text-white'
+              }`}
+            >
               Dashboard
             </Link>
-            <Link href="/dashboard" className="hover:text-white">
-              Agent View
+            <Link 
+              href="/admin-panel/conversations" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                pathname?.startsWith('/admin-panel/conversations')
+                  ? 'bg-slate-800 text-white'
+                  : 'hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              Conversations
             </Link>
-            <Link href="/support" className="hover:text-white">
+            <Link 
+              href="/admin-panel/support" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                pathname === '/admin-panel/support'
+                  ? 'bg-slate-800 text-white'
+                  : 'hover:bg-slate-800 hover:text-white'
+              }`}
+            >
               Support Inbox
             </Link>
             <button

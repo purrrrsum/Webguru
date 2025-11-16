@@ -624,12 +624,21 @@ export async function getJobsByAgentId(agentId: string): Promise<Job[]> {
 export async function getAllJobsWithUsers(): Promise<Job[]> {
   try {
     const result = await sql`
-      SELECT jobs.*, users.name AS user_name
+      SELECT 
+        jobs.*, 
+        u.name AS user_name,
+        a.name AS agent_name,
+        (SELECT COUNT(*) FROM files WHERE files.job_id = jobs.id) AS file_count
       FROM jobs
-      LEFT JOIN users ON users.id = jobs.user_id
+      LEFT JOIN users u ON u.id = jobs.user_id
+      LEFT JOIN users a ON a.id = jobs.agent_id
       ORDER BY jobs.created_at DESC
     `;
-    return result.rows.map(mapJobRow);
+    return result.rows.map((row) => ({
+      ...mapJobRow(row),
+      agentName: row.agent_name || null,
+      fileCount: parseInt(row.file_count || '0', 10),
+    }));
   } catch (error: any) {
     console.error('Error fetching all jobs with users:', error);
     console.error('Error details:', error.message, error.code);

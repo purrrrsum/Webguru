@@ -89,10 +89,10 @@ export default async function AdminPanelPage() {
             <p className="text-sm text-slate-400">Sorted by most recent creation time.</p>
           </div>
           <Link
-            href="/dashboard"
+            href="/admin-panel/conversations"
             className="text-sm text-slate-300 underline-offset-4 hover:underline"
           >
-            View all jobs
+            View all conversations
           </Link>
         </div>
         <div className="mt-4 overflow-hidden rounded-lg border border-slate-800">
@@ -119,7 +119,7 @@ export default async function AdminPanelPage() {
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium text-white">{job.title || job.id}</div>
                       <Link
-                        href={`/chat/${job.id}`}
+                        href={`/admin-panel/conversations/${job.id}`}
                         className="text-xs text-slate-400 hover:text-white"
                       >
                         View conversation
@@ -179,10 +179,10 @@ export default async function AdminPanelPage() {
             <p className="text-sm text-slate-400">Action items waiting for resolution.</p>
           </div>
           <Link
-            href="/support"
+            href="/admin-panel/support"
             className="text-sm text-slate-300 underline-offset-4 hover:underline"
           >
-            Support inbox
+            View all tickets
           </Link>
         </div>
         <div className="mt-4 space-y-3">
@@ -198,7 +198,7 @@ export default async function AdminPanelPage() {
               >
                 <div className="flex items-center justify-between">
                   <Link
-                    href={`/chat/${annotation.jobId}`}
+                    href={`/admin-panel/conversations/${annotation.jobId}`}
                     className="text-sm font-semibold text-white hover:underline"
                   >
                     View job
