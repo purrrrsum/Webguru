@@ -549,13 +549,16 @@ export default function ChatPage() {
                   allItems.map((item) => {
                     if (item.type === 'file') {
                       const file = item.data as FileData;
+                      // Map admin role to agent for chat interface (admins have agent permissions)
+                      const chatRole = session.user.role === 'admin' ? 'agent' : session.user.role;
+                      
                       return (
                         <ChatBubble
                           key={`file-${file.id}`}
                           file={file}
                           isOwn={file.uploadedBy === session.user.id}
                           currentUserId={session.user.id}
-                          currentUserRole={session.user.role}
+                          currentUserRole={chatRole as 'user' | 'agent'}
                           onTick={handleTick}
                           onDelete={handleDelete}
                         />
