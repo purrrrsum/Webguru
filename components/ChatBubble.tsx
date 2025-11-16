@@ -4,6 +4,7 @@ import { FileData } from '@/lib/utils';
 import { useState } from 'react';
 import Image from 'next/image';
 import TickButton from './TickButton';
+import ImageAnnotationEditor from './ImageAnnotationEditor';
 
 interface ChatBubbleProps {
   file: FileData;
@@ -23,6 +24,7 @@ export default function ChatBubble({
   onDelete,
 }: ChatBubbleProps) {
   const [imageError, setImageError] = useState(false);
+  const [showAnnotationEditor, setShowAnnotationEditor] = useState(false);
   const isImage = file.type.startsWith('image/');
   const isVideo = file.type.startsWith('video/');
 
@@ -55,6 +57,34 @@ export default function ChatBubble({
     await onTick(file.id);
   };
 
+  const handleSaveAnnotation = async (annotations: any[], annotatedImageDataUrl?: string) => {
+    try {
+      // Upload annotated image if provided
+      if (annotatedImageDataUrl) {
+        const response = await fetch(annotatedImageDataUrl);
+        const blob = await response.blob();
+        const formData = new FormData();
+        formData.append('file', blob, `annotated_${file.filename}`);
+        formData.append('jobId', file.jobId);
+        formData.append('originalFileId', file.id);
+
+        const uploadRes = await fetch('/api/upload-annotated', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (uploadRes.ok) {
+          setShowAnnotationEditor(false);
+          // Optionally refresh the page or notify parent
+          window.location.reload();
+        }
+      }
+    } catch (error) {
+      console.error('Error saving annotation:', error);
+      throw error;
+    }
+  };
+
   const bothTicked = file.userTick && file.agentTick;
 
   return (
@@ -64,13 +94,13 @@ export default function ChatBubble({
       <div
         className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
           isOwn
-            ? 'bg-whatsapp-green-light rounded-tr-none'
-            : 'bg-white rounded-tl-none'
+            ? 'bg-whatsapp-green rounded-tr-none'
+            : 'bg-gray-700/50 rounded-tl-none'
         } shadow-sm`}
       >
         {/* File Preview */}
         {isImage && !imageError ? (
-          <div className="relative w-full mb-2 rounded overflow-hidden">
+          <div className="relative w-full mb-2 rounded overflow-hidden group">
             <Image
               src={file.url}
               alt={file.filename}
@@ -80,6 +110,13 @@ export default function ChatBubble({
               onError={() => setImageError(true)}
               unoptimized
             />
+            <button
+              onClick={() => setShowAnnotationEditor(true)}
+              className="absolute top-2 right-2 px-3 py-1.5 bg-whatsapp-green text-white rounded-md text-xs font-medium hover:bg-whatsapp-green-dark transition-colors opacity-0 group-hover:opacity-100"
+              title="Edit & Mark"
+            >
+              ✏️ Edit
+            </button>
           </div>
         ) : isVideo ? (
           <div className="mb-2 rounded overflow-hidden">
@@ -92,21 +129,21 @@ export default function ChatBubble({
             </video>
           </div>
         ) : (
-          <div className="mb-2 p-4 bg-whatsapp-gray-light rounded flex items-center gap-3">
+          <div className="mb-2 p-4 bg-gray-800/50 rounded flex items-center gap-3">
             <div className="w-10 h-10 bg-whatsapp-green rounded-full flex items-center justify-center text-white font-bold">
               📄
             </div>
             <div className="flex-1">
-              <p className="font-medium text-sm text-gray-800 truncate">
+              <p className="font-medium text-sm text-gray-200 truncate">
                 {file.filename}
               </p>
-              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+              <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
             </div>
           </div>
         )}
 
         {/* File Info */}
-        <div className="text-xs text-gray-600 mb-2">
+        <div className="text-xs text-gray-300 mb-2">
           <p className="font-medium">{file.filename}</p>
           <p>{formatFileSize(file.size)}</p>
         </div>
@@ -139,6 +176,16 @@ export default function ChatBubble({
           })}
         </div>
       </div>
+
+      {/* Annotation Editor Modal */}
+      {showAnnotationEditor && isImage && (
+        <ImageAnnotationEditor
+          imageUrl={file.url}
+          imageId={file.id}
+          onSave={handleSaveAnnotation}
+          onClose={() => setShowAnnotationEditor(false)}
+        />
+      )}
     </div>
   );
 }

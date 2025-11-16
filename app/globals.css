@@ -3,8 +3,47 @@
 @tailwind utilities;
 
 body {
-  background-color: #ece5dd;
+  background: linear-gradient(180deg, #0a1628 0%, #1a2332 100%);
+  background-attachment: fixed;
   min-height: 100vh;
+}
+
+/* Telegram-style background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.03) 2px,
+      rgba(255, 255, 255, 0.03) 4px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Telegram-style chat background */
+.telegram-bg {
+  background: linear-gradient(180deg, #0a1628 0%, #1a2332 100%);
+  background-attachment: fixed;
+}
+
+.telegram-card {
+  background: rgba(30, 40, 55, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.telegram-header {
+  background: rgba(20, 30, 45, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @keyframes fade-in {

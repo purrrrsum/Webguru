@@ -63,6 +63,16 @@ export async function ensureDatabaseSetup() {
     `;
 
     await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS is_online BOOLEAN DEFAULT FALSE
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS is_ready BOOLEAN DEFAULT FALSE
+    `;
+
+    await sql`
       CREATE TABLE IF NOT EXISTS jobs (
         id VARCHAR(255) PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -106,6 +116,29 @@ export async function ensureDatabaseSetup() {
     await sql`
       ALTER TABLE jobs
       ADD COLUMN IF NOT EXISTS last_escalated_at TIMESTAMP
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS job_number INTEGER
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS previous_agent_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('normal', 'high', 'urgent'))
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_jobs_job_number ON jobs(job_number)
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_users_is_ready ON users(is_ready) WHERE role = 'agent'
     `;
 
     await sql`
@@ -259,6 +292,8 @@ function mapUserRow(row: any): User {
     bankAccountNumber: row.bank_account_number || '',
     bankIfsc: row.bank_ifsc || '',
     bankName: row.bank_name || '',
+    isOnline: row.is_online || false,
+    isReady: row.is_ready || false,
   };
 }
 
@@ -276,6 +311,9 @@ function mapJobRow(row: any): Job {
     slaStatus: row.sla_status || 'pending',
     escalationLevel: row.escalation_level || 'none',
     lastEscalatedAt: row.last_escalated_at || null,
+    jobNumber: row.job_number || null,
+    previousAgentId: row.previous_agent_id || null,
+    priority: row.priority || 'normal',
   };
 }
 
@@ -475,6 +513,34 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
     values.push(updates.bankName);
   }
 
+  if (updates.isOnline !== undefined) {
+    fields.push('is_online');
+    values.push(updates.isOnline);
+  }
+
+  if (updates.isReady !== undefined) {
+    fields.push('is_ready');
+    values.push(updates.isReady);
+  }
+
+  // If agent goes offline or not ready, check and reassign their jobs
+  if ((updates.isOnline === false || updates.isReady === false) && fields.length > 0) {
+    const user = await getUserById(id);
+    if (user?.role === 'agent') {
+      // Get final state after update
+      const finalIsOnline = updates.isOnline !== undefined ? updates.isOnline : user.isOnline;
+      const finalIsReady = updates.isReady !== undefined ? updates.isReady : user.isReady;
+      
+      // If agent is going offline or not ready, reassign jobs
+      if (finalIsOnline === false || finalIsReady === false) {
+        // Reassign jobs in background (don't wait)
+        checkAndReassignJobsForOfflineAgent(id).catch(err => 
+          console.error('Error reassigning jobs:', err)
+        );
+      }
+    }
+  }
+
     if (fields.length === 0) {
       return await getUserById(id);
     }
@@ -571,49 +637,159 @@ export async function getAllJobsWithUsers(): Promise<Job[]> {
   }
 }
 
+// Get available agents (online and ready)
+export async function getAvailableAgents(): Promise<User[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM users 
+      WHERE role = 'agent' AND is_online = TRUE AND is_ready = TRUE
+      ORDER BY created_at ASC
+    `;
+    return result.rows.map(mapUserRow);
+  } catch (error) {
+    console.error('Error fetching available agents:', error);
+    return [];
+  }
+}
+
+// Update agent availability
+export async function updateAgentAvailability(agentId: string, isOnline: boolean, isReady: boolean): Promise<User | null> {
+  try {
+    const result = await sql`
+      UPDATE users 
+      SET is_online = ${isOnline}, is_ready = ${isReady}, updated_at = NOW()
+      WHERE id = ${agentId} AND role = 'agent'
+      RETURNING *
+    `;
+    return result.rows[0] ? mapUserRow(result.rows[0]) : null;
+  } catch (error) {
+    console.error('Error updating agent availability:', error);
+    return null;
+  }
+}
+
+// Reassign job to available agent when current agent goes offline
+export async function reassignJobToAvailableAgent(jobId: string, previousAgentId: string): Promise<Job | null> {
+  try {
+    // Get available agents (excluding the previous one)
+    const availableAgents = await getAvailableAgents();
+    const newAgent = availableAgents.find(a => a.id !== previousAgentId) || availableAgents[0];
+    
+    if (!newAgent) {
+      console.warn('No available agents to reassign job', jobId);
+      return null;
+    }
+
+    // Update job with new agent and set priority to high
+    const result = await sql`
+      UPDATE jobs 
+      SET agent_id = ${newAgent.id},
+          previous_agent_id = ${previousAgentId},
+          priority = 'high',
+          updated_at = NOW()
+      WHERE id = ${jobId}
+      RETURNING *
+    `;
+    
+    return result.rows[0] ? mapJobRow(result.rows[0]) : null;
+  } catch (error) {
+    console.error('Error reassigning job:', error);
+    return null;
+  }
+}
+
+// Check and reassign jobs when agent goes offline
+export async function checkAndReassignJobsForOfflineAgent(agentId: string): Promise<number> {
+  try {
+    const jobs = await getJobsByAgentId(agentId);
+    let reassignedCount = 0;
+    
+    for (const job of jobs) {
+      // Check if there are unread messages from user (user is waiting for response)
+      const messages = await getMessagesByJobId(job.id);
+      const hasUnreadUserMessages = messages.some(m => 
+        m.senderId === job.userId && !m.readByAgent
+      );
+      
+      if (hasUnreadUserMessages) {
+        const reassigned = await reassignJobToAvailableAgent(job.id, agentId);
+        if (reassigned) {
+          reassignedCount++;
+        }
+      }
+    }
+    
+    return reassignedCount;
+  } catch (error) {
+    console.error('Error checking and reassigning jobs:', error);
+    return 0;
+  }
+}
+
 export async function createJob(job: Omit<Job, 'id'> & { id?: string }): Promise<Job> {
   let jobId = job.id;
+  let jobNumber = job.jobNumber;
+  
+  // Generate sequential job number if not provided
+  if (!jobNumber) {
+    try {
+      const result = await sql`
+        SELECT COALESCE(MAX(job_number), 0) + 1 AS next_number FROM jobs
+      `;
+      jobNumber = result.rows[0]?.next_number || 1;
+    } catch (error) {
+      console.warn('Failed to get next job number:', error);
+      jobNumber = 1;
+    }
+  }
   
   // Generate sequential job ID if not provided
   if (!jobId) {
-    try {
-      // Get the highest job number
-      const result = await sql`
-        SELECT id FROM jobs 
-        WHERE id LIKE 'job%' 
-        ORDER BY CAST(SUBSTRING(id FROM 4) AS INTEGER) DESC 
-        LIMIT 1
-      `;
-      
-      if (result.rows.length > 0) {
-        const lastId = result.rows[0].id;
-        const lastNumber = parseInt(lastId.replace('job', '')) || 0;
-        jobId = `job${String(lastNumber + 1).padStart(6, '0')}`;
+    jobId = `job${String(jobNumber).padStart(6, '0')}`;
+  }
+  
+  // If no agent specified, assign to available agent
+  let agentId = job.agentId;
+  if (!agentId) {
+    const availableAgents = await getAvailableAgents();
+    if (availableAgents.length > 0) {
+      // Assign to agent with least jobs
+      const agentJobCounts = await Promise.all(
+        availableAgents.map(async (agent) => {
+          const jobs = await getJobsByAgentId(agent.id);
+          return { agent, count: jobs.length };
+        })
+      );
+      agentJobCounts.sort((a, b) => a.count - b.count);
+      agentId = agentJobCounts[0].agent.id;
+    } else {
+      // Fallback to first agent if none available
+      const allAgents = await sql`SELECT * FROM users WHERE role = 'agent' LIMIT 1`;
+      if (allAgents.rows.length > 0) {
+        agentId = allAgents.rows[0].id;
       } else {
-        jobId = 'job000001';
+        throw new Error('No agents available');
       }
-    } catch (error) {
-      // Fallback to timestamp if sequential fails
-      console.warn('Sequential ID generation failed, using timestamp:', error);
-      jobId = `job${Date.now()}`;
     }
   }
   
   const now = new Date().toISOString();
   try {
     const result = await sql`
-      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags, due_at, sla_status, escalation_level)
+      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags, due_at, sla_status, escalation_level, job_number, priority)
       VALUES (
         ${jobId},
         ${job.userId},
-        ${job.agentId},
+        ${agentId},
         ${now},
         ${now},
         ${job.title || null},
         ${job.tags && job.tags.length ? job.tags : []},
         ${job.dueAt || null},
         ${job.slaStatus || 'pending'},
-        ${job.escalationLevel || 'none'}
+        ${job.escalationLevel || 'none'},
+        ${jobNumber},
+        ${job.priority || 'normal'}
       )
       RETURNING *
     `;
@@ -634,9 +810,32 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<Job 
       values.push(updates.updatedAt);
     }
 
+    if (updates.jobNumber !== undefined) {
+      updateFields.push('job_number');
+      values.push(updates.jobNumber);
+    }
+
+    if (updates.title !== undefined) {
+      updateFields.push('title');
+      values.push(updates.title);
+    }
+
+    if (updates.agentId !== undefined) {
+      updateFields.push('agent_id');
+      values.push(updates.agentId);
+    }
+
+    if (updates.priority !== undefined) {
+      updateFields.push('priority');
+      values.push(updates.priority);
+    }
+
     if (updateFields.length === 0) {
       return await getJobById(id);
     }
+
+    updateFields.push('updated_at');
+    values.push(new Date().toISOString());
 
     const setClause = updateFields.map((field, index) => 
       `${field} = $${index + 2}`

@@ -70,7 +70,7 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
           Name
         </label>
         <input
@@ -80,12 +80,12 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+          className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
           Email
         </label>
         <input
@@ -95,12 +95,12 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+          className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
         />
       </div>
 
       <div>
-        <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="company" className="block text-sm font-medium text-gray-300 mb-1">
           Company
         </label>
         <input
@@ -109,12 +109,12 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           name="company"
           value={formData.company}
           onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+          className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
         />
       </div>
 
       <div>
-        <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="address" className="block text-sm font-medium text-gray-300 mb-1">
           Address
         </label>
         <textarea
@@ -123,12 +123,12 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           value={formData.address}
           onChange={handleChange}
           rows={3}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+          className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
         />
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-1">
           Phone
         </label>
         <input
@@ -137,19 +137,19 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+          className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
         />
       </div>
 
       {initialData?.role === 'agent' && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4">
-          <p className="text-sm font-semibold text-gray-700">Payment details (visible only to admins)</p>
-          <p className="text-xs text-gray-500 mb-3">
+        <div className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-4">
+          <p className="text-sm font-semibold text-gray-200">Payment details (visible only to admins)</p>
+          <p className="text-xs text-gray-400 mb-3">
             Provide payout information so the finance team can release your earnings.
           </p>
           <div className="space-y-4">
             <div>
-              <label htmlFor="upiId" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="upiId" className="block text-sm font-medium text-gray-300 mb-1">
                 UPI ID
               </label>
               <input
@@ -159,11 +159,11 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                 value={formData.upiId}
                 onChange={handleChange}
                 placeholder="e.g. thesupport@upi"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
               />
             </div>
             <div>
-              <label htmlFor="bankAccountName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="bankAccountName" className="block text-sm font-medium text-gray-300 mb-1">
                 Account holder name
               </label>
               <input
@@ -173,11 +173,11 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                 value={formData.bankAccountName}
                 onChange={handleChange}
                 placeholder="Name as per bank records"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
               />
             </div>
             <div>
-              <label htmlFor="bankAccountNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="bankAccountNumber" className="block text-sm font-medium text-gray-300 mb-1">
                 Account number
               </label>
               <input
@@ -187,11 +187,11 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                 value={formData.bankAccountNumber}
                 onChange={handleChange}
                 placeholder="Enter account number"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
               />
             </div>
             <div>
-              <label htmlFor="bankIfsc" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="bankIfsc" className="block text-sm font-medium text-gray-300 mb-1">
                 IFSC code
               </label>
               <input
@@ -201,11 +201,11 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                 value={formData.bankIfsc}
                 onChange={handleChange}
                 placeholder="e.g. HDFC0001234"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md uppercase focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md uppercase focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
               />
             </div>
             <div>
-              <label htmlFor="bankName" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="bankName" className="block text-sm font-medium text-gray-300 mb-1">
                 Bank & branch
               </label>
               <input
@@ -215,7 +215,7 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
                 value={formData.bankName}
                 onChange={handleChange}
                 placeholder="e.g. HDFC Bank, MG Road"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
               />
             </div>
           </div>
@@ -226,8 +226,8 @@ export default function ProfileForm({ initialData, onSave }: ProfileFormProps) {
         <div
           className={`p-3 rounded-md ${
             message.type === 'success'
-              ? 'bg-green-50 text-green-800'
-              : 'bg-red-50 text-red-800'
+              ? 'bg-green-500/20 text-green-300 border border-green-500/40'
+              : 'bg-red-500/20 text-red-300 border border-red-500/40'
           }`}
         >
           {message.text}

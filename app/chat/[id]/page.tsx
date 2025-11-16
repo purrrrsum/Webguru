@@ -58,6 +58,9 @@ export default function ChatPage() {
   const [savingVersion, setSavingVersion] = useState(false);
   const [slaDueInput, setSlaDueInput] = useState('');
   const [updatingSla, setUpdatingSla] = useState(false);
+  const [editingJobNumber, setEditingJobNumber] = useState(false);
+  const [jobNumberInput, setJobNumberInput] = useState('');
+  const [updatingJobNumber, setUpdatingJobNumber] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,6 +84,9 @@ export default function ChatPage() {
         setChatData(data);
         if (data?.job?.dueAt) {
           setSlaDueInput(new Date(data.job.dueAt).toISOString().slice(0, 16));
+        }
+        if (data?.job?.jobNumber) {
+          setJobNumberInput(String(data.job.jobNumber));
         }
         await Promise.all([fetchAnnotations(), fetchVersions()]);
       } else if (res.status === 404) {
@@ -325,6 +331,48 @@ export default function ChatPage() {
     }
   };
 
+  const handleJobNumberUpdate = async () => {
+    if (!jobId || !jobNumberInput.trim()) return;
+    const newNumber = parseInt(jobNumberInput.trim());
+    if (isNaN(newNumber) || newNumber < 1) {
+      alert('Please enter a valid job number');
+      return;
+    }
+
+    setUpdatingJobNumber(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobNumber: newNumber }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setChatData((prev) =>
+          prev
+            ? {
+                ...prev,
+                job: {
+                  ...prev.job,
+                  jobNumber: data.job?.jobNumber || null,
+                },
+              }
+            : prev
+        );
+        setEditingJobNumber(false);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.error || 'Failed to update job number');
+      }
+    } catch (error) {
+      console.error('Error updating job number:', error);
+      alert('Failed to update job number');
+    } finally {
+      setUpdatingJobNumber(false);
+    }
+  };
+
   const handlePasteImage = async (event: ReactClipboardEvent<HTMLInputElement>) => {
     const items = event.clipboardData?.items;
     if (!items?.length) {
@@ -363,7 +411,7 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-whatsapp-gray-light">
+      <div className="min-h-screen flex items-center justify-center telegram-bg">
         <div className="text-whatsapp-green text-xl">Loading chat...</div>
       </div>
     );
@@ -385,9 +433,9 @@ export default function ChatPage() {
   const counterpartRole = session.user.role === 'user' ? 'Agent' : 'User';
 
   return (
-    <div className="min-h-screen bg-whatsapp-gray-light flex flex-col">
+    <div className="min-h-screen telegram-bg flex flex-col">
       {/* Header */}
-      <header className="bg-whatsapp-green text-white p-4 shadow-md">
+      <header className="telegram-header text-white p-4 shadow-md">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -404,7 +452,48 @@ export default function ChatPage() {
               </svg>
             </Link>
             <div>
-              <h1 className="text-lg font-bold">{jobTitle}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                {chatData.job.jobNumber && (
+                  <span className="text-xs font-mono text-white/70">#{chatData.job.jobNumber}</span>
+                )}
+                {session.user.role === 'user' && (
+                  <button
+                    onClick={() => setEditingJobNumber(!editingJobNumber)}
+                    className="text-xs text-white/70 hover:text-white underline"
+                  >
+                    {editingJobNumber ? 'Cancel' : 'Edit #'}
+                  </button>
+                )}
+                {chatData.job.priority === 'high' || chatData.job.priority === 'urgent' ? (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    chatData.job.priority === 'urgent' 
+                      ? 'bg-red-500/30 text-red-200 border border-red-500/50' 
+                      : 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                  }`}>
+                    {chatData.job.priority === 'urgent' ? 'URGENT' : 'HIGH'}
+                  </span>
+                ) : null}
+              </div>
+              {editingJobNumber && session.user.role === 'user' && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={jobNumberInput}
+                    onChange={(e) => setJobNumberInput(e.target.value)}
+                    className="px-2 py-1 text-sm bg-white/10 border border-white/20 rounded text-white w-24"
+                    placeholder="Job #"
+                    min="1"
+                  />
+                  <button
+                    onClick={handleJobNumberUpdate}
+                    disabled={updatingJobNumber}
+                    className="px-3 py-1 text-xs bg-whatsapp-green hover:bg-whatsapp-green-dark rounded disabled:opacity-50"
+                  >
+                    {updatingJobNumber ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              )}
+              <h1 className="text-lg font-bold mt-1">{jobTitle}</h1>
               <p className="text-xs text-white/80">
                 {counterpartRole}: {counterpartName}
               </p>
@@ -447,10 +536,10 @@ export default function ChatPage() {
         <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6">
           <div className="mb-6 lg:mb-0">
             {/* Chat Messages */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[60vh]">
+            <div className="telegram-card rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[60vh]">
               <div className="flex-1 overflow-y-auto p-4 pb-24">
                 {allItems.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-gray-400">
                     <p className="text-lg mb-2">No messages yet</p>
                     <p className="text-sm">Send a message or upload a file to get started</p>
                   </div>
@@ -478,16 +567,16 @@ export default function ChatPage() {
                           className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                              isOwn
-                                ? 'bg-whatsapp-green text-white'
-                                : 'bg-white text-gray-800 shadow-sm border border-gray-100'
-                            }`}
+                          className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                            isOwn
+                              ? 'bg-whatsapp-green text-white'
+                              : 'bg-gray-700/50 text-gray-100 shadow-sm border border-gray-600'
+                          }`}
                           >
                             <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
                             <p
                               className={`text-xs mt-1 ${
-                                isOwn ? 'text-white/70' : 'text-gray-500'
+                                isOwn ? 'text-white/70' : 'text-gray-400'
                               }`}
                             >
                               {new Date(message.createdAt).toLocaleTimeString([], {
@@ -505,7 +594,7 @@ export default function ChatPage() {
               </div>
 
               {/* Input Area */}
-              <div className="bg-white border-t border-gray-200 p-4">
+              <div className="telegram-card border-t border-gray-700 p-4">
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                   <input
                     type="text"
@@ -513,7 +602,7 @@ export default function ChatPage() {
                     onChange={(e) => setMessageText(e.target.value)}
                     onPaste={handlePasteImage}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
+                    className="flex-1 px-4 py-2 bg-white/10 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green text-white placeholder-gray-400"
                     disabled={sendingMessage}
                   />
                   <button
@@ -533,23 +622,23 @@ export default function ChatPage() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">SLA & Schedule</h2>
-              <p className="text-xs text-gray-500 mb-2">
+            <div className="telegram-card rounded-lg shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-white mb-3">SLA & Schedule</h2>
+              <p className="text-xs text-gray-400 mb-2">
                 Track due dates to keep the project on schedule. Automations notify when items approach or miss deadlines.
               </p>
-              <div className="text-sm text-gray-700 space-y-2 mb-4">
+              <div className="text-sm text-gray-300 space-y-2 mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-600">Status</span>
+                  <span className="font-medium text-gray-300">Status</span>
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
                       chatData.job.slaStatus === 'overdue'
-                        ? 'bg-red-100 text-red-700'
+                        ? 'bg-red-500/20 text-red-300 border border-red-500/40'
                         : chatData.job.slaStatus === 'due_soon'
-                        ? 'bg-yellow-100 text-yellow-700'
+                        ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
                         : chatData.job.slaStatus === 'on_track'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-green-500/20 text-green-300 border border-green-500/40'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/40'
                     }`}
                   >
                     {chatData.job.slaStatus === 'overdue'
@@ -562,8 +651,8 @@ export default function ChatPage() {
                   </span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-600">Due date</p>
-                  <p className="text-sm text-gray-700">
+                  <p className="font-medium text-gray-300">Due date</p>
+                  <p className="text-sm text-gray-300">
                     {chatData.job.dueAt
                       ? new Date(chatData.job.dueAt).toLocaleString()
                       : 'Not set'}
@@ -572,7 +661,7 @@ export default function ChatPage() {
               </div>
               {session.user.role === 'agent' && (
                 <form onSubmit={handleSlaSubmit} className="space-y-2">
-                  <label htmlFor="sla-due" className="block text-xs font-medium text-gray-600">
+                  <label htmlFor="sla-due" className="block text-xs font-medium text-gray-300">
                     Update due date
                   </label>
                   <input
@@ -580,7 +669,7 @@ export default function ChatPage() {
                     type="datetime-local"
                     value={slaDueInput}
                     onChange={(e) => setSlaDueInput(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm"
+                    className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm text-white"
                     min={new Date().toISOString().slice(0, 16)}
                   />
                   <button
@@ -594,23 +683,23 @@ export default function ChatPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="telegram-card rounded-lg shadow-sm p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-gray-700">Collaboration Notes</h2>
-                <span className="text-xs text-gray-500">
+                <h2 className="text-sm font-semibold text-white">Collaboration Notes</h2>
+                <span className="text-xs text-gray-400">
                   {annotations.filter((a) => a.status === 'open').length} open
                 </span>
               </div>
               <div className="max-h-64 overflow-y-auto space-y-3">
                 {annotations.length === 0 ? (
-                  <p className="text-xs text-gray-500">No annotations yet.</p>
+                  <p className="text-xs text-gray-400">No annotations yet.</p>
                 ) : (
                   annotations.map((annotation) => (
                     <div
                       key={annotation.id}
-                      className="border border-gray-200 rounded-md p-2 text-xs text-gray-700"
+                      className="border border-gray-700 rounded-md p-2 text-xs text-gray-300"
                     >
-                      <p className="font-semibold text-gray-600">
+                      <p className="font-semibold text-gray-200">
                         {annotation.authorName || 'Unknown'} •{' '}
                         {new Date(annotation.createdAt).toLocaleString()}
                       </p>
@@ -644,7 +733,7 @@ export default function ChatPage() {
                   value={annotationContent}
                   onChange={(e) => setAnnotationContent(e.target.value)}
                   placeholder="Add a clarification or instruction..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm text-white placeholder-gray-400"
                   rows={3}
                 />
                 <button
@@ -657,26 +746,26 @@ export default function ChatPage() {
               </form>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="telegram-card rounded-lg shadow-sm p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-gray-700">Revision History</h2>
-                <span className="text-xs text-gray-500">{versions.length} versions</span>
+                <h2 className="text-sm font-semibold text-white">Revision History</h2>
+                <span className="text-xs text-gray-400">{versions.length} versions</span>
               </div>
               <div className="max-h-64 overflow-y-auto space-y-3">
                 {versions.length === 0 ? (
-                  <p className="text-xs text-gray-500">No versions recorded yet.</p>
+                  <p className="text-xs text-gray-400">No versions recorded yet.</p>
                 ) : (
                   versions.map((version) => (
-                    <div key={version.id} className="border border-gray-200 rounded-md p-2 text-xs text-gray-700">
+                    <div key={version.id} className="border border-gray-700 rounded-md p-2 text-xs text-gray-300">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-gray-600">
+                        <span className="font-semibold text-gray-200">
                           Version {version.versionNumber}
                         </span>
-                        <span className="text-gray-500">
+                        <span className="text-gray-400">
                           {new Date(version.createdAt).toLocaleString()}
                         </span>
                       </div>
-                      <p className="mt-1 text-gray-600">
+                      <p className="mt-1 text-gray-300">
                         By {version.createdByName || 'Unknown'}
                       </p>
                       {version.notes && (
@@ -691,7 +780,7 @@ export default function ChatPage() {
                   value={versionNotes}
                   onChange={(e) => setVersionNotes(e.target.value)}
                   placeholder="Describe what changed in this revision..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm text-white placeholder-gray-400"
                   rows={2}
                 />
                 <button

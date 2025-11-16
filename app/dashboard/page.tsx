@@ -19,6 +19,8 @@ interface Job {
   dueAt?: string | null;
   slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
   escalationLevel?: 'none' | 'warning' | 'escalated';
+  jobNumber?: number | null;
+  priority?: 'normal' | 'high' | 'urgent';
 }
 
 export default function DashboardPage() {
@@ -64,7 +66,7 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-whatsapp-gray-light">
+      <div className="min-h-screen flex items-center justify-center telegram-bg">
         <div className="text-whatsapp-green text-xl">Loading...</div>
       </div>
     );
@@ -75,8 +77,8 @@ export default function DashboardPage() {
   }
 
   const isAgent = session.user.role === 'agent';
-  const headerClass = isAgent ? 'bg-slate-900 text-slate-100' : 'bg-whatsapp-green text-white';
-  const pageBgClass = isAgent ? 'bg-slate-900/70' : 'bg-whatsapp-gray-light';
+  const headerClass = 'telegram-header text-white';
+  const pageBgClass = 'telegram-bg';
 
   const handleNewJobSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -171,9 +173,9 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
         {session.user.role === 'user' && (
-          <div className="mb-6 rounded-lg border border-whatsapp-green/30 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800">Pay for your proofreading jobs</h2>
-            <p className="mt-1 text-sm text-gray-600">
+          <div className="mb-6 rounded-lg border border-whatsapp-green/30 telegram-card p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-white">Pay for your proofreading jobs</h2>
+            <p className="mt-1 text-sm text-gray-300">
               Scan the QR or use the UPI details below. Share the payment reference in the chat so our finance team can match it quickly.
             </p>
             <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -190,22 +192,22 @@ export default function DashboardPage() {
                     className="w-full"
                   />
                 </a>
-                <p className="mt-2 text-xs text-gray-500 text-center">
+                <p className="mt-2 text-xs text-gray-400 text-center">
                   Tap to enlarge QR in a new tab.
                 </p>
               </div>
               <div className="flex-1 space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Phone (UPI linked)</p>
-                  <p className="text-lg font-semibold text-gray-900">+91 90000 12345</p>
+                  <p className="text-sm font-medium text-gray-300">Phone (UPI linked)</p>
+                  <p className="text-lg font-semibold text-white">+91 90000 12345</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">UPI ID</p>
-                  <p className="text-lg font-semibold text-gray-900">thesupport@upi</p>
+                  <p className="text-sm font-medium text-gray-300">UPI ID</p>
+                  <p className="text-lg font-semibold text-white">thesupport@upi</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Need help?</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm font-medium text-gray-300">Need help?</p>
+                  <p className="text-sm text-gray-300">
                     Share payment slips in the chat or email{' '}
                     <a href="mailto:billing@thesupport.agency" className="text-whatsapp-green hover:underline">
                       billing@thesupport.agency
@@ -218,9 +220,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-4">
+        <div className="telegram-card rounded-lg shadow-md p-6 mb-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-2xl font-bold text-white">
               {session.user.role === 'user' ? 'Your Jobs' : 'All User Conversations'}
             </h2>
             {session.user.role === 'user' && (
@@ -241,9 +243,9 @@ export default function DashboardPage() {
           </div>
 
           {showJobForm && (
-            <form onSubmit={handleNewJobSubmit} className="mb-6 bg-whatsapp-gray-light/40 border border-gray-200 rounded-lg p-4 space-y-3">
+            <form onSubmit={handleNewJobSubmit} className="mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3">
               <div>
-                <label htmlFor="job-title" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="job-title" className="block text-sm font-medium text-gray-300 mb-1">
                   Job title
                 </label>
                 <input
@@ -252,13 +254,13 @@ export default function DashboardPage() {
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                   maxLength={120}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
                   placeholder="e.g. Brochure Proofread – September Launch"
                   required
                 />
               </div>
               <div>
-                <label htmlFor="job-tags" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="job-tags" className="block text-sm font-medium text-gray-300 mb-1">
                   Tags (optional)
                 </label>
                 <input
@@ -266,13 +268,13 @@ export default function DashboardPage() {
                   type="text"
                   value={jobTagsInput}
                   onChange={(e) => setJobTagsInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
                   placeholder="Add up to 3 tags, separated by commas"
                 />
-                <p className="text-xs text-gray-500 mt-1">Example: brochure, campaign, client-name</p>
+                <p className="text-xs text-gray-400 mt-1">Example: brochure, campaign, client-name</p>
               </div>
               <div>
-                <label htmlFor="job-due" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="job-due" className="block text-sm font-medium text-gray-300 mb-1">
                   Due date & time (optional)
                 </label>
                 <input
@@ -280,15 +282,15 @@ export default function DashboardPage() {
                   type="datetime-local"
                   value={jobDueAt}
                   onChange={(e) => setJobDueAt(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white"
                   min={new Date().toISOString().slice(0, 16)}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   Set expectations so agents can plan and automations can alert on delays.
                 </p>
               </div>
               {jobFormError && (
-                <p className="text-sm text-red-600">{jobFormError}</p>
+                <p className="text-sm text-red-400">{jobFormError}</p>
               )}
               <div className="flex justify-end">
                 <button
@@ -303,7 +305,7 @@ export default function DashboardPage() {
           )}
 
           {isAgent && (
-            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-slate-700">
+            <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4 text-gray-300">
               <p className="text-sm font-semibold">Agent view</p>
               <p className="mt-1 text-sm">
                 You can open any active job to review messages and files. Tags highlight the content type and status shared by the user.
@@ -312,7 +314,7 @@ export default function DashboardPage() {
           )}
 
           {jobs.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-400">
               <p className="text-lg mb-2">No jobs yet</p>
               {session.user.role === 'user' && (
                 <p className="text-sm">Click "New Job" to start a conversation</p>
@@ -324,29 +326,41 @@ export default function DashboardPage() {
                 <Link
                   key={job.id}
                   href={`/chat/${job.id}`}
-                  className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="block p-4 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors telegram-card"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-800">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {job.jobNumber && (
+                          <span className="text-xs font-mono text-gray-400">#{job.jobNumber}</span>
+                        )}
+                        <p className="font-medium text-white">
                           {job.title?.length ? job.title : `Job ${job.id.slice(0, 8)}`}
                         </p>
+                        {job.priority === 'high' || job.priority === 'urgent' ? (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            job.priority === 'urgent' 
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/40' 
+                              : 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
+                          }`}>
+                            {job.priority === 'urgent' ? 'URGENT' : 'HIGH'}
+                          </span>
+                        ) : null}
                         {job.hasUnread && (
                           <span className="w-2 h-2 bg-whatsapp-green rounded-full"></span>
                         )}
                       </div>
                       {isAgent && job.userName && (
-                        <p className="text-xs text-gray-500 mt-1">Client: {job.userName}</p>
+                        <p className="text-xs text-gray-400 mt-1">Client: {job.userName}</p>
                       )}
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-gray-400 mt-1">
                         {job.fileCount} file{job.fileCount !== 1 ? 's' : ''} •{' '}
                         {new Date(job.createdAt).toLocaleDateString()}
                       </p>
                       {job.tags && job.tags.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {job.tags.map((tag) => (
-                            <span key={`${job.id}-${tag}`} className="text-xs px-2 py-1 bg-whatsapp-green-light text-whatsapp-green rounded-full">
+                            <span key={`${job.id}-${tag}`} className="text-xs px-2 py-1 bg-whatsapp-green/20 text-whatsapp-green rounded-full border border-whatsapp-green/30">
                               {tag}
                             </span>
                           ))}
@@ -354,17 +368,17 @@ export default function DashboardPage() {
                       )}
                       {job.dueAt && (
                         <div className="mt-2 flex items-center gap-2 text-xs">
-                          <span className="font-semibold text-gray-600">
+                          <span className="font-semibold text-gray-300">
                             Due: {new Date(job.dueAt).toLocaleString()}
                           </span>
                           {job.slaStatus && (
                             <span
                               className={`px-2 py-1 rounded-full ${
                                 job.slaStatus === 'overdue'
-                                  ? 'bg-red-100 text-red-700'
+                                  ? 'bg-red-500/20 text-red-300 border border-red-500/40'
                                   : job.slaStatus === 'due_soon'
-                                  ? 'bg-yellow-100 text-yellow-700'
-                                  : 'bg-green-100 text-green-700'
+                                  ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
+                                  : 'bg-green-500/20 text-green-300 border border-green-500/40'
                               }`}
                             >
                               {job.slaStatus === 'overdue'
@@ -378,7 +392,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <svg
-                      className="w-5 h-5 text-gray-400"
+                      className="w-5 h-5 text-gray-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

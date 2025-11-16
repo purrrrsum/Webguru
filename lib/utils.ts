@@ -16,6 +16,8 @@ export interface User {
   bankAccountNumber?: string;
   bankIfsc?: string;
   bankName?: string;
+  isOnline?: boolean;
+  isReady?: boolean;
 }
 
 export interface Job {
@@ -31,6 +33,9 @@ export interface Job {
   slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
   escalationLevel?: 'none' | 'warning' | 'escalated';
   lastEscalatedAt?: string | null;
+  jobNumber?: number | null;
+  previousAgentId?: string | null;
+  priority?: 'normal' | 'high' | 'urgent';
 }
 
 export interface FileData {

@@ -59,6 +59,8 @@ export async function GET() {
           dueAt: job.dueAt || null,
           slaStatus: job.slaStatus || 'pending',
           escalationLevel: job.escalationLevel || 'none',
+          jobNumber: job.jobNumber || null,
+          priority: job.priority || 'normal',
         };
       })
     );
@@ -97,47 +99,7 @@ export async function POST(request: NextRequest) {
       .filter((tag: string) => tag.length > 0)
       .slice(0, 3);
 
-    // Find first agent (or use agent1 as default)
-    const users = await getAllUsers();
-    const agent = users.find((u) => u.role === 'agent');
-    const agentId = agent?.id || 'agent1';
-
-    // If agent doesn't exist, create default agent
-    if (!agent) {
-      const { createUser } = await import('@/lib/db');
-      const defaultAgent = await createUser({
-        email: 'agent@thesupport.in',
-        name: 'Support Agent',
-        company: 'TheSupport.in',
-        address: 'Delhi, India',
-        phone: '+919900112233',
-        jobCount: 0,
-        role: 'agent',
-      });
-      const newJob = await createJob({
-        userId: session.user.id,
-        agentId: defaultAgent.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        title,
-        tags,
-        dueAt: typeof payload?.dueAt === 'string' && payload.dueAt.trim().length
-          ? new Date(payload.dueAt).toISOString()
-          : null,
-        slaStatus:
-          typeof payload?.dueAt === 'string' && payload.dueAt.trim().length
-            ? 'on_track'
-            : 'pending',
-        escalationLevel: 'none',
-      });
-      return NextResponse.json({
-        job: {
-          ...newJob,
-          userName: session.user.name || null,
-        },
-      });
-    }
-
+    // Job will be auto-assigned to available agent by createJob function
     const dueAt =
       typeof payload?.dueAt === 'string' && payload.dueAt.trim().length
         ? new Date(payload.dueAt).toISOString()
@@ -145,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     const newJob = await createJob({
       userId: session.user.id,
-      agentId: agent.id,
+      // agentId will be auto-assigned by createJob to available agent
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       title,

@@ -112,6 +112,19 @@ export default function Navigation() {
             {session ? (
               <>
                 <Link 
+                  href="/profile" 
+                  className="text-gray-700 hover:text-whatsapp-green px-3 py-2 text-sm font-medium flex items-center gap-2"
+                >
+                  <span>Profile</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    session.user.role === 'agent' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {session.user.role === 'agent' ? 'Agent' : 'User'}
+                  </span>
+                </Link>
+                <Link 
                   href="/dashboard" 
                   className="bg-whatsapp-green text-white px-4 py-2 rounded-md hover:bg-whatsapp-green-dark text-sm font-medium"
                 >
