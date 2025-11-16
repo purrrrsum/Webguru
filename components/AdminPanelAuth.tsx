@@ -2,51 +2,48 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 
 export default function AdminPanelAuth({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for admin session in localStorage
-    const adminSession = localStorage.getItem('admin_session');
-    
-    if (adminSession) {
-      try {
-        const admin = JSON.parse(adminSession);
-        if (admin && admin.id) {
-          setIsAuthenticated(true);
-        } else {
-          router.push('/admin-panel/login');
-        }
-      } catch (error) {
-        router.push('/admin-panel/login');
-      }
-    } else {
-      // If no localStorage session, redirect to login
+    // Small delay to ensure session is loaded
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && status === 'unauthenticated') {
       if (pathname !== '/admin-panel/login') {
         router.push('/admin-panel/login');
       }
+    } else if (!isLoading && status === 'authenticated') {
+      // Check if user is admin
+      const isAdmin = (session?.user as any)?.isAdmin;
+      if (!isAdmin && pathname !== '/admin-panel/login') {
+        router.push('/admin-panel/login?error=AccessDenied');
+      }
     }
-    
-    setIsLoading(false);
-  }, [router, pathname]);
+  }, [status, session, isLoading, pathname, router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_session');
-    router.push('/admin-panel/login');
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/admin-panel/login' });
   };
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading || status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+      <div className="min-h-screen telegram-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-          <p className="mt-4 text-slate-400">Loading...</p>
+          <p className="mt-4 text-gray-400">Loading...</p>
         </div>
       </div>
     );
@@ -57,8 +54,11 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
+  // Check if user is admin
+  const isAdmin = (session?.user as any)?.isAdmin;
+
   // If not authenticated and not on login page, show nothing (redirect will happen)
-  if (!isAuthenticated) {
+  if (!isAdmin) {
     return null;
   }
 
