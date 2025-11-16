@@ -88,7 +88,7 @@ export default function AdminConversationPage() {
 
   // Combine files and messages, sort by timestamp
   const allItems = [
-    ...chatData.files.map((file) => ({ type: 'file' as const, data: file, timestamp: new Date(file.uploadedAt || file.createdAt).getTime() })),
+    ...chatData.files.map((file) => ({ type: 'file' as const, data: file, timestamp: new Date(file.uploadedAt).getTime() })),
     ...chatData.messages.map((msg) => ({ type: 'message' as const, data: msg, timestamp: new Date(msg.createdAt).getTime() })),
   ].sort((a, b) => a.timestamp - b.timestamp);
 
