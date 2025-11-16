@@ -16,6 +16,9 @@ interface Job {
   title?: string | null;
   tags?: string[];
   userName?: string | null;
+  dueAt?: string | null;
+  slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
+  escalationLevel?: 'none' | 'warning' | 'escalated';
 }
 
 export default function DashboardPage() {
