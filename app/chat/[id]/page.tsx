@@ -21,6 +21,8 @@ interface ChatData {
     dueAt?: string | null;
     slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
     escalationLevel?: 'none' | 'warning' | 'escalated';
+    jobNumber?: number | null;
+    priority?: 'normal' | 'high' | 'urgent';
   };
   files: FileData[];
   messages: Message[];
