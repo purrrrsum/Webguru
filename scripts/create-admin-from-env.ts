@@ -48,26 +48,42 @@ async function main() {
       'SELECT id FROM admins WHERE username = $1 OR email = $2',
       [username, email]
     );
-    if (existing.rows.length > 0) {
-      console.log('ℹ️ Admin already exists. Nothing to do.');
-      process.exit(0);
-    }
-
     const hashedPassword = await hash(password, 10);
-    const adminId = nanoid();
     const canDelete = role === 'admin';
 
-    await query(
-      `INSERT INTO admins (id, username, email, password, full_name, role, can_create, can_delete, can_manage_users, can_manage_agents, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)`,
-      [adminId, username, email, hashedPassword, fullName || username, role, true, canDelete, true, true]
-    );
-
-    console.log('✅ Admin created successfully');
-    console.log(`   Username: ${username}`);
-    console.log(`   Email:    ${email}`);
-    console.log(`   Role:     ${role}`);
-    console.log('   Note: Change the password periodically for security.');
+    if (existing.rows.length > 0) {
+      // Update existing admin (by username or email)
+      const res = await query(
+        `UPDATE admins
+         SET password = $1,
+             full_name = COALESCE($2, full_name),
+             role = $3,
+             can_delete = $4,
+             updated_at = NOW()
+         WHERE username = $5 OR email = $6
+         RETURNING id, username, email, role`,
+        [hashedPassword, fullName || username, role, canDelete, username, email]
+      );
+      const a = res.rows[0];
+      console.log('✅ Admin updated successfully');
+      console.log(`   Username: ${a?.username || username}`);
+      console.log(`   Email:    ${a?.email || email}`);
+      console.log(`   Role:     ${a?.role || role}`);
+      console.log('   Note: Change the password periodically for security.');
+    } else {
+      // Create new admin
+      const adminId = nanoid();
+      await query(
+        `INSERT INTO admins (id, username, email, password, full_name, role, can_create, can_delete, can_manage_users, can_manage_agents, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)`,
+        [adminId, username, email, hashedPassword, fullName || username, role, true, canDelete, true, true]
+      );
+      console.log('✅ Admin created successfully');
+      console.log(`   Username: ${username}`);
+      console.log(`   Email:    ${email}`);
+      console.log(`   Role:     ${role}`);
+      console.log('   Note: Change the password periodically for security.');
+    }
   } catch (err: any) {
     console.error('❌ Error creating admin:', err?.message || err);
     process.exit(1);
