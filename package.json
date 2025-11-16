@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "package": "node package-for-hosting.js",
+    "create-admin-from-env": "npx tsx scripts/create-admin-from-env.ts",
     "verify-db": "npx tsx scripts/verify-db.ts",
     "init-db": "npx tsx scripts/init-db.ts",
     "create-users": "npx tsx scripts/create-test-users.ts",
