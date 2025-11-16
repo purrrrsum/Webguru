@@ -31,8 +31,11 @@ export async function GET(request: NextRequest) {
     const summaryOnly = request.nextUrl.searchParams.get('summary') === 'true';
     const markRead = request.nextUrl.searchParams.get('markRead') === 'true';
 
+    // Treat admin as agent for support tickets
+    const isAgentOrAdmin = session.user.role === 'agent' || session.user.role === 'admin';
+
     if (summaryOnly) {
-      if (session.user.role !== 'agent') {
+      if (!isAgentOrAdmin) {
         return NextResponse.json({ unreadCount: 0 });
       }
 
@@ -41,14 +44,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ unreadCount });
     }
 
-    const tickets =
-      session.user.role === 'agent'
-        ? await getAllSupportTickets()
-        : await getSupportTicketsByUser(session.user.id);
+    const tickets = isAgentOrAdmin
+      ? await getAllSupportTickets()
+      : await getSupportTicketsByUser(session.user.id);
 
     let unreadCount: number | undefined;
 
-    if (session.user.role === 'agent') {
+    if (isAgentOrAdmin) {
       unreadCount = tickets.filter((ticket) => ticket.unreadForAdmin).length;
       if (markRead && unreadCount > 0) {
         await markSupportTicketsAsRead();
@@ -85,10 +87,13 @@ export async function POST(request: NextRequest) {
     const sanitizedSubject = sanitizeSubject(subject);
     const sanitizedDescription = sanitizeDescription(description);
 
+    // Map admin role to agent for support tickets
+    const ticketRole = session.user.role === 'admin' ? 'agent' : session.user.role;
+
     const ticket = await createSupportTicket({
       userId: session.user.id,
       email: session.user.email,
-      role: session.user.role,
+      role: ticketRole as 'user' | 'agent',
       subject: sanitizedSubject,
       description: sanitizedDescription,
       priority: priority && ['low', 'normal', 'high'].includes(priority) ? priority : 'normal',
@@ -109,7 +114,9 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id || session.user.role !== 'agent') {
+    // Allow both agent and admin to update support tickets
+    const isAgentOrAdmin = session?.user?.role === 'agent' || session?.user?.role === 'admin';
+    if (!session?.user?.id || !isAgentOrAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
