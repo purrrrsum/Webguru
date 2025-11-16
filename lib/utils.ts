@@ -29,6 +29,7 @@ export interface Job {
   title?: string | null;
   tags?: string[];
   userName?: string | null;
+  agentName?: string | null;
   dueAt?: string | null;
   slaStatus?: 'pending' | 'on_track' | 'due_soon' | 'overdue' | 'escalated';
   escalationLevel?: 'none' | 'warning' | 'escalated';
@@ -36,6 +37,7 @@ export interface Job {
   jobNumber?: number | null;
   previousAgentId?: string | null;
   priority?: 'normal' | 'high' | 'urgent';
+  fileCount?: number;
 }
 
 export interface FileData {
