@@ -726,7 +726,7 @@ export async function checkAndReassignJobsForOfflineAgent(agentId: string): Prom
   }
 }
 
-export async function createJob(job: Omit<Job, 'id'> & { id?: string }): Promise<Job> {
+export async function createJob(job: Omit<Job, 'id' | 'agentId'> & { id?: string; agentId?: string }): Promise<Job> {
   let jobId = job.id;
   let jobNumber = job.jobNumber;
   
