@@ -62,8 +62,12 @@ export const adminAuthOptions: NextAuthOptions = {
         
         // Verify email on every JWT refresh
         if (!email || email !== adminEmailLower) {
-          // Clear token if email doesn't match
-          return {};
+          // Return token with invalid flag if email doesn't match
+          token.id = '';
+          token.email = '';
+          token.role = 'user';
+          token.isAdmin = false;
+          return token;
         }
         
         token.id = user.id || user.email || '';
@@ -76,8 +80,11 @@ export const adminAuthOptions: NextAuthOptions = {
         const email = token.email.toLowerCase().trim();
         const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
         if (email !== adminEmailLower) {
-          // Clear token if email doesn't match
-          return {};
+          // Mark token as invalid if email doesn't match
+          token.id = '';
+          token.email = '';
+          token.role = 'user';
+          token.isAdmin = false;
         }
       }
       return token;
