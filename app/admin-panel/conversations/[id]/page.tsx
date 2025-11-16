@@ -186,7 +186,7 @@ export default function AdminConversationPage() {
                             : 'bg-slate-800 text-slate-200'
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">{message.message}</p>
                         <p className="text-xs mt-1 opacity-70">
                           {new Date(message.createdAt).toLocaleString()}
                         </p>
