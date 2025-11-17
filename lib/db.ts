@@ -479,19 +479,22 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
 
 export async function updateUser(id: string, updates: Partial<User>): Promise<User | null> {
   try {
-    if (updates.email) {
-      // Check if email already exists for a different user
+    // Get current user first
+    const currentUser = await getUserById(id);
+    if (!currentUser) {
+      throw new Error('User not found');
+    }
+
+    if (updates.email && updates.email !== currentUser.email) {
+      // Check if new email already exists for a different user
       const existing = await getUserByEmail(updates.email);
       if (existing && existing.id !== id) {
         throw new Error(`Email ${updates.email} is already in use by another account.`);
       }
     }
     
-    // If updating role, ensure no conflicts (admin can change roles)
-    if (updates.role) {
-      const currentUser = await getUserByEmail(updates.email || '');
-      // Role changes are allowed (for admin), but email uniqueness is still enforced
-    }
+    // Role changes are allowed (for admin), but email uniqueness is still enforced
+    // No additional checks needed here - admin can change roles
 
     const fields: string[] = [];
     const values: any[] = [];
