@@ -19,7 +19,7 @@ export async function ensureDatabaseSetup() {
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
-        email VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
         name VARCHAR(255) NOT NULL,
         company VARCHAR(255) DEFAULT '',
         address TEXT DEFAULT '',
@@ -33,8 +33,7 @@ export async function ensureDatabaseSetup() {
         bank_ifsc TEXT,
         bank_name TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(email, role)
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
@@ -63,30 +62,26 @@ export async function ensureDatabaseSetup() {
       ADD COLUMN IF NOT EXISTS bank_name TEXT
     `;
 
-    // Remove old UNIQUE constraint on email if it exists (for migration)
+    // Ensure UNIQUE constraint on email exists (one email = one role)
     await sql`
       DO $$
       BEGIN
+        -- Remove composite unique constraint if it exists
         IF EXISTS (
-          SELECT 1 FROM pg_constraint 
-          WHERE conname = 'users_email_key' 
-          AND conrelid = 'users'::regclass
-        ) THEN
-          ALTER TABLE users DROP CONSTRAINT users_email_key;
-        END IF;
-      END $$;
-    `;
-
-    // Add composite unique constraint on (email, role) if it doesn't exist
-    await sql`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (
           SELECT 1 FROM pg_constraint 
           WHERE conname = 'users_email_role_key' 
           AND conrelid = 'users'::regclass
         ) THEN
-          ALTER TABLE users ADD CONSTRAINT users_email_role_key UNIQUE (email, role);
+          ALTER TABLE users DROP CONSTRAINT users_email_role_key;
+        END IF;
+        
+        -- Add UNIQUE constraint on email if it doesn't exist
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'users_email_key' 
+          AND conrelid = 'users'::regclass
+        ) THEN
+          ALTER TABLE users ADD CONSTRAINT users_email_key UNIQUE (email);
         END IF;
       END $$;
     `;
@@ -373,19 +368,11 @@ export async function getUserById(id: string): Promise<User | null> {
   }
 }
 
-export async function getUserByEmail(email: string, role?: 'user' | 'agent'): Promise<User | null> {
+export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    let result;
-    if (role) {
-      result = await sql`
-        SELECT * FROM users WHERE email = ${email} AND role = ${role}
-      `;
-    } else {
-      // If no role specified, return the first match (backward compatibility)
-      result = await sql`
-        SELECT * FROM users WHERE email = ${email} LIMIT 1
-      `;
-    }
+    const result = await sql`
+      SELECT * FROM users WHERE email = ${email}
+    `;
     return result.rows[0] ? mapUserRow(result.rows[0]) : null;
   } catch (error: any) {
     console.error('Error fetching user by email:', error);
@@ -399,9 +386,15 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
   const userId = user.id || `user${Date.now()}`;
   const intendedRole = user.role || 'user';
   try {
-    // Check if user already exists by email and role
-    const existing = await getUserByEmail(user.email, intendedRole);
+    // Check if user already exists by email
+    const existing = await getUserByEmail(user.email);
     if (existing) {
+      // If email exists with different role, throw error
+      if (existing.role !== intendedRole) {
+        throw new Error(
+          `This email is already registered as ${existing.role}. Please sign in using the ${existing.role === 'agent' ? 'agent' : 'user'} login page.`
+        );
+      }
       // Update existing user instead of creating new one
       return await updateUser(existing.id, {
         name: user.name,
@@ -459,12 +452,17 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
     
     // Provide more helpful error messages
     if (error.code === '23505') {
-      // Unique constraint violation - try to get existing user with same role
-      const existing = await getUserByEmail(user.email, intendedRole);
+      // Unique constraint violation - email already exists
+      const existing = await getUserByEmail(user.email);
       if (existing) {
+        if (existing.role !== intendedRole) {
+          throw new Error(
+            `This email is already registered as ${existing.role}. Please sign in using the ${existing.role === 'agent' ? 'agent' : 'user'} login page.`
+          );
+        }
         return existing;
       }
-      throw new Error(`User with email ${user.email} and role ${intendedRole} already exists`);
+      throw new Error(`User with email ${user.email} already exists`);
     }
     
     if (error.message?.includes('does not exist') || error.message?.includes('relation')) {
@@ -482,14 +480,17 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
 export async function updateUser(id: string, updates: Partial<User>): Promise<User | null> {
   try {
     if (updates.email) {
-      const newRole = updates.role;
-      if (newRole) {
-        // Check if email+role combination already exists for a different user
-        const existing = await getUserByEmail(updates.email, newRole);
-        if (existing && existing.id !== id) {
-          throw new Error(`Email ${updates.email} is already in use by another ${newRole} account.`);
-        }
+      // Check if email already exists for a different user
+      const existing = await getUserByEmail(updates.email);
+      if (existing && existing.id !== id) {
+        throw new Error(`Email ${updates.email} is already in use by another account.`);
       }
+    }
+    
+    // If updating role, ensure no conflicts (admin can change roles)
+    if (updates.role) {
+      const currentUser = await getUserByEmail(updates.email || '');
+      // Role changes are allowed (for admin), but email uniqueness is still enforced
     }
 
     const fields: string[] = [];

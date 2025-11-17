@@ -111,6 +111,16 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             >
               Support Inbox
             </Link>
+            <Link 
+              href="/admin-panel/users" 
+              className={`px-3 py-2 rounded-md transition-colors ${
+                pathname === '/admin-panel/users'
+                  ? 'bg-slate-800 text-white'
+                  : 'hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              Users
+            </Link>
             <button
               onClick={handleLogout}
               className="rounded-md border border-slate-700 px-3 py-1.5 hover:border-white hover:text-white"

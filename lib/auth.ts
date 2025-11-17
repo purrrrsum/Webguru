@@ -36,10 +36,17 @@ async function ensureUserAccount(
   existingAccount?: User | null
 ): Promise<User> {
   const targetRole = overrides.role || role;
-  // Check for existing account with the specific role
-  const existing = existingAccount ?? (await getUserByEmail(email, targetRole));
+  // Check for existing account
+  const existing = existingAccount ?? (await getUserByEmail(email));
   
   if (existing) {
+    // If email exists with different role, deny access
+    if (existing.role !== targetRole) {
+      throw new Error(
+        `This email is already registered as ${existing.role}. Please sign in using the ${existing.role === 'agent' ? 'agent' : 'user'} login page.`
+      );
+    }
+    
     // Account exists with the correct role, update if needed
     const updates: Partial<User> = {};
 
@@ -67,8 +74,7 @@ async function ensureUserAccount(
     return existing;
   }
 
-  // Account doesn't exist with this role, create it
-  // Note: Same email can now exist with different roles
+  // Account doesn't exist, create it with the requested role
   return await createUser({
     email,
     name: overrides.name || getNameFromEmail(email),
@@ -167,9 +173,14 @@ export const authOptions: NextAuthOptions = {
             ? credentials.role
             : inferRoleFromEmail(email);
 
-        // Check if account exists with the requested role
-        const existingAccount = await getUserByEmail(email, requestedRole);
-        // If account doesn't exist with requested role, that's fine - we'll create it
+        // Check if account exists
+        const existingAccount = await getUserByEmail(email);
+        // If account exists with different role, deny access
+        if (existingAccount && existingAccount.role !== requestedRole) {
+          throw new Error(
+            `This email is registered as ${existingAccount.role}. Please use the ${existingAccount.role === 'agent' ? 'agent' : 'user'} login page.`
+          );
+        }
 
         // Admin bypass is restricted to agent/admin emails
         if (secret === 'admin-login') {
