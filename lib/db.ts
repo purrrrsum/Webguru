@@ -397,8 +397,8 @@ export async function getUserByEmail(email: string, role?: 'user' | 'agent'): Pr
 
 export async function createUser(user: Omit<User, 'id'> & { id?: string }): Promise<User> {
   const userId = user.id || `user${Date.now()}`;
+  const intendedRole = user.role || 'user';
   try {
-    const intendedRole = user.role || 'user';
     // Check if user already exists by email and role
     const existing = await getUserByEmail(user.email, intendedRole);
     if (existing) {
