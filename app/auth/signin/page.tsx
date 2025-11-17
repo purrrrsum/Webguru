@@ -16,7 +16,9 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard', role: 'user' });
+    // Store role in cookie before OAuth redirect
+    document.cookie = `oauth_role=user; path=/; max-age=300; SameSite=Lax`;
+    signIn('google', { callbackUrl: '/dashboard' });
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {

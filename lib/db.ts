@@ -19,7 +19,7 @@ export async function ensureDatabaseSetup() {
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
+        email VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
         company VARCHAR(255) DEFAULT '',
         address TEXT DEFAULT '',
@@ -33,7 +33,8 @@ export async function ensureDatabaseSetup() {
         bank_ifsc TEXT,
         bank_name TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(email, role)
       )
     `;
 
@@ -60,6 +61,34 @@ export async function ensureDatabaseSetup() {
     await sql`
       ALTER TABLE users
       ADD COLUMN IF NOT EXISTS bank_name TEXT
+    `;
+
+    // Remove old UNIQUE constraint on email if it exists (for migration)
+    await sql`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'users_email_key' 
+          AND conrelid = 'users'::regclass
+        ) THEN
+          ALTER TABLE users DROP CONSTRAINT users_email_key;
+        END IF;
+      END $$;
+    `;
+
+    // Add composite unique constraint on (email, role) if it doesn't exist
+    await sql`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint 
+          WHERE conname = 'users_email_role_key' 
+          AND conrelid = 'users'::regclass
+        ) THEN
+          ALTER TABLE users ADD CONSTRAINT users_email_role_key UNIQUE (email, role);
+        END IF;
+      END $$;
     `;
 
     await sql`
@@ -344,11 +373,19 @@ export async function getUserById(id: string): Promise<User | null> {
   }
 }
 
-export async function getUserByEmail(email: string): Promise<User | null> {
+export async function getUserByEmail(email: string, role?: 'user' | 'agent'): Promise<User | null> {
   try {
-    const result = await sql`
-      SELECT * FROM users WHERE email = ${email}
-    `;
+    let result;
+    if (role) {
+      result = await sql`
+        SELECT * FROM users WHERE email = ${email} AND role = ${role}
+      `;
+    } else {
+      // If no role specified, return the first match (backward compatibility)
+      result = await sql`
+        SELECT * FROM users WHERE email = ${email} LIMIT 1
+      `;
+    }
     return result.rows[0] ? mapUserRow(result.rows[0]) : null;
   } catch (error: any) {
     console.error('Error fetching user by email:', error);
@@ -362,12 +399,9 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
   const userId = user.id || `user${Date.now()}`;
   try {
     const intendedRole = user.role || 'user';
-    // Check if user already exists by email
-    const existing = await getUserByEmail(user.email);
+    // Check if user already exists by email and role
+    const existing = await getUserByEmail(user.email, intendedRole);
     if (existing) {
-      if (existing.role !== intendedRole) {
-        throw new Error('This email is already registered with a different role.');
-      }
       // Update existing user instead of creating new one
       return await updateUser(existing.id, {
         name: user.name,
@@ -425,12 +459,12 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
     
     // Provide more helpful error messages
     if (error.code === '23505') {
-      // Unique constraint violation - try to get existing user
-      const existing = await getUserByEmail(user.email);
+      // Unique constraint violation - try to get existing user with same role
+      const existing = await getUserByEmail(user.email, intendedRole);
       if (existing) {
         return existing;
       }
-      throw new Error(`User with email ${user.email} already exists`);
+      throw new Error(`User with email ${user.email} and role ${intendedRole} already exists`);
     }
     
     if (error.message?.includes('does not exist') || error.message?.includes('relation')) {
@@ -448,11 +482,12 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
 export async function updateUser(id: string, updates: Partial<User>): Promise<User | null> {
   try {
     if (updates.email) {
-      const existing = await getUserByEmail(updates.email);
-      if (existing && existing.id !== id) {
-        const newRole = updates.role || existing.role;
-        if (existing.role !== newRole) {
-          throw new Error('Email already in use by another account with a different role.');
+      const newRole = updates.role;
+      if (newRole) {
+        // Check if email+role combination already exists for a different user
+        const existing = await getUserByEmail(updates.email, newRole);
+        if (existing && existing.id !== id) {
+          throw new Error(`Email ${updates.email} is already in use by another ${newRole} account.`);
         }
       }
     }

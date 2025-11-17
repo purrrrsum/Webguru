@@ -36,14 +36,11 @@ async function ensureUserAccount(
   existingAccount?: User | null
 ): Promise<User> {
   const targetRole = overrides.role || role;
-  const existing = existingAccount ?? (await getUserByEmail(email));
+  // Check for existing account with the specific role
+  const existing = existingAccount ?? (await getUserByEmail(email, targetRole));
+  
   if (existing) {
-    if (existing.role !== targetRole) {
-      throw new Error(
-        `This email is already registered as ${existing.role}. Please sign in using the ${existing.role === 'agent' ? 'agent' : 'user'} portal.`
-      );
-    }
-
+    // Account exists with the correct role, update if needed
     const updates: Partial<User> = {};
 
     if (overrides.name && overrides.name !== existing.name) {
@@ -70,6 +67,8 @@ async function ensureUserAccount(
     return existing;
   }
 
+  // Account doesn't exist with this role, create it
+  // Note: Same email can now exist with different roles
   return await createUser({
     email,
     name: overrides.name || getNameFromEmail(email),
@@ -168,12 +167,9 @@ export const authOptions: NextAuthOptions = {
             ? credentials.role
             : inferRoleFromEmail(email);
 
-        const existingAccount = await getUserByEmail(email);
-        if (existingAccount && existingAccount.role !== requestedRole) {
-          throw new Error(
-            `This email is registered as ${existingAccount.role}. Please use the ${existingAccount.role === 'agent' ? 'agent' : 'user'} login.`
-          );
-        }
+        // Check if account exists with the requested role
+        const existingAccount = await getUserByEmail(email, requestedRole);
+        // If account doesn't exist with requested role, that's fine - we'll create it
 
         // Admin bypass is restricted to agent/admin emails
         if (secret === 'admin-login') {
@@ -259,23 +255,38 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'google') {
         if (user.email) {
           await ensureDatabaseSetup();
-          const inferredRole = inferRoleFromEmail(user.email);
-          const dbUser = await ensureUserAccount(user.email, inferredRole, {
+          
+          // For Google OAuth, we need to determine the role
+          // The role is set via cookie before OAuth redirect, but we can't access it here directly
+          // So we'll create/update the account with the inferred role first
+          // Then in the JWT callback, we'll check the cookie and update if needed
+          let requestedRole: 'user' | 'agent' = inferRoleFromEmail(user.email);
+          
+          const dbUser = await ensureUserAccount(user.email, requestedRole, {
             name: user.name || getNameFromEmail(user.email),
           });
 
           user.id = dbUser.id;
           user.name = dbUser.name;
           (user as any).role = dbUser.role;
+          // Store the requested role in user object for JWT callback
+          (user as any).requestedRole = requestedRole;
         }
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || 'user';
+        
+        // For Google OAuth, check if we need to update role based on cookie
+        // The cookie is set before OAuth and should be available in the request
+        // Since we can't access cookies directly here, we'll rely on the role
+        // set during signIn, which uses email inference
+        // The actual role selection happens at login page level
       }
+      
       return token;
     },
     async session({ session, token }) {

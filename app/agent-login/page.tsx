@@ -15,7 +15,9 @@ export default function AgentLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = () => {
-    signIn('google', { callbackUrl: '/dashboard', role: 'agent' });
+    // Store role in cookie before OAuth redirect
+    document.cookie = `oauth_role=agent; path=/; max-age=300; SameSite=Lax`;
+    signIn('google', { callbackUrl: '/dashboard' });
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
@@ -46,17 +48,17 @@ export default function AgentLoginPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-whatsapp-gray-light flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+      <div className="min-h-screen telegram-bg flex items-center justify-center p-4">
+        <div className="telegram-card rounded-lg shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-whatsapp-green mb-2">
+            <h1 className="text-3xl font-bold text-blue-400 mb-2">
               Agent Login
             </h1>
-            <p className="text-gray-600">Sign in to access agent portal</p>
+            <p className="text-gray-300">Sign in to access agent portal</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-800 rounded-md text-sm">
+            <div className="mb-4 p-3 bg-red-900/30 border border-red-500/50 text-red-200 rounded-md text-sm">
               {error}
             </div>
           )}
@@ -65,7 +67,7 @@ export default function AgentLoginPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full mb-4 px-4 py-3 bg-white border-2 border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 font-medium shadow-sm"
+            className="w-full mb-4 px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-md hover:bg-slate-700 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 font-medium shadow-sm text-white"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -78,10 +80,10 @@ export default function AgentLoginPage() {
 
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-slate-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">OR</span>
+              <span className="px-2 telegram-card text-gray-400">OR</span>
             </div>
           </div>
 
@@ -89,7 +91,7 @@ export default function AgentLoginPage() {
             <div className="mb-4">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-300 mb-1"
               >
                 Email
               </label>
@@ -99,7 +101,7 @@ export default function AgentLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-500"
                 placeholder="agent@thesupport.in"
               />
             </div>
@@ -107,7 +109,7 @@ export default function AgentLoginPage() {
             <div className="mb-6">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-300 mb-1"
               >
                 Password
               </label>
@@ -117,7 +119,7 @@ export default function AgentLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-md focus:ring-blue-500 focus:border-blue-500 text-white placeholder-gray-500"
                 placeholder="Enter password"
               />
             </div>
@@ -125,7 +127,7 @@ export default function AgentLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-whatsapp-green hover:bg-whatsapp-green-dark text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In with Password'}
             </button>
@@ -134,7 +136,7 @@ export default function AgentLoginPage() {
           <div className="mt-6 text-center">
             <Link
               href="/auth/signin"
-              className="text-sm text-whatsapp-green hover:underline"
+              className="text-sm text-blue-400 hover:underline"
             >
               User Login →
             </Link>
