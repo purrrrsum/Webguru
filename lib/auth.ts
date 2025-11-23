@@ -136,6 +136,8 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   // Use request headers to determine base URL dynamically
   useSecureCookies: process.env.NODE_ENV === 'production',
+  // Set the base URL for callbacks
+  basePath: '/api/auth',
   providers: [
     // Only add Google Provider if credentials are configured
     ...(isGoogleOAuthConfigured() ? [
