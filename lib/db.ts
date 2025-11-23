@@ -158,6 +158,11 @@ export async function ensureDatabaseSetup() {
     `;
 
     await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open', 'closed'))
+    `;
+
+    await sql`
       CREATE INDEX IF NOT EXISTS idx_jobs_job_number ON jobs(job_number)
     `;
 
@@ -338,6 +343,7 @@ function mapJobRow(row: any): Job {
     jobNumber: row.job_number || null,
     previousAgentId: row.previous_agent_id || null,
     priority: row.priority || 'normal',
+    status: row.status || 'open',
   };
 }
 
@@ -876,6 +882,11 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<Job 
     if (updates.priority !== undefined) {
       updateFields.push('priority');
       values.push(updates.priority);
+    }
+
+    if (updates.status !== undefined) {
+      updateFields.push('status');
+      values.push(updates.status);
     }
 
     if (updateFields.length === 0) {
@@ -1473,6 +1484,385 @@ export async function getJobsSummaryForAdmin(limit = 20): Promise<Job[]> {
     return result.rows.map(mapJobRow);
   } catch (error) {
     console.error('Error fetching jobs summary for admin:', error);
+    return [];
+  }
+}
+
+export async function getJobsOpenMoreThan15Minutes(): Promise<Job[]> {
+  try {
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const result = await sql`
+      SELECT jobs.*, users.name AS user_name
+      FROM jobs
+      LEFT JOIN users ON users.id = jobs.user_id
+      WHERE jobs.status = 'open' 
+        AND jobs.created_at < ${fifteenMinutesAgo}
+      ORDER BY jobs.created_at ASC
+    `;
+    return result.rows.map(mapJobRow);
+  } catch (error) {
+    console.error('Error fetching jobs open more than 15 minutes:', error);
+    return [];
+  }
+}
+
+// CMS Content Management
+export async function ensureCMSTables() {
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS website_content (
+        id VARCHAR(255) PRIMARY KEY,
+        key VARCHAR(255) UNIQUE NOT NULL,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS website_colors (
+        id VARCHAR(255) PRIMARY KEY,
+        key VARCHAR(255) UNIQUE NOT NULL,
+        value VARCHAR(7) NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS blog_cities (
+        id VARCHAR(255) PRIMARY KEY,
+        city_name VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS seo_settings (
+        id VARCHAR(255) PRIMARY KEY,
+        page_path VARCHAR(255) UNIQUE NOT NULL,
+        title VARCHAR(255),
+        description TEXT,
+        keywords TEXT,
+        og_title VARCHAR(255),
+        og_description TEXT,
+        og_image TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+  } catch (error) {
+    console.error('Error ensuring CMS tables:', error);
+  }
+}
+
+export async function getAllWebsiteContent(): Promise<Record<string, string>> {
+  try {
+    await ensureCMSTables();
+    const result = await sql`SELECT key, value FROM website_content`;
+    const content: Record<string, string> = {};
+    result.rows.forEach((row: any) => {
+      content[row.key] = row.value;
+    });
+    return content;
+  } catch (error) {
+    console.error('Error fetching all website content:', error);
+    return {};
+  }
+}
+
+export async function setWebsiteContent(key: string, value: string): Promise<void> {
+  try {
+    await ensureCMSTables();
+    const id = `content_${key}_${Date.now()}`;
+    await sql`
+      INSERT INTO website_content (id, key, value, updated_at)
+      VALUES (${id}, ${key}, ${value}, ${new Date().toISOString()})
+      ON CONFLICT (key) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = EXCLUDED.updated_at
+    `;
+  } catch (error) {
+    console.error('Error setting website content:', error);
+    throw error;
+  }
+}
+
+export async function getAllWebsiteColors(): Promise<Record<string, string>> {
+  try {
+    await ensureCMSTables();
+    const result = await sql`SELECT key, value FROM website_colors`;
+    const colors: Record<string, string> = {};
+    result.rows.forEach((row: any) => {
+      colors[row.key] = row.value;
+    });
+    return colors;
+  } catch (error) {
+    console.error('Error fetching all website colors:', error);
+    return {};
+  }
+}
+
+export async function setWebsiteColor(key: string, value: string): Promise<void> {
+  try {
+    await ensureCMSTables();
+    const id = `color_${key}_${Date.now()}`;
+    await sql`
+      INSERT INTO website_colors (id, key, value, updated_at)
+      VALUES (${id}, ${key}, ${value}, ${new Date().toISOString()})
+      ON CONFLICT (key) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = EXCLUDED.updated_at
+    `;
+  } catch (error) {
+    console.error('Error setting website color:', error);
+    throw error;
+  }
+}
+
+// Blog Cities Management
+export interface BlogCity {
+  id: string;
+  cityName: string;
+  content: string;
+  slug: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAllBlogCities(): Promise<BlogCity[]> {
+  try {
+    await ensureCMSTables();
+    const result = await sql`
+      SELECT * FROM blog_cities ORDER BY city_name ASC
+    `;
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      cityName: row.city_name,
+      content: row.content,
+      slug: row.slug,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch (error) {
+    console.error('Error fetching blog cities:', error);
+    return [];
+  }
+}
+
+export async function getBlogCityBySlug(slug: string): Promise<BlogCity | null> {
+  try {
+    await ensureCMSTables();
+    const result = await sql`
+      SELECT * FROM blog_cities WHERE slug = ${slug} LIMIT 1
+    `;
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      cityName: row.city_name,
+      content: row.content,
+      slug: row.slug,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  } catch (error) {
+    console.error('Error fetching blog city:', error);
+    return null;
+  }
+}
+
+export async function createBlogCity(city: { cityName: string; content: string; slug: string }): Promise<BlogCity> {
+  try {
+    await ensureCMSTables();
+    const id = `city_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    await sql`
+      INSERT INTO blog_cities (id, city_name, content, slug, created_at, updated_at)
+      VALUES (${id}, ${city.cityName}, ${city.content}, ${city.slug}, ${new Date().toISOString()}, ${new Date().toISOString()})
+    `;
+    const result = await sql`SELECT * FROM blog_cities WHERE id = ${id}`;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      cityName: row.city_name,
+      content: row.content,
+      slug: row.slug,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  } catch (error) {
+    console.error('Error creating blog city:', error);
+    throw error;
+  }
+}
+
+export async function updateBlogCity(id: string, updates: { cityName?: string; content?: string; slug?: string }): Promise<BlogCity | null> {
+  try {
+    await ensureCMSTables();
+    const updateFields: string[] = [];
+    const values: any[] = [id];
+
+    if (updates.cityName) {
+      updateFields.push('city_name');
+      values.push(updates.cityName);
+    }
+    if (updates.content) {
+      updateFields.push('content');
+      values.push(updates.content);
+    }
+    if (updates.slug) {
+      updateFields.push('slug');
+      values.push(updates.slug);
+    }
+
+    if (updateFields.length === 0) {
+      const result = await sql`SELECT * FROM blog_cities WHERE id = ${id}`;
+      if (result.rows.length === 0) return null;
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        cityName: row.city_name,
+        content: row.content,
+        slug: row.slug,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    }
+
+    updateFields.push('updated_at');
+    values.push(new Date().toISOString());
+
+    const setClause = updateFields.map((field, index) => `${field} = $${index + 2}`).join(', ');
+    const { query } = await import('./db-client');
+    const result = await query(
+      `UPDATE blog_cities SET ${setClause} WHERE id = $1 RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      cityName: row.city_name,
+      content: row.content,
+      slug: row.slug,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  } catch (error) {
+    console.error('Error updating blog city:', error);
+    return null;
+  }
+}
+
+export async function deleteBlogCity(id: string): Promise<boolean> {
+  try {
+    await ensureCMSTables();
+    await sql`DELETE FROM blog_cities WHERE id = ${id}`;
+    return true;
+  } catch (error) {
+    console.error('Error deleting blog city:', error);
+    return false;
+  }
+}
+
+// SEO Settings Management
+export interface SEOSettings {
+  id: string;
+  pagePath: string;
+  title?: string | null;
+  description?: string | null;
+  keywords?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImage?: string | null;
+  updatedAt: string;
+}
+
+export async function getSEOSettings(pagePath: string): Promise<SEOSettings | null> {
+  try {
+    await ensureCMSTables();
+    const result = await sql`
+      SELECT * FROM seo_settings WHERE page_path = ${pagePath} LIMIT 1
+    `;
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      pagePath: row.page_path,
+      title: row.title,
+      description: row.description,
+      keywords: row.keywords,
+      ogTitle: row.og_title,
+      ogDescription: row.og_description,
+      ogImage: row.og_image,
+      updatedAt: row.updated_at,
+    };
+  } catch (error) {
+    console.error('Error fetching SEO settings:', error);
+    return null;
+  }
+}
+
+export async function setSEOSettings(pagePath: string, settings: Partial<Omit<SEOSettings, 'id' | 'pagePath' | 'updatedAt'>>): Promise<SEOSettings> {
+  try {
+    await ensureCMSTables();
+    const id = `seo_${pagePath.replace(/\//g, '_')}_${Date.now()}`;
+    await sql`
+      INSERT INTO seo_settings (id, page_path, title, description, keywords, og_title, og_description, og_image, updated_at)
+      VALUES (
+        ${id},
+        ${pagePath},
+        ${settings.title || null},
+        ${settings.description || null},
+        ${settings.keywords || null},
+        ${settings.ogTitle || null},
+        ${settings.ogDescription || null},
+        ${settings.ogImage || null},
+        ${new Date().toISOString()}
+      )
+      ON CONFLICT (page_path) DO UPDATE SET
+        title = EXCLUDED.title,
+        description = EXCLUDED.description,
+        keywords = EXCLUDED.keywords,
+        og_title = EXCLUDED.og_title,
+        og_description = EXCLUDED.og_description,
+        og_image = EXCLUDED.og_image,
+        updated_at = EXCLUDED.updated_at
+    `;
+    const result = await sql`SELECT * FROM seo_settings WHERE page_path = ${pagePath}`;
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      pagePath: row.page_path,
+      title: row.title,
+      description: row.description,
+      keywords: row.keywords,
+      ogTitle: row.og_title,
+      ogDescription: row.og_description,
+      ogImage: row.og_image,
+      updatedAt: row.updated_at,
+    };
+  } catch (error) {
+    console.error('Error setting SEO settings:', error);
+    throw error;
+  }
+}
+
+export async function getAllSEOSettings(): Promise<SEOSettings[]> {
+  try {
+    await ensureCMSTables();
+    const result = await sql`SELECT * FROM seo_settings ORDER BY page_path ASC`;
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      pagePath: row.page_path,
+      title: row.title,
+      description: row.description,
+      keywords: row.keywords,
+      ogTitle: row.og_title,
+      ogDescription: row.og_description,
+      ogImage: row.og_image,
+      updatedAt: row.updated_at,
+    }));
+  } catch (error) {
+    console.error('Error fetching all SEO settings:', error);
     return [];
   }
 }

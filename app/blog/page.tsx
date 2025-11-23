@@ -1,32 +1,11 @@
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import { getAllBlogCities } from '@/lib/db';
 
-const blogPosts = [
-  {
-    id: 1,
-    title: 'Getting Started with Design Corrections',
-    excerpt: 'Learn how to use our platform to get professional design corrections quickly and efficiently.',
-    date: '2024-01-15',
-    category: 'Tutorial',
-  },
-  {
-    id: 2,
-    title: 'Best Practices for File Uploads',
-    excerpt: 'Tips and tricks for uploading files that get the best results from our correction service.',
-    date: '2024-01-10',
-    category: 'Tips',
-  },
-  {
-    id: 3,
-    title: 'Understanding the Mutual Confirmation System',
-    excerpt: 'Learn about our unique two-party confirmation system that ensures transparency and satisfaction.',
-    date: '2024-01-05',
-    category: 'Feature',
-  },
-];
+export default async function BlogPage() {
+  const cities = await getAllBlogCities();
 
-export default function BlogPage() {
   return (
     <>
       <Navigation />
@@ -37,33 +16,128 @@ export default function BlogPage() {
             <p className="text-xl text-gray-600">Tips, tutorials, and updates from our team</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post) => (
-              <article key={post.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+          {/* City-based Blog Posts */}
+          {cities.length > 0 && (
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">City-Specific Content</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {cities.map((city) => (
+                  <article key={city.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-semibold text-whatsapp-green uppercase tracking-wide">
+                          {city.cityName}
+                        </span>
+                        <time className="text-xs text-gray-500" dateTime={city.updatedAt}>
+                          {new Date(city.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </time>
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-900 mb-2">
+                        <Link href={`/blog/${city.slug}`} className="hover:text-whatsapp-green">
+                          {city.cityName} - Design Services
+                        </Link>
+                      </h2>
+                      <p className="text-gray-600 mb-4 line-clamp-3">
+                        {city.content.length > 150 ? city.content.substring(0, 150) + '...' : city.content}
+                      </p>
+                      <Link 
+                        href={`/blog/${city.slug}`}
+                        className="text-whatsapp-green hover:text-whatsapp-green-dark font-semibold text-sm"
+                      >
+                        Read more →
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Default Blog Posts */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">General Blog Posts</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <article className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-semibold text-whatsapp-green uppercase tracking-wide">
-                      {post.category}
+                      Tutorial
                     </span>
-                    <time className="text-xs text-gray-500" dateTime={post.date}>
-                      {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    <time className="text-xs text-gray-500" dateTime="2024-01-15">
+                      {new Date('2024-01-15').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </time>
                   </div>
                   <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    <Link href={`/blog/${post.id}`} className="hover:text-whatsapp-green">
-                      {post.title}
+                    <Link href="/blog/1" className="hover:text-whatsapp-green">
+                      Getting Started with Design Corrections
                     </Link>
                   </h2>
-                  <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                  <p className="text-gray-600 mb-4">
+                    Learn how to use our platform to get professional design corrections quickly and efficiently.
+                  </p>
                   <Link 
-                    href={`/blog/${post.id}`}
+                    href="/blog/1"
                     className="text-whatsapp-green hover:text-whatsapp-green-dark font-semibold text-sm"
                   >
                     Read more →
                   </Link>
                 </div>
               </article>
-            ))}
+
+              <article className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-whatsapp-green uppercase tracking-wide">
+                      Tips
+                    </span>
+                    <time className="text-xs text-gray-500" dateTime="2024-01-10">
+                      {new Date('2024-01-10').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </time>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    <Link href="/blog/2" className="hover:text-whatsapp-green">
+                      Best Practices for File Uploads
+                    </Link>
+                  </h2>
+                  <p className="text-gray-600 mb-4">
+                    Tips and tricks for uploading files that get the best results from our correction service.
+                  </p>
+                  <Link 
+                    href="/blog/2"
+                    className="text-whatsapp-green hover:text-whatsapp-green-dark font-semibold text-sm"
+                  >
+                    Read more →
+                  </Link>
+                </div>
+              </article>
+
+              <article className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-whatsapp-green uppercase tracking-wide">
+                      Feature
+                    </span>
+                    <time className="text-xs text-gray-500" dateTime="2024-01-05">
+                      {new Date('2024-01-05').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </time>
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    <Link href="/blog/3" className="hover:text-whatsapp-green">
+                      Understanding the Mutual Confirmation System
+                    </Link>
+                  </h2>
+                  <p className="text-gray-600 mb-4">
+                    Learn about our unique two-party confirmation system that ensures transparency and satisfaction.
+                  </p>
+                  <Link 
+                    href="/blog/3"
+                    className="text-whatsapp-green hover:text-whatsapp-green-dark font-semibold text-sm"
+                  >
+                    Read more →
+                  </Link>
+                </div>
+              </article>
+            </div>
           </div>
 
           <div className="text-center mt-12">
@@ -78,4 +152,3 @@ export default function BlogPage() {
     </>
   );
 }
-

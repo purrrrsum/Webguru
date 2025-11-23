@@ -27,7 +27,7 @@ export default function AdminPage() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push('/');
+        router.push('/dashboard');
       }
     } catch (err) {
       setError('Login failed. Please try again.');

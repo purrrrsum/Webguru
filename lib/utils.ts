@@ -37,6 +37,7 @@ export interface Job {
   jobNumber?: number | null;
   previousAgentId?: string | null;
   priority?: 'normal' | 'high' | 'urgent';
+  status?: 'open' | 'closed';
   fileCount?: number;
 }
 
