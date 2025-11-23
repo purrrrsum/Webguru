@@ -175,16 +175,28 @@ export const authOptions: NextAuthOptions = {
 
         // Check if account exists
         const existingAccount = await getUserByEmail(email);
-        // If account exists with different role, deny access
+        
+        // If account exists, always use its existing role for authentication
+        // This prevents role mismatch errors when logging in
+        const actualRole = existingAccount?.role || requestedRole;
+        
+        // For OTP/password login with existing accounts, use the account's role
+        // Role check only matters when creating new accounts via OTP
         if (existingAccount && existingAccount.role !== requestedRole) {
-          throw new Error(
-            `This email is registered as ${existingAccount.role}. Please use the ${existingAccount.role === 'agent' ? 'agent' : 'user'} login page.`
-          );
+          // If trying to use OTP to create account with different role, deny
+          // But for password login, we'll use the existing account's role
+          const isOtpAttempt = /^\d{6}$/.test(secret.trim());
+          if (isOtpAttempt) {
+            throw new Error(
+              `This email is registered as ${existingAccount.role}. Please use the ${existingAccount.role === 'agent' ? 'agent' : 'user'} login page.`
+            );
+          }
+          // For password login, we'll proceed with the existing account's role
         }
 
         // Admin bypass is restricted to agent/admin emails
         if (secret === 'admin-login') {
-          if (requestedRole !== 'agent') {
+          if (requestedRole !== 'agent' && actualRole !== 'agent') {
             throw new Error('Admin access allowed only for agent accounts.');
           }
 
@@ -202,7 +214,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (secret === 'test-login-bypass') {
-          const user = await ensureUserAccount(email, requestedRole, {}, existingAccount || undefined);
+          const user = await ensureUserAccount(email, actualRole, {}, existingAccount || undefined);
           const sanitized = { ...user };
           delete (sanitized as any).password;
           return sanitized as any;
@@ -215,7 +227,7 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          const user = await ensureUserAccount(email, requestedRole, {}, existingAccount || undefined);
+          const user = await ensureUserAccount(email, actualRole, {}, existingAccount || undefined);
           const sanitized = { ...user };
           delete (sanitized as any).password;
           return sanitized as any;
@@ -241,6 +253,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid email or password.');
         }
 
+        // Return the existing account with its actual role
         const sanitized = { ...existingAccount };
         delete (sanitized as any).password;
         return sanitized as any;
@@ -267,21 +280,20 @@ export const authOptions: NextAuthOptions = {
         if (user.email) {
           await ensureDatabaseSetup();
           
-          // For Google OAuth, we need to determine the role
-          // The role is set via cookie before OAuth redirect, but we can't access it here directly
-          // So we'll create/update the account with the inferred role first
-          // Then in the JWT callback, we'll check the cookie and update if needed
-          let requestedRole: 'user' | 'agent' = inferRoleFromEmail(user.email);
+          // For Google OAuth, check if account already exists first
+          const existingAccount = await getUserByEmail(user.email);
+          
+          // If account exists, use its existing role
+          // Otherwise, infer role from email
+          let requestedRole: 'user' | 'agent' = existingAccount?.role || inferRoleFromEmail(user.email);
           
           const dbUser = await ensureUserAccount(user.email, requestedRole, {
             name: user.name || getNameFromEmail(user.email),
-          });
+          }, existingAccount || undefined);
 
           user.id = dbUser.id;
           user.name = dbUser.name;
           (user as any).role = dbUser.role;
-          // Store the requested role in user object for JWT callback
-          (user as any).requestedRole = requestedRole;
         }
       }
       return true;
