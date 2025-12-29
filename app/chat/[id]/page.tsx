@@ -417,8 +417,8 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center telegram-bg">
-        <div className="text-whatsapp-green text-xl">Loading chat...</div>
+      <div className="min-h-screen flex items-center justify-center apple-chat-bg">
+        <div className="text-apple-blue text-xl font-medium">Loading chat...</div>
       </div>
     );
   }
@@ -439,9 +439,9 @@ export default function ChatPage() {
   const counterpartRole = session.user.role === 'user' ? 'Agent' : 'User';
 
   return (
-    <div className="min-h-screen telegram-bg flex flex-col">
+    <div className="min-h-screen apple-chat-bg flex flex-col">
       {/* Header */}
-      <header className="telegram-header text-white p-4 shadow-md">
+      <header className="apple-chat-header p-4 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -542,8 +542,8 @@ export default function ChatPage() {
         <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6">
           <div className="mb-6 lg:mb-0">
             {/* Chat Messages */}
-            <div className="telegram-card rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[60vh]">
-              <div className="flex-1 overflow-y-auto p-4 pb-24">
+            <div className="apple-chat-card overflow-hidden flex flex-col min-h-[60vh]">
+              <div className="flex-1 overflow-y-auto p-6 pb-24">
                 {allItems.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
                     <p className="text-lg mb-2">No messages yet</p>
@@ -576,10 +576,10 @@ export default function ChatPage() {
                           className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                          className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                          className={`max-w-[70%] px-4 py-3 rounded-2xl ${
                             isOwn
-                              ? 'bg-whatsapp-green text-white'
-                              : 'bg-gray-700/50 text-gray-100 shadow-sm border border-gray-600'
+                              ? 'bg-apple-blue text-white ml-auto'
+                              : 'bg-white text-apple-gray-900 shadow-sm border border-apple-gray-200'
                           }`}
                           >
                             <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
@@ -603,21 +603,21 @@ export default function ChatPage() {
               </div>
 
               {/* Input Area */}
-              <div className="telegram-card border-t border-gray-700 p-4">
-                <form onSubmit={handleSendMessage} className="flex gap-2">
+              <div className="apple-chat-card border-t border-apple-gray-200 p-6">
+                <form onSubmit={handleSendMessage} className="flex gap-3">
                   <input
                     type="text"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
                     onPaste={handlePasteImage}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 bg-white/10 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-whatsapp-green text-white placeholder-gray-400"
+                    className="flex-1 px-4 py-3 bg-apple-gray-100 border border-apple-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                     disabled={sendingMessage}
                   />
                   <button
                     type="submit"
                     disabled={!messageText.trim() || sendingMessage}
-                    className="px-6 py-2 bg-whatsapp-green text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-3 apple-button-primary rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sendingMessage ? 'Sending...' : 'Send'}
                   </button>
@@ -631,7 +631,7 @@ export default function ChatPage() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="telegram-card rounded-lg shadow-sm p-4">
+            <div className="apple-card p-6">
               <h2 className="text-sm font-semibold text-white mb-3">SLA & Schedule</h2>
               <p className="text-xs text-gray-400 mb-2">
                 Track due dates to keep the project on schedule. Automations notify when items approach or miss deadlines.
@@ -692,9 +692,9 @@ export default function ChatPage() {
               )}
             </div>
 
-            <div className="telegram-card rounded-lg shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-white">Collaboration Notes</h2>
+            <div className="apple-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="apple-heading-3 text-apple-gray-900">Collaboration Notes</h2>
                 <span className="text-xs text-gray-400">
                   {annotations.filter((a) => a.status === 'open').length} open
                 </span>
@@ -755,9 +755,9 @@ export default function ChatPage() {
               </form>
             </div>
 
-            <div className="telegram-card rounded-lg shadow-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-white">Revision History</h2>
+            <div className="apple-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="apple-heading-3 text-apple-gray-900">Revision History</h2>
                 <span className="text-xs text-gray-400">{versions.length} versions</span>
               </div>
               <div className="max-h-64 overflow-y-auto space-y-3">

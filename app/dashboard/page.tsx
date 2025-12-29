@@ -66,8 +66,8 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center telegram-bg">
-        <div className="text-whatsapp-green text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center apple-chat-bg">
+        <div className="text-apple-blue text-xl font-medium">Loading...</div>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function DashboardPage() {
 
   const isAgent = session.user.role === 'agent';
   const headerClass = 'telegram-header text-white';
-  const pageBgClass = 'telegram-bg';
+  const pageBgClass = 'apple-chat-bg';
 
   const handleNewJobSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -173,9 +173,9 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
         {session.user.role === 'user' && (
-          <div className="mb-6 rounded-lg border border-whatsapp-green/30 telegram-card p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-white">Pay for your proofreading jobs</h2>
-            <p className="mt-1 text-sm text-gray-300">
+          <div className="mb-6 apple-card p-6">
+            <h2 className="apple-heading-3 text-apple-gray-900 mb-3">Pay for your proofreading jobs</h2>
+            <p className="apple-body-small text-apple-gray-600 mb-4">
               Scan the QR or use the UPI details below. Share the payment reference in the chat so our finance team can match it quickly.
             </p>
             <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-gray-300">Need help?</p>
                   <p className="text-sm text-gray-300">
                     Share payment slips in the chat or email{' '}
-                    <a href="mailto:billing@thesupport.agency" className="text-whatsapp-green hover:underline">
+                    <a href="mailto:billing@thesupport.agency" className="text-apple-blue hover:text-apple-blue-dark">
                       billing@thesupport.agency
                     </a>
                     .
@@ -220,7 +220,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="telegram-card rounded-lg shadow-md p-6 mb-4">
+        <div className="apple-card p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">
               {session.user.role === 'user' ? 'Your Jobs' : 'All User Conversations'}
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                   }
                   setShowJobForm((prev) => !prev);
                 }}
-                className="px-4 py-2 bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition-colors"
+                className="apple-button-primary"
               >
                 {showJobForm ? 'Cancel' : '+ New Job'}
               </button>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                   maxLength={120}
-                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                   placeholder="e.g. Brochure Proofread – September Launch"
                   required
                 />
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                   type="text"
                   value={jobTagsInput}
                   onChange={(e) => setJobTagsInput(e.target.value)}
-                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-white placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                   placeholder="Add up to 3 tags, separated by commas"
                 />
                 <p className="text-xs text-gray-400 mt-1">Example: brochure, campaign, client-name</p>
@@ -296,7 +296,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={creatingJob}
-                  className="px-4 py-2 bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition-colors disabled:opacity-50"
+                  className="apple-button-primary disabled:opacity-50"
                 >
                   {creatingJob ? 'Creating...' : 'Create Job'}
                 </button>
@@ -326,7 +326,7 @@ export default function DashboardPage() {
                 <Link
                   key={job.id}
                   href={`/chat/${job.id}`}
-                  className="block p-4 border border-gray-700 rounded-lg hover:bg-gray-800/50 transition-colors telegram-card"
+                  className="block apple-card p-6 hover:shadow-apple-lg transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -347,7 +347,7 @@ export default function DashboardPage() {
                           </span>
                         ) : null}
                         {job.hasUnread && (
-                          <span className="w-2 h-2 bg-whatsapp-green rounded-full"></span>
+                          <span className="w-2 h-2 bg-apple-blue rounded-full"></span>
                         )}
                       </div>
                       {isAgent && job.userName && (
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                       {job.tags && job.tags.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {job.tags.map((tag) => (
-                            <span key={`${job.id}-${tag}`} className="text-xs px-2 py-1 bg-whatsapp-green/20 text-whatsapp-green rounded-full border border-whatsapp-green/30">
+                            <span key={`${job.id}-${tag}`} className="text-xs px-3 py-1 bg-apple-blue/10 text-apple-blue rounded-full border border-apple-blue/20">
                               {tag}
                             </span>
                           ))}
