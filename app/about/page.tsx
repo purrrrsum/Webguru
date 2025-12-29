@@ -6,69 +6,124 @@ export default function AboutPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">About Us</h1>
-          
-          <div className="prose prose-lg max-w-none">
-            <p className="text-gray-600 mb-6 text-lg">
-              Welcome to <strong>thesupport.agency</strong>, the affordable proofreading platform designed specifically for design agencies 
-              who need professional content correction at the lowest prices in the market.
-            </p>
-
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Our Mission</h2>
-            <p className="text-gray-600 mb-6">
-              We believe that every design agency, regardless of size, should have access to professional proofreading services 
-              without breaking the bank. Our mission is to make quality content correction accessible, affordable, and efficient 
-              through our innovative platform that connects agencies with skilled proofreading agents.
-            </p>
-
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">What We Proofread</h2>
-            <p className="text-gray-600 mb-4">
-              Our platform is perfect for a wide range of content types that design agencies work with daily:
-            </p>
-            <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-              <li><strong>Social Media Posts:</strong> Captions, hashtags, and content for Instagram, Facebook, Twitter, and more</li>
-              <li><strong>Videos with Subtitles:</strong> Accurate subtitles, translations, and closed captions</li>
-              <li><strong>Books & Publications:</strong> Complete proofreading for novels, eBooks, and printed materials</li>
-              <li><strong>Website Content:</strong> Landing pages, blog posts, product descriptions, and web copy</li>
-              <li><strong>Technical Documents:</strong> User manuals, API documentation, technical specifications</li>
-              <li><strong>Design Mockups:</strong> Text corrections in design files, presentations, and marketing materials</li>
-            </ul>
-
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">How It Works</h2>
-            <p className="text-gray-600 mb-6">
-              Our platform enables you to upload any file (images, documents, videos) along with a text message specifying your 
-              correction requirements. Expert agents download, review, and upload corrected versions. Both you and the agent must 
-              tick the original file to confirm completion, ensuring transparency and satisfaction.
-            </p>
-
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Key Features</h2>
-            <ul className="list-disc list-inside text-gray-600 space-y-2 mb-6">
-              <li>Secure file uploads up to 20MB</li>
-              <li>Real-time chat collaboration</li>
-              <li>Mutual confirmation system</li>
-              <li>Google OAuth and Email OTP authentication</li>
-              <li>Mobile-responsive design</li>
-              <li>Job tracking and profile management</li>
-            </ul>
-
-            <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">Why Choose Us</h2>
-            <p className="text-gray-600 mb-4">
-              We combine the simplicity of WhatsApp with the professionalism of enterprise software. 
-              Our platform is built for both individuals and businesses who need reliable, transparent 
-              design correction services.
-            </p>
-
-            <div className="bg-whatsapp-green-light p-6 rounded-lg mt-8">
-              <p className="text-gray-800">
-                <strong>Ready to get started?</strong> Sign up today and experience the future of 
-                collaborative design corrections.
-              </p>
-              <Link href="/auth/signin" className="bg-whatsapp-green text-white px-6 py-2 rounded-md hover:bg-whatsapp-green-dark inline-block mt-4">
-                Get Started
-              </Link>
+      <div className="min-h-screen apple-chat-bg">
+        {/* Hero Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="text-center mb-16">
+            <div className="mb-6">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-apple-blue-light text-apple-blue text-sm font-medium">
+                About Our Mission
+              </span>
             </div>
+            <h1 className="apple-heading-1 mb-6">Human-powered proofreading for modern teams</h1>
+            <p className="apple-body-large max-w-3xl mx-auto text-apple-gray-600">
+              We believe every creative deserves professional proofreading without the premium price tag.
+              Our platform connects design agencies with skilled proofreaders worldwide.
+            </p>
+          </div>
+
+          {/* Mission Section */}
+          <div className="apple-card p-8 mb-12">
+            <div className="text-center mb-8">
+              <h2 className="apple-heading-2 mb-4">Our Mission</h2>
+              <p className="apple-body-large text-apple-gray-600 max-w-3xl mx-auto">
+                To democratize professional proofreading services, making them accessible, affordable, and efficient
+                for design agencies of all sizes through our innovative human-powered platform.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-apple-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <h3 className="apple-heading-3 mb-3">Quality First</h3>
+                <p className="apple-body-small text-apple-gray-600">
+                  Every piece of content is reviewed by experienced professionals with attention to detail.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-apple-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">⚡</span>
+                </div>
+                <h3 className="apple-heading-3 mb-3">Lightning Fast</h3>
+                <p className="apple-body-small text-apple-gray-600">
+                  Quick turnaround times without compromising on the quality of our proofreading.
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-apple-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🤝</span>
+                </div>
+                <h3 className="apple-heading-3 mb-3">Transparent</h3>
+                <p className="apple-body-small text-apple-gray-600">
+                  Clear communication and mutual confirmation ensure complete satisfaction.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* What We Proofread */}
+          <div className="mb-12">
+            <h2 className="apple-heading-2 text-center mb-12">What We Proofread</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { icon: "📱", title: "Social Media Posts", desc: "Captions, hashtags, and content for all platforms" },
+                { icon: "🎬", title: "Videos & Subtitles", desc: "Accurate subtitles, translations, and closed captions" },
+                { icon: "📚", title: "Books & Publications", desc: "Complete proofreading for novels and eBooks" },
+                { icon: "🌐", title: "Website Content", desc: "Landing pages, blog posts, and web copy" },
+                { icon: "📄", title: "Technical Documents", desc: "User manuals and technical specifications" },
+                { icon: "🎨", title: "Design Mockups", desc: "Text corrections in design files and presentations" }
+              ].map((item, index) => (
+                <div key={index} className="apple-card p-6 text-center">
+                  <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl">{item.icon}</span>
+                  </div>
+                  <h3 className="apple-heading-3 mb-3">{item.title}</h3>
+                  <p className="apple-body-small text-apple-gray-600">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* How It Works */}
+          <div className="mb-12">
+            <h2 className="apple-heading-2 text-center mb-12">How It Works</h2>
+            <div className="apple-card p-8">
+              <div className="grid md:grid-cols-4 gap-8">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-apple-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">1</div>
+                  <h3 className="font-semibold mb-2">Upload Content</h3>
+                  <p className="text-sm text-apple-gray-600">Upload images, documents, or videos with your requirements</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-apple-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
+                  <h3 className="font-semibold mb-2">Expert Review</h3>
+                  <p className="text-sm text-apple-gray-600">Our proofreaders download and review your content</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-apple-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">3</div>
+                  <h3 className="font-semibold mb-2">Receive Corrections</h3>
+                  <p className="text-sm text-apple-gray-600">Get your proofread content back with detailed corrections</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-apple-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">4</div>
+                  <h3 className="font-semibold mb-2">Mutual Confirmation</h3>
+                  <p className="text-sm text-apple-gray-600">Both parties confirm completion for transparency</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div className="apple-card p-8 bg-gradient-to-r from-apple-blue-light to-white text-center">
+            <h2 className="apple-heading-2 mb-4">Ready to get started?</h2>
+            <p className="apple-body-large text-apple-gray-700 mb-6">
+              Join thousands of design professionals who trust us with their content.
+            </p>
+            <Link href="/auth/signin" className="apple-button-primary">
+              Start Proofreading Today
+            </Link>
           </div>
         </div>
       </div>

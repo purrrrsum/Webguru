@@ -69,61 +69,78 @@ export default function SOPPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Standard Operating Procedure (SOP)</h1>
-            <p className="text-xl text-gray-600">
-              Upload your content and sample posts to get started
+      <div className="min-h-screen apple-chat-bg">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          {/* Hero Section */}
+          <div className="text-center mb-16">
+            <div className="mb-6">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-apple-blue-light text-apple-blue text-sm font-medium">
+                Design Request Process
+              </span>
+            </div>
+            <h1 className="apple-heading-1 mb-6">Standard Operating Procedure</h1>
+            <p className="apple-body-large max-w-2xl mx-auto text-apple-gray-600">
+              Upload your content and sample posts to get started with our design services
             </p>
           </div>
 
           {/* Process Overview */}
-          <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">How It Works</h2>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-8 h-8 bg-whatsapp-green text-white rounded-full flex items-center justify-center font-bold mr-4">
-                  1
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Upload Your Content</h3>
-                  <p className="text-gray-600">
-                    Upload your content in PDF or Word document format. Include all guidelines, brand colors, fonts, and any specific requirements.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-8 h-8 bg-whatsapp-green text-white rounded-full flex items-center justify-center font-bold mr-4">
-                  2
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Provide Sample Posts</h3>
-                  <p className="text-gray-600">
-                    Share sample posts either as URLs or images. This helps us understand your style and preferences.
-                  </p>
+          <div className="apple-card p-8 mb-12">
+            <h2 className="apple-heading-2 mb-8">How It Works</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="apple-card p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="apple-heading-3 mb-2">Upload Your Content</h3>
+                    <p className="apple-body-small text-apple-gray-600">
+                      Upload your content in PDF or Word document format. Include all guidelines, brand colors, fonts, and any specific requirements.
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-8 h-8 bg-whatsapp-green text-white rounded-full flex items-center justify-center font-bold mr-4">
-                  3
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Contact Within 1 Hour</h3>
-                  <p className="text-gray-600">
-                    We&apos;ll contact you within 1 hour to discuss your requirements and answer any questions.
-                  </p>
+
+              <div className="apple-card p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="apple-heading-3 mb-2">Provide Sample Posts</h3>
+                    <p className="apple-body-small text-apple-gray-600">
+                      Share sample posts either as URLs or images. This helps us understand your style and preferences.
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-8 h-8 bg-whatsapp-green text-white rounded-full flex items-center justify-center font-bold mr-4">
+
+              <div className="apple-card p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="apple-heading-3 mb-2">Contact Within 1 Hour</h3>
+                    <p className="apple-body-small text-apple-gray-600">
+                      We&apos;ll contact you within 1 hour to discuss your requirements and answer any questions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="apple-card p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
                   4
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Receive Designs</h3>
-                  <p className="text-gray-600">
-                    You&apos;ll receive 3-4 design templates and 1 unique design based on your requirements.
-                  </p>
+                  <div>
+                    <h3 className="apple-heading-3 mb-2">Receive Designs</h3>
+                    <p className="apple-body-small text-apple-gray-600">
+                      You&apos;ll receive 3-4 design templates and 1 unique design based on your requirements.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -131,28 +148,30 @@ export default function SOPPage() {
 
           {/* Form */}
           {submitted ? (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-              <div className="text-4xl mb-4">✓</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h2>
-              <p className="text-gray-600 mb-6">
+            <div className="apple-card p-8 text-center bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl text-white">✓</span>
+              </div>
+              <h2 className="apple-heading-2 mb-4">Thank You!</h2>
+              <p className="apple-body-large text-apple-gray-700 mb-8">
                 We&apos;ve received your submission. We&apos;ll contact you within 1 hour.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="bg-whatsapp-green text-white px-6 py-2 rounded-lg hover:bg-whatsapp-green-dark transition-colors"
+                className="apple-button-primary"
               >
                 Submit Another Request
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Submit Your Request</h2>
+            <div className="apple-card p-8">
+              <h2 className="apple-heading-2 mb-8">Submit Your Request</h2>
 
               {/* Contact Information */}
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Name *
+                  <label htmlFor="name" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                    Full Name *
                   </label>
                   <input
                     type="text"
@@ -161,12 +180,13 @@ export default function SOPPage() {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                    placeholder="Your full name"
+                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
+                  <label htmlFor="email" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                    Email Address *
                   </label>
                   <input
                     type="email"
@@ -175,12 +195,13 @@ export default function SOPPage() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone *
+                  <label htmlFor="phone" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                    Phone Number *
                   </label>
                   <input
                     type="tel"
@@ -189,12 +210,13 @@ export default function SOPPage() {
                     required
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                    placeholder="+91 98765 43210"
+                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
-                    Company
+                  <label htmlFor="company" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                    Company Name
                   </label>
                   <input
                     type="text"
@@ -202,7 +224,7 @@ export default function SOPPage() {
                     name="company"
                     value={formData.company}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
                   />
                 </div>
               </div>
@@ -294,7 +316,7 @@ export default function SOPPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-whatsapp-green text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-whatsapp-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="apple-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Request'}
                 </button>

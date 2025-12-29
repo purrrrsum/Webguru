@@ -125,8 +125,8 @@ export default function ProfilePage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-whatsapp-gray-light">
-        <div className="text-whatsapp-green text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center apple-chat-bg">
+        <div className="text-apple-blue text-xl font-medium">Loading...</div>
       </div>
     );
   }
@@ -136,14 +136,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen telegram-bg">
+    <div className="min-h-screen apple-chat-bg">
       {/* Header */}
-      <header className="telegram-header text-white p-4 shadow-md">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <header className="apple-chat-header p-6 shadow-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-white hover:bg-white/20 p-2 rounded"
+              className="text-apple-gray-600 hover:text-apple-blue p-3 rounded-xl hover:bg-white/50 transition-all"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -154,11 +154,14 @@ export default function ProfilePage() {
                 />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold">Profile</h1>
+            <div>
+              <h1 className="apple-heading-2">Profile Settings</h1>
+              <p className="apple-body-small text-apple-gray-600">Manage your account and preferences</p>
+            </div>
           </div>
           <Link
             href="/api/auth/signout"
-            className="px-4 py-2 bg-white/20 rounded-md hover:bg-white/30 transition-colors text-sm"
+            className="apple-button-secondary"
           >
             Sign Out
           </Link>
@@ -166,42 +169,49 @@ export default function ProfilePage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto p-4 mt-8">
-        <div className="telegram-card rounded-lg shadow-md p-6">
+      <main className="max-w-6xl mx-auto p-6">
+        <div className="apple-card p-8">
           {/* Job Count Badge */}
-          <div className="mb-6 pb-6 border-b border-gray-700">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Completed Jobs</p>
-                <p className="text-3xl font-bold text-whatsapp-green mt-1">
-                  {user.jobCount || 0}
-                </p>
-              </div>
-              <div className="w-16 h-16 bg-whatsapp-green/20 rounded-full flex items-center justify-center">
-                <span className="text-3xl text-whatsapp-green">✓</span>
+          <div className="mb-8 pb-8 border-b border-apple-gray-200">
+            <div className="apple-card p-6 bg-gradient-to-r from-apple-blue-light to-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="apple-body-small text-apple-gray-600 uppercase tracking-wide font-medium">Completed Jobs</p>
+                  <p className="text-4xl font-bold text-apple-blue mt-2">
+                    {user.jobCount || 0}
+                  </p>
+                  <p className="apple-body-small text-apple-gray-600 mt-1">
+                    {session.user.role === 'agent' ? 'Jobs completed' : 'Proofreading projects done'}
+                  </p>
+                </div>
+                <div className="w-20 h-20 bg-apple-blue/10 rounded-2xl flex items-center justify-center">
+                  <span className="text-4xl text-apple-blue">✓</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Available Agents Count (for users only) */}
           {session.user.role === 'user' && availableAgentsCount !== null && (
-            <div className="mb-6 pb-6 border-b border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Agents Available</p>
-                  <p className="text-3xl font-bold text-blue-400 mt-1">
-                    {availableAgentsCount}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {availableAgentsCount === 0 
-                      ? 'No agents online at the moment' 
-                      : availableAgentsCount === 1
-                      ? 'Agent ready to take tasks'
-                      : 'Agents ready to take tasks'}
-                  </p>
-                </div>
-                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-2xl">👥</span>
+            <div className="mb-8 pb-8 border-b border-apple-gray-200">
+              <div className="apple-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="apple-body-small text-apple-gray-600 uppercase tracking-wide font-medium">Agents Online</p>
+                    <p className="text-4xl font-bold text-blue-600 mt-2">
+                      {availableAgentsCount}
+                    </p>
+                    <p className="apple-body-small text-apple-gray-600 mt-1">
+                      {availableAgentsCount === 0
+                        ? 'No agents online at the moment'
+                        : availableAgentsCount === 1
+                        ? 'Agent ready to take tasks'
+                        : 'Agents ready to take tasks'}
+                    </p>
+                  </div>
+                  <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center">
+                    <span className="text-4xl">👥</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -209,63 +219,80 @@ export default function ProfilePage() {
 
           {/* Agent Availability Toggle */}
           {session.user.role === 'agent' && (
-            <div className="mb-6 pb-6 border-b border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4">Availability Status</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-300">Online</p>
-                    <p className="text-xs text-gray-500">Show as available in system</p>
-                  </div>
-                  <button
-                    onClick={() => handleAvailabilityToggle('isOnline', !isOnline)}
-                    disabled={updatingAvailability}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      isOnline ? 'bg-whatsapp-green' : 'bg-gray-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        isOnline ? 'translate-x-6' : 'translate-x-1'
+            <div className="mb-8 pb-8 border-b border-apple-gray-200">
+              <h3 className="apple-heading-3 mb-6">Availability Status</h3>
+              <div className="space-y-6">
+                <div className="apple-card p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="apple-heading-3 text-sm mb-1">Online Status</h4>
+                      <p className="apple-body-small text-apple-gray-600">Show as available in the system</p>
+                    </div>
+                    <button
+                      onClick={() => handleAvailabilityToggle('isOnline', !isOnline)}
+                      disabled={updatingAvailability}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
+                        isOnline ? 'bg-apple-blue' : 'bg-apple-gray-300'
                       }`}
-                    />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-300">Ready to Take Tasks</p>
-                    <p className="text-xs text-gray-500">Receive new job assignments</p>
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                          isOnline ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleAvailabilityToggle('isReady', !isReady)}
-                    disabled={updatingAvailability || !isOnline}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      isReady && isOnline ? 'bg-whatsapp-green' : 'bg-gray-600'
-                    } ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        isReady && isOnline ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
                 </div>
-                {isOnline && isReady && (
-                  <p className="text-xs text-green-400">✓ You are receiving new job assignments</p>
-                )}
-                {isOnline && !isReady && (
-                  <p className="text-xs text-yellow-400">⚠ Online but not accepting new tasks</p>
-                )}
-                {!isOnline && (
-                  <p className="text-xs text-gray-500">Offline - Jobs will be reassigned if you have pending messages</p>
-                )}
+
+                <div className="apple-card p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="apple-heading-3 text-sm mb-1">Ready to Take Tasks</h4>
+                      <p className="apple-body-small text-apple-gray-600">Receive new job assignments</p>
+                    </div>
+                    <button
+                      onClick={() => handleAvailabilityToggle('isReady', !isReady)}
+                      disabled={updatingAvailability || !isOnline}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
+                        isReady && isOnline ? 'bg-apple-blue' : 'bg-apple-gray-300'
+                      } ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                          isReady && isOnline ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="apple-card p-4">
+                  {isOnline && isReady && (
+                    <div className="flex items-center gap-3">
+                      <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                      <p className="apple-body-small text-green-700 font-medium">You are receiving new job assignments</p>
+                    </div>
+                  )}
+                  {isOnline && !isReady && (
+                    <div className="flex items-center gap-3">
+                      <span className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs">⚠</span>
+                      <p className="apple-body-small text-yellow-700 font-medium">Online but not accepting new tasks</p>
+                    </div>
+                  )}
+                  {!isOnline && (
+                    <div className="flex items-center gap-3">
+                      <span className="w-5 h-5 bg-apple-gray-400 rounded-full flex items-center justify-center text-white text-xs">⭕</span>
+                      <p className="apple-body-small text-apple-gray-600">Offline - Jobs will be reassigned if you have pending messages</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
           {/* Profile Form */}
           <div>
-            <h2 className="text-xl font-bold text-white mb-4">Edit Profile</h2>
+            <h2 className="apple-heading-2 mb-6">Edit Profile</h2>
             <ProfileForm initialData={user} onSave={handleSave} />
           </div>
         </div>

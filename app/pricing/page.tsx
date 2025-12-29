@@ -6,145 +6,155 @@ export default function PricingPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Transparent Pricing</h1>
-            <p className="text-xl text-gray-600">Choose the plan that works best for you</p>
-            <div className="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg inline-block">
-              🎉 Special Offer: Get 40% discount if no errors are found or marked!
+      <div className="min-h-screen apple-chat-bg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          {/* Hero Section */}
+          <div className="text-center mb-20">
+            <div className="mb-6">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-apple-blue-light text-apple-blue text-sm font-medium">
+                Transparent Pricing
+              </span>
+            </div>
+            <h1 className="apple-heading-1 mb-6">Choose the perfect plan for your needs</h1>
+            <p className="apple-body-large max-w-2xl mx-auto text-apple-gray-600 mb-8">
+              Simple, predictable pricing with no hidden fees. Volume discounts automatically applied.
+            </p>
+            <div className="apple-card p-6 max-w-md mx-auto bg-gradient-to-r from-apple-blue-light to-white">
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-2xl">🎯</span>
+                <p className="text-apple-blue font-semibold">
+                  40% automatic discount if no errors are found
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Pricing Plans */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Choose Your Plan</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-              {/* Single Image Plan */}
-              <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Pay Per Image</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-whatsapp-green">₹5</span>
-                  <span className="text-gray-600 ml-2">per image</span>
+          <div className="mb-20">
+            <h2 className="apple-heading-2 text-center mb-12">Choose Your Plan</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+              {/* Pay Per Image Plan */}
+              <div className="apple-card p-8">
+                <div className="text-center mb-6">
+                  <h3 className="apple-heading-3 mb-4">Pay Per Image</h3>
+                  <div className="mb-2">
+                    <span className="text-5xl font-bold text-apple-blue">₹5</span>
+                  </div>
+                  <p className="apple-body-small text-apple-gray-600">per image</p>
+                  <p className="apple-body-small text-apple-gray-500 mt-2">Perfect for occasional use</p>
                 </div>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Perfect for occasional use</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Pay as you go</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Pay as you go</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">No commitment</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">No commitment</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">5-10 min response</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Agent response: 5-10 minutes</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">3 revisions included</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">3 revisions included</span>
                   </li>
                 </ul>
               </div>
 
-              {/* Weekly Plan */}
-              <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-whatsapp-green relative">
-                <span className="absolute top-0 right-0 bg-whatsapp-green text-white px-3 py-1 rounded-bl-lg text-sm font-semibold">
-                  Popular
-                </span>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Weekly Plan</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-whatsapp-green">₹100</span>
-                  <span className="text-gray-600 ml-2">per week</span>
+              {/* Weekly Plan - Most Popular */}
+              <div className="apple-card p-8 relative ring-2 ring-apple-blue">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-apple-blue text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
                 </div>
-                <div className="text-sm text-gray-500 mb-4">Unlimited images</div>
+                <div className="text-center mb-6">
+                  <h3 className="apple-heading-3 mb-4">Weekly Plan</h3>
+                  <div className="mb-2">
+                    <span className="text-5xl font-bold text-apple-blue">₹100</span>
+                  </div>
+                  <p className="apple-body-small text-apple-gray-600">per week</p>
+                  <p className="apple-body-small text-apple-gray-500 mt-2">Unlimited images</p>
+                </div>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Unlimited image processing</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Unlimited images</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Agent response: 3-7 minutes</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">3-7 min response</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">3 revisions per image</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">3 revisions per image</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Best for regular users</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Best for regular users</span>
                   </li>
                 </ul>
               </div>
 
               {/* Monthly Plan */}
-              <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Monthly Plan</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-whatsapp-green">₹400</span>
-                  <span className="text-gray-600 ml-2">per month</span>
+              <div className="apple-card p-8">
+                <div className="text-center mb-6">
+                  <h3 className="apple-heading-3 mb-4">Monthly Plan</h3>
+                  <div className="mb-2">
+                    <span className="text-5xl font-bold text-apple-blue">₹400</span>
+                  </div>
+                  <p className="apple-body-small text-apple-gray-600">per month</p>
+                  <p className="apple-body-small text-apple-gray-500 mt-2">20 videos + Unlimited images</p>
                 </div>
-                <div className="text-sm text-gray-500 mb-4">20 videos + Unlimited images</div>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">20 videos included</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">20 videos included</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Unlimited images</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Unlimited images</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Dedicated agent</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Dedicated agent</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">Agent response: 2-5 minutes</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-whatsapp-green mr-2">✓</span>
-                    <span className="text-gray-600">3 revisions per item</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">2-5 min response</span>
                   </li>
                 </ul>
               </div>
 
               {/* Premium Plan */}
-              <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-purple-500 relative">
-                <span className="absolute top-0 right-0 bg-purple-500 text-white px-3 py-1 rounded-bl-lg text-sm font-semibold">
-                  Premium
-                </span>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Premium Plan</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-purple-600">₹1000</span>
-                  <span className="text-gray-600 ml-2">per month</span>
+              <div className="apple-card p-8 relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 rounded-full text-sm font-medium">Premium</span>
                 </div>
-                <div className="text-sm text-gray-500 mb-4">Unlimited everything</div>
+                <div className="text-center mb-6">
+                  <h3 className="apple-heading-3 mb-4">Premium Plan</h3>
+                  <div className="mb-2">
+                    <span className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">₹1000</span>
+                  </div>
+                  <p className="apple-body-small text-apple-gray-600">per month</p>
+                  <p className="apple-body-small text-apple-gray-500 mt-2">Unlimited everything</p>
+                </div>
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start">
-                    <span className="text-purple-600 mr-2">✓</span>
-                    <span className="text-gray-600">Unlimited images & videos</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Unlimited content</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-purple-600 mr-2">✓</span>
-                    <span className="text-gray-600">Extended agent time</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">1-3 min response</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-purple-600 mr-2">✓</span>
-                    <span className="text-gray-600">Agent response: 1-3 minutes</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Priority support</span>
                   </li>
-                  <li className="flex items-start">
-                    <span className="text-purple-600 mr-2">✓</span>
-                    <span className="text-gray-600">Priority support</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-purple-600 mr-2">✓</span>
-                    <span className="text-gray-600">Unlimited revisions</span>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                    <span className="apple-body-small text-apple-gray-600">Unlimited revisions</span>
                   </li>
                 </ul>
               </div>
@@ -152,108 +162,145 @@ export default function PricingPage() {
           </div>
 
           {/* Language Support */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Language Support</h2>
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-              <p className="text-gray-600 mb-6 text-center">
-                We currently support the following languages with more coming soon:
+          <div className="mb-20">
+            <h2 className="apple-heading-2 text-center mb-12">Multi-Language Support</h2>
+            <div className="apple-card p-8 max-w-5xl mx-auto">
+              <p className="apple-body-large text-center text-apple-gray-600 mb-12">
+                Professional proofreading across multiple languages with native-speaking experts
               </p>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center p-4 border border-gray-200 rounded-lg">
-                  <div className="text-3xl mb-2">🇬🇧</div>
-                  <div className="font-semibold text-lg">English</div>
-                  <div className="text-sm text-gray-600">Full support</div>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center p-6 apple-card">
+                  <div className="text-4xl mb-4">🇬🇧</div>
+                  <h3 className="apple-heading-3 mb-2">English</h3>
+                  <p className="apple-body-small text-apple-gray-600">Full professional support</p>
                 </div>
-                <div className="text-center p-4 border border-gray-200 rounded-lg">
-                  <div className="text-3xl mb-2">🇮🇳</div>
-                  <div className="font-semibold text-lg">Hindi</div>
-                  <div className="text-sm text-gray-600">Full support</div>
+                <div className="text-center p-6 apple-card">
+                  <div className="text-4xl mb-4">🇮🇳</div>
+                  <h3 className="apple-heading-3 mb-2">Hindi</h3>
+                  <p className="apple-body-small text-apple-gray-600">Native speaker proofreading</p>
                 </div>
-                <div className="text-center p-4 border border-gray-200 rounded-lg">
-                  <div className="text-3xl mb-2">🇮🇳</div>
-                  <div className="font-semibold text-lg">Tamil</div>
-                  <div className="text-sm text-gray-600">Full support</div>
+                <div className="text-center p-6 apple-card">
+                  <div className="text-4xl mb-4">🇮🇳</div>
+                  <h3 className="apple-heading-3 mb-2">Tamil</h3>
+                  <p className="apple-body-small text-apple-gray-600">Expert Tamil proofreading</p>
                 </div>
               </div>
-              <p className="text-center text-sm text-gray-500 mt-6">
-                More languages will be added soon!
-              </p>
+              <div className="text-center mt-8">
+                <p className="apple-body-small text-apple-gray-500">
+                  More languages coming soon • <Link href="/contact" className="text-apple-blue hover:text-apple-blue-dark">Request a language</Link>
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Response Time Info */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Agent Response Times</h2>
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-semibold">Plan</th>
-                      <th className="text-center py-3 px-4 font-semibold">Response Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="py-3 px-4">Pay Per Image</td>
-                      <td className="py-3 px-4 text-center">5-10 minutes</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-3 px-4">Weekly Plan</td>
-                      <td className="py-3 px-4 text-center">3-7 minutes</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-3 px-4">Monthly Plan</td>
-                      <td className="py-3 px-4 text-center">2-5 minutes</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3 px-4">Premium Plan</td>
-                      <td className="py-3 px-4 text-center">1-3 minutes</td>
-                    </tr>
-                  </tbody>
-                </table>
+          <div className="mb-20">
+            <h2 className="apple-heading-2 text-center mb-12">Lightning-Fast Response Times</h2>
+            <div className="apple-card p-8 max-w-4xl mx-auto">
+              <p className="apple-body-large text-center text-apple-gray-600 mb-8">
+                Get your proofreading done quickly with our dedicated team of experts
+              </p>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="apple-card p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">⚡</span>
+                    </div>
+                    <div>
+                      <h3 className="apple-heading-3">Pay Per Image</h3>
+                      <p className="apple-body text-apple-blue font-semibold">5-10 minutes</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="apple-card p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">🚀</span>
+                    </div>
+                    <div>
+                      <h3 className="apple-heading-3">Weekly Plan</h3>
+                      <p className="apple-body text-apple-blue font-semibold">3-7 minutes</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="apple-card p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl">💎</span>
+                    </div>
+                    <div>
+                      <h3 className="apple-heading-3">Monthly Plan</h3>
+                      <p className="apple-body text-apple-blue font-semibold">2-5 minutes</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="apple-card p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <span className="text-2xl text-white">⭐</span>
+                    </div>
+                    <div>
+                      <h3 className="apple-heading-3">Premium Plan</h3>
+                      <p className="apple-body bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-semibold">1-3 minutes</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Revisions Info */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Revisions Policy</h2>
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-              <p className="text-gray-600 mb-4">
-                We want you to be completely satisfied with your work. All plans include:
+          {/* Revisions Policy */}
+          <div className="mb-20">
+            <h2 className="apple-heading-2 text-center mb-12">Satisfaction Guaranteed</h2>
+            <div className="apple-card p-8 max-w-4xl mx-auto">
+              <p className="apple-body-large text-center text-apple-gray-600 mb-8">
+                Your satisfaction is our priority. We offer generous revision policies to ensure perfect results.
               </p>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <span className="text-whatsapp-green mr-2">✓</span>
-                  <span className="text-gray-600"><strong>Pay Per Image:</strong> 3 revisions per image</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-whatsapp-green mr-2">✓</span>
-                  <span className="text-gray-600"><strong>Weekly Plan:</strong> 3 revisions per image</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-whatsapp-green mr-2">✓</span>
-                  <span className="text-gray-600"><strong>Monthly Plan:</strong> 3 revisions per item (image/video)</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-whatsapp-green mr-2">✓</span>
-                  <span className="text-gray-600"><strong>Premium Plan:</strong> Unlimited revisions</span>
-                </li>
-              </ul>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="apple-card p-6">
+                  <h3 className="apple-heading-3 mb-4">Standard Plans</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-3">
+                      <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                      <span className="apple-body-small">Pay Per Image: 3 revisions</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                      <span className="apple-body-small">Weekly Plan: 3 revisions per image</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <span className="w-5 h-5 bg-apple-blue rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                      <span className="apple-body-small">Monthly Plan: 3 revisions per item</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="apple-card p-6 bg-gradient-to-br from-purple-50 to-pink-50">
+                  <h3 className="apple-heading-3 mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Premium Plan</h3>
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm">∞</span>
+                    <span className="apple-body font-semibold">Unlimited revisions included</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Final CTA */}
           <div className="text-center">
-            <Link 
-              href="/auth/signin" 
-              className="bg-whatsapp-green text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-whatsapp-green-dark transition-colors inline-block"
-            >
-              Get Started Now
-            </Link>
-            <p className="text-gray-600 mt-4">
-              Have questions? <Link href="/contact" className="text-whatsapp-green hover:underline">Contact us</Link>
-            </p>
+            <div className="apple-card p-8 max-w-2xl mx-auto bg-gradient-to-r from-apple-blue-light to-white">
+              <h2 className="apple-heading-2 mb-4">Ready to get started?</h2>
+              <p className="apple-body-large text-apple-gray-700 mb-8">
+                Join thousands of professionals who trust us with their content proofreading needs.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link href="/auth/signin" className="apple-button-primary">
+                  Get Started Today
+                </Link>
+                <Link href="/contact" className="apple-button-secondary">
+                  Have Questions?
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
