@@ -164,7 +164,7 @@ export default function SOPPage() {
               </button>
             </div>
           ) : (
-            <div className="apple-card p-8">
+            <form onSubmit={handleSubmit} className="apple-card p-8">
               <h2 className="apple-heading-2 mb-8">Submit Your Request</h2>
 
               {/* Contact Information */}
@@ -328,20 +328,20 @@ export default function SOPPage() {
           )}
 
           {/* Related Content */}
-          <div className="mt-12 bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Services</h2>
+          <div className="mt-12 apple-card p-8">
+            <h2 className="apple-heading-2 mb-8">Related Services</h2>
             <div className="grid md:grid-cols-3 gap-6">
-              <Link href="/services" className="block p-4 border border-gray-200 rounded-lg hover:border-whatsapp-green transition-colors">
-                <h3 className="font-semibold text-gray-900 mb-2">Extra Services</h3>
-                <p className="text-sm text-gray-600">Social media design, banners, and video editing</p>
+              <Link href="/services" className="apple-card p-6 hover:shadow-apple-lg transition-all duration-200">
+                <h3 className="apple-heading-3 mb-3">Extra Services</h3>
+                <p className="apple-body-small text-apple-gray-600">Social media design, banners, and video editing</p>
               </Link>
-              <Link href="/pricing" className="block p-4 border border-gray-200 rounded-lg hover:border-whatsapp-green transition-colors">
-                <h3 className="font-semibold text-gray-900 mb-2">Pricing Plans</h3>
+              <Link href="/pricing" className="apple-card p-6 hover:shadow-apple-lg transition-all duration-200">
+                <h3 className="apple-heading-3 mb-3">Pricing Plans</h3>
                 <p className="text-sm text-gray-600">View our affordable pricing options</p>
               </Link>
-              <Link href="/contact" className="block p-4 border border-gray-200 rounded-lg hover:border-whatsapp-green transition-colors">
-                <h3 className="font-semibold text-gray-900 mb-2">Contact Us</h3>
-                <p className="text-sm text-gray-600">Get in touch for custom requirements</p>
+              <Link href="/contact" className="apple-card p-6 hover:shadow-apple-lg transition-all duration-200">
+                <h3 className="apple-heading-3 mb-3">Contact Us</h3>
+                <p className="apple-body-small text-apple-gray-600">Get in touch for custom requirements</p>
               </Link>
             </div>
           </div>
