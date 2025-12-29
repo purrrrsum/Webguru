@@ -227,7 +227,7 @@ export default function ServicesPage() {
                 </li>
               </ul>
               <p className="text-gray-600 mt-6 text-center">
-                We'll provide an estimated completion time when you submit your request.
+                We&apos;ll provide an estimated completion time when you submit your request.
               </p>
             </div>
           </div>

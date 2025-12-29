@@ -5,6 +5,8 @@ import { getAllJobsWithUsers, getFilesByJobId } from '@/lib/db';
 
 const ADMIN_EMAIL = 'jaffarsadiq1001@gmail.com';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const session = await getServerSession(adminAuthOptions);

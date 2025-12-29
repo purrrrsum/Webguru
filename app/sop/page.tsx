@@ -111,7 +111,7 @@ export default function SOPPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Contact Within 1 Hour</h3>
                   <p className="text-gray-600">
-                    We'll contact you within 1 hour to discuss your requirements and answer any questions.
+                    We&apos;ll contact you within 1 hour to discuss your requirements and answer any questions.
                   </p>
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function SOPPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Receive Designs</h3>
                   <p className="text-gray-600">
-                    You'll receive 3-4 design templates and 1 unique design based on your requirements.
+                    You&apos;ll receive 3-4 design templates and 1 unique design based on your requirements.
                   </p>
                 </div>
               </div>
@@ -135,7 +135,7 @@ export default function SOPPage() {
               <div className="text-4xl mb-4">✓</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h2>
               <p className="text-gray-600 mb-6">
-                We've received your submission. We'll contact you within 1 hour.
+                We&apos;ve received your submission. We&apos;ll contact you within 1 hour.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
@@ -299,7 +299,7 @@ export default function SOPPage() {
                   {loading ? 'Submitting...' : 'Submit Request'}
                 </button>
                 <p className="text-sm text-gray-600 mt-4">
-                  We'll contact you within 1 hour after submission
+                  We&apos;ll contact you within 1 hour after submission
                 </p>
               </div>
             </form>

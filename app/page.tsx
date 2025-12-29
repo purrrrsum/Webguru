@@ -173,7 +173,7 @@ export default function HomePage() {
             <div className="text-center">
               <div className="bg-whatsapp-green text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">1</div>
               <h3 className="font-semibold mb-2 text-lg">Create Account</h3>
-              <p className="text-gray-600 text-sm">Sign up with Google or Email - it's free!</p>
+              <p className="text-gray-600 text-sm">Sign up with Google or Email - it&apos;s free!</p>
             </div>
             <div className="text-center">
               <div className="bg-whatsapp-green text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">2</div>

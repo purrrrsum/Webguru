@@ -35,7 +35,7 @@ export default function ContactPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
-            <p className="text-xl text-gray-600">We'd love to hear from you. Send us a message!</p>
+            <p className="text-xl text-gray-600">We&apos;d love to hear from you. Send us a message!</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12">
@@ -128,7 +128,7 @@ export default function ContactPage() {
 
                 {submitted && (
                   <div className="bg-green-50 text-green-800 p-4 rounded-md">
-                    Thank you! Your message has been sent. We'll get back to you soon.
+                    Thank you! Your message has been sent. We&apos;ll get back to you soon.
                   </div>
                 )}
 

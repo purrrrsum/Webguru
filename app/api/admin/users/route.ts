@@ -5,6 +5,8 @@ import sql from '@/lib/db-client';
 
 const ADMIN_EMAIL = 'jaffarsadiq1001@gmail.com';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Verify admin access

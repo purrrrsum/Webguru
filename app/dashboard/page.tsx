@@ -317,7 +317,7 @@ export default function DashboardPage() {
             <div className="text-center py-12 text-gray-400">
               <p className="text-lg mb-2">No jobs yet</p>
               {session.user.role === 'user' && (
-                <p className="text-sm">Click "New Job" to start a conversation</p>
+                <p className="text-sm">Click &quot;New Job&quot; to start a conversation</p>
               )}
             </div>
           ) : (

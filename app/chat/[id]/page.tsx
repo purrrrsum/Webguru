@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState, useRef, ClipboardEvent as ReactClipboardEvent } from 'react';
+import { useEffect, useState, useRef, useCallback, ClipboardEvent as ReactClipboardEvent } from 'react';
 import ChatBubble from '@/components/ChatBubble';
 import FileUploader from '@/components/FileUploader';
 import { FileData, Message, JobAnnotation, JobVersion } from '@/lib/utils';
@@ -39,14 +39,6 @@ export default function ChatPage() {
   const router = useRouter();
   const jobId = params?.id;
 
-  if (!jobId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Invalid chat ID. Please check the link and try again.</p>
-      </div>
-    );
-  }
-
   const [chatData, setChatData] = useState<ChatData | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -65,20 +57,34 @@ export default function ChatPage() {
   const [updatingJobNumber, setUpdatingJobNumber] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!session) {
-      router.push('/auth/signin');
-      return;
+  const fetchAnnotations = useCallback(async () => {
+    if (!jobId) return;
+    try {
+      const res = await fetch(`/api/collaboration/annotations?jobId=${jobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnnotations(data.annotations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching annotations:', error);
     }
-    fetchChatData();
-  }, [session, jobId]);
+  }, [jobId]);
 
-  useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatData?.files, chatData?.messages]);
+  const fetchVersions = useCallback(async () => {
+    if (!jobId) return;
+    try {
+      const res = await fetch(`/api/collaboration/versions?jobId=${jobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setVersions(data.versions || []);
+      }
+    } catch (error) {
+      console.error('Error fetching versions:', error);
+    }
+  }, [jobId]);
 
-  const fetchChatData = async () => {
+  const fetchChatData = useCallback(async () => {
+    if (!jobId) return;
     try {
       const res = await fetch(`/api/chat/${jobId}`);
       if (res.ok) {
@@ -99,33 +105,23 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, router, fetchAnnotations, fetchVersions]);
 
-  const fetchAnnotations = async () => {
-    if (!jobId) return;
-    try {
-      const res = await fetch(`/api/collaboration/annotations?jobId=${jobId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAnnotations(data.annotations || []);
-      }
-    } catch (error) {
-      console.error('Error fetching annotations:', error);
+  useEffect(() => {
+    if (!session) {
+      router.push('/auth/signin');
+      return;
     }
-  };
+    if (!jobId) {
+      return;
+    }
+    fetchChatData();
+  }, [session, jobId, router, fetchChatData]);
 
-  const fetchVersions = async () => {
-    if (!jobId) return;
-    try {
-      const res = await fetch(`/api/collaboration/versions?jobId=${jobId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setVersions(data.versions || []);
-      }
-    } catch (error) {
-      console.error('Error fetching versions:', error);
-    }
-  };
+  useEffect(() => {
+    // Scroll to bottom when new messages arrive
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatData?.files, chatData?.messages]);
 
   const handleUpload = async (file: File) => {
     if (!session?.user) return;
@@ -410,6 +406,14 @@ export default function ChatPage() {
     ...(chatData?.files.map(f => ({ type: 'file' as const, data: f, timestamp: f.uploadedAt })) || []),
     ...(chatData?.messages.map(m => ({ type: 'message' as const, data: m, timestamp: m.createdAt })) || [])
   ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  if (!jobId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Invalid chat ID. Please check the link and try again.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
