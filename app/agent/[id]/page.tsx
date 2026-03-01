@@ -95,7 +95,7 @@ export default async function AgentProfilePage({ params }: { params: { id: strin
                             </h2>
                             <div className="prose prose-invert max-w-none text-slate-300 font-light leading-relaxed whitespace-pre-wrap">
                                 {agent.bio ? agent.bio : (
-                                    <p className="text-slate-500 italic">This professional hasn't written a bio yet.</p>
+                                    <p className="text-slate-500 italic">This professional hasn&apos;t written a bio yet.</p>
                                 )}
                             </div>
                         </div>
