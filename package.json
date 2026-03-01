@@ -25,6 +25,7 @@
     "create-admin": "npx tsx scripts/create-admin.ts"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@types/pg": "^8.10.9",
     "bcryptjs": "^2.4.3",
     "nanoid": "^5.0.4",

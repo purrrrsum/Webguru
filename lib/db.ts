@@ -62,6 +62,46 @@ export async function ensureDatabaseSetup() {
       ADD COLUMN IF NOT EXISTS bank_name TEXT
     `;
 
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS industry VARCHAR(255)
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS website VARCHAR(255)
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS preferred_service VARCHAR(100)
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(10,2) DEFAULT 0.00
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS bio TEXT
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS resume_pdf_url TEXT
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS rating_avg DECIMAL(3,2) DEFAULT 0.00
+    `;
+
+    await sql`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS review_count INTEGER DEFAULT 0
+    `;
+
     // Ensure UNIQUE constraint on email exists (one email = one role)
     await sql`
       DO $$
@@ -170,6 +210,11 @@ export async function ensureDatabaseSetup() {
     await sql`
       ALTER TABLE jobs
       ADD COLUMN IF NOT EXISTS pricing_model VARCHAR(50) DEFAULT 'single_project' CHECK (pricing_model IN ('single_project', 'monthly_subscription', 'yearly_subscription'))
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS agreed_price DECIMAL(10,2)
     `;
 
     await sql`
@@ -284,7 +329,34 @@ export async function ensureDatabaseSetup() {
     `;
 
     await sql`
+      CREATE TABLE IF NOT EXISTS escrow_holds (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        amount DECIMAL(10,2) NOT NULL,
+        released_at TIMESTAMP,
+        status VARCHAR(20) DEFAULT 'held' CHECK (status IN ('held', 'released', 'refunded_to_user')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS reviews (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+        reviewer_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        reviewee_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        comment TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    await sql`
       CREATE INDEX IF NOT EXISTS idx_job_annotations_job_id ON job_annotations(job_id)
+    `;
+
+    await sql`
+      CREATE INDEX IF NOT EXISTS idx_messages_job_created ON messages(job_id, created_at DESC)
     `;
 
     await sql`
@@ -343,8 +415,16 @@ function mapUserRow(row: any): User {
     bankAccountNumber: row.bank_account_number || '',
     bankIfsc: row.bank_ifsc || '',
     bankName: row.bank_name || '',
+    industry: row.industry || '',
+    website: row.website || '',
+    preferredService: row.preferred_service || '',
     isOnline: row.is_online || false,
     isReady: row.is_ready || false,
+    walletBalance: parseFloat(row.wallet_balance || '0.00'),
+    bio: row.bio || '',
+    resumePdfUrl: row.resume_pdf_url || '',
+    ratingAvg: parseFloat(row.rating_avg || '0.00'),
+    reviewCount: parseInt(row.review_count || '0', 10),
   };
 }
 
@@ -368,6 +448,7 @@ function mapJobRow(row: any): Job {
     status: row.status || 'pending_match',
     serviceType: row.service_type || 'other',
     pricingModel: row.pricing_model || 'single_project',
+    agreedPrice: row.agreed_price ? parseFloat(row.agreed_price) : null,
   };
 }
 
@@ -438,6 +519,9 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
         bankAccountNumber: user.bankAccountNumber,
         bankIfsc: user.bankIfsc,
         bankName: user.bankName,
+        industry: user.industry,
+        website: user.website,
+        preferredService: user.preferredService,
       }) || existing;
     }
 
@@ -456,7 +540,10 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
         bank_account_name,
         bank_account_number,
         bank_ifsc,
-        bank_name
+        bank_name,
+        industry,
+        website,
+        preferred_service
       )
       VALUES (
         ${userId},
@@ -472,7 +559,10 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
         ${user.bankAccountName || null},
         ${user.bankAccountNumber || null},
         ${user.bankIfsc || null},
-        ${user.bankName || null}
+        ${user.bankName || null},
+        ${user.industry || null},
+        ${user.website || null},
+        ${user.preferredService || null}
       )
       RETURNING *
     `;
@@ -580,6 +670,18 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
     if (updates.bankName !== undefined) {
       fields.push('bank_name');
       values.push(updates.bankName);
+    }
+    if (updates.industry !== undefined) {
+      fields.push('industry');
+      values.push(updates.industry);
+    }
+    if (updates.website !== undefined) {
+      fields.push('website');
+      values.push(updates.website);
+    }
+    if (updates.preferredService !== undefined) {
+      fields.push('preferred_service');
+      values.push(updates.preferredService);
     }
 
     if (updates.isOnline !== undefined) {
@@ -1898,6 +2000,47 @@ export async function getAllSEOSettings(): Promise<SEOSettings[]> {
   } catch (error) {
     console.error('Error fetching all SEO settings:', error);
     return [];
+  }
+}
+
+// ============================================
+// PHASE 2 - Financial & Escrow Helpers
+// ============================================
+
+export async function updateWalletBalance(userId: string, amount: number): Promise<void> {
+  await sql`
+    UPDATE users 
+    SET wallet_balance = COALESCE(wallet_balance, 0) + ${amount} 
+    WHERE id = ${userId}
+  `;
+}
+
+export async function createEscrowHold(jobId: string, amount: number): Promise<void> {
+  const escrowId = nanoid();
+  await sql`
+    INSERT INTO escrow_holds (id, job_id, amount)
+    VALUES (${escrowId}, ${jobId}, ${amount})
+  `;
+}
+
+export async function releaseEscrowHold(escrowId: string, status: 'released' | 'refunded'): Promise<void> {
+  await sql`
+    UPDATE escrow_holds 
+    SET status = ${status}, released_at = CURRENT_TIMESTAMP
+    WHERE id = ${escrowId}
+  `;
+}
+
+export async function processEscrows(): Promise<void> {
+  const result = await sql`
+    UPDATE escrow_holds
+    SET status = 'released', released_at = CURRENT_TIMESTAMP
+    WHERE status = 'held' AND created_at < NOW() - INTERVAL '24 hours'
+    RETURNING id, job_id, amount
+  `;
+  for (const row of result.rows) {
+    // In a real production system, dispatch payouts to agent/company balance here.
+    console.log(`Processed Escrow ${row.id} for Job ${row.job_id} for amount ${row.amount}`);
   }
 }
 

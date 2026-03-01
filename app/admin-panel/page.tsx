@@ -10,8 +10,6 @@ import {
 } from '@/lib/db';
 import SlaAutomationButton from '@/components/SlaAutomationButton';
 
-const ADMIN_EMAIL = 'jaffarsadiq1001@gmail.com';
-
 const statusBadgeClasses: Record<string, string> = {
   overdue: 'bg-red-100/20 text-red-300 border border-red-500/40',
   due_soon: 'bg-amber-100/20 text-amber-200 border border-amber-400/40',
@@ -36,12 +34,10 @@ export default async function AdminPanelPage() {
     redirect('/admin-panel/login?error=AccessDenied');
   }
 
-  const email = session.user.email?.toLowerCase().trim();
-  const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
   const isAdmin = (session.user as any)?.isAdmin;
 
-  // STRICT: Only allow jaffarsadiq1001@gmail.com
-  if (!isAdmin || !email || email !== adminEmailLower) {
+  // STRICT: Check if admin flag was applied by auth route
+  if (!isAdmin) {
     redirect('/admin-panel/login?error=AccessDenied');
   }
 

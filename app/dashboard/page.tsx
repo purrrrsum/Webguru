@@ -68,8 +68,8 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center apple-chat-bg">
-        <div className="text-apple-blue text-xl font-medium">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center brand-chat-bg">
+        <div className="text-brand-blue text-xl font-medium">Loading...</div>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function DashboardPage() {
 
   const isAgent = session.user.role === 'agent';
   const headerClass = 'telegram-header text-white';
-  const pageBgClass = 'apple-chat-bg';
+  const pageBgClass = 'brand-chat-bg';
 
   const handleNewJobSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -179,9 +179,9 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
         {session.user.role === 'user' && (
-          <div className="mb-6 apple-card p-6">
-            <h2 className="apple-heading-3 text-apple-gray-900 mb-3">Pay for your proofreading jobs</h2>
-            <p className="apple-body-small text-apple-gray-600 mb-4">
+          <div className="mb-6 brand-card p-6">
+            <h2 className="brand-heading-3 text-brand-gray-900 mb-3">Pay for your proofreading jobs</h2>
+            <p className="brand-body-small text-brand-gray-600 mb-4">
               Scan the QR or use the UPI details below. Share the payment reference in the chat so our finance team can match it quickly.
             </p>
             <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -215,7 +215,7 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-gray-300">Need help?</p>
                   <p className="text-sm text-gray-300">
                     Share payment slips in the chat or email{' '}
-                    <a href="mailto:billing@thesupport.agency" className="text-apple-blue hover:text-apple-blue-dark">
+                    <a href="mailto:billing@thesupport.agency" className="text-brand-blue hover:text-brand-blue-dark">
                       billing@thesupport.agency
                     </a>
                     .
@@ -226,7 +226,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="apple-card p-6 mb-6">
+        <div className="brand-card p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-white">
               {session.user.role === 'user' ? 'Your Jobs' : 'All User Conversations'}
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                   }
                   setShowJobForm((prev) => !prev);
                 }}
-                className="apple-button-primary"
+                className="brand-button-primary"
               >
                 {showJobForm ? 'Cancel' : '+ New Job'}
               </button>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                   maxLength={120}
-                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                  className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                   placeholder="e.g. Brochure Proofread – September Launch"
                   required
                 />
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                   id="service-type"
                   value={jobServiceType}
                   onChange={(e) => setJobServiceType(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900"
+                  className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900"
                 >
                   <option value="design">Design</option>
                   <option value="content_creation">Content Creation</option>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                   id="pricing-model"
                   value={jobPricingModel}
                   onChange={(e) => setJobPricingModel(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900"
+                  className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900"
                 >
                   <option value="single_project">Single Project / Task</option>
                   <option value="monthly_subscription">Monthly Subscription</option>
@@ -307,7 +307,7 @@ export default function DashboardPage() {
                   type="text"
                   value={jobTagsInput}
                   onChange={(e) => setJobTagsInput(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                  className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                   placeholder="Add up to 3 tags, separated by commas"
                 />
                 <p className="text-xs text-gray-400 mt-1">Example: brochure, campaign, client-name</p>
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={creatingJob}
-                  className="apple-button-primary disabled:opacity-50"
+                  className="brand-button-primary disabled:opacity-50"
                 >
                   {creatingJob ? 'Creating...' : 'Create Job'}
                 </button>
@@ -365,7 +365,7 @@ export default function DashboardPage() {
                 <Link
                   key={job.id}
                   href={`/chat/${job.id}`}
-                  className="block apple-card p-6 hover:shadow-apple-lg transition-all duration-200"
+                  className="block brand-card p-6 hover:shadow-brand-lg transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -385,7 +385,7 @@ export default function DashboardPage() {
                           </span>
                         ) : null}
                         {job.hasUnread && (
-                          <span className="w-2 h-2 bg-apple-blue rounded-full"></span>
+                          <span className="w-2 h-2 bg-brand-blue rounded-full"></span>
                         )}
                       </div>
                       {isAgent && job.userName && (
@@ -398,7 +398,7 @@ export default function DashboardPage() {
                       {job.tags && job.tags.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {job.tags.map((tag) => (
-                            <span key={`${job.id}-${tag}`} className="text-xs px-3 py-1 bg-apple-blue/10 text-apple-blue rounded-full border border-apple-blue/20">
+                            <span key={`${job.id}-${tag}`} className="text-xs px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full border border-brand-blue/20">
                               {tag}
                             </span>
                           ))}

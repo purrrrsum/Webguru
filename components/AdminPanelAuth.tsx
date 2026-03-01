@@ -25,13 +25,11 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
         router.push('/admin-panel/login');
       }
     } else if (!isLoading && status === 'authenticated') {
-      // STRICT: Check if user is admin AND email matches exactly
+      // STRICT: Check if user is admin
       const isAdmin = (session?.user as any)?.isAdmin;
-      const email = session?.user?.email?.toLowerCase().trim();
-      const adminEmail = 'jaffarsadiq1001@gmail.com'.toLowerCase().trim();
-      
-      // Reject if not admin OR email doesn't match
-      if (!isAdmin || !email || email !== adminEmail) {
+
+      // Reject if not admin
+      if (!isAdmin) {
         if (pathname !== '/admin-panel/login') {
           router.push('/admin-panel/login?error=AccessDenied');
         }
@@ -60,11 +58,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
     return <>{children}</>;
   }
 
-  // STRICT: Check if user is admin AND email matches exactly
-  const isAdmin = (session?.user as any)?.isAdmin;
-  const email = session?.user?.email?.toLowerCase().trim();
-  const adminEmail = 'jaffarsadiq1001@gmail.com'.toLowerCase().trim();
-  const isAuthorizedAdmin = isAdmin && email === adminEmail;
+  // STRICT: Check if user is admin
+  const isAuthorizedAdmin = (session?.user as any)?.isAdmin;
 
   // If not authorized admin, show nothing (redirect will happen)
   if (!isAuthorizedAdmin) {
@@ -81,53 +76,48 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <h1 className="text-lg font-semibold text-white">thesupport.agency</h1>
           </div>
           <nav className="flex items-center gap-4 text-sm text-slate-300">
-            <Link 
-              href="/admin-panel" 
-              className={`px-3 py-2 rounded-md transition-colors ${
-                pathname === '/admin-panel' || pathname === '/admin-panel/'
+            <Link
+              href="/admin-panel"
+              className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel' || pathname === '/admin-panel/'
                   ? 'bg-slate-800 text-white'
                   : 'hover:bg-slate-800 hover:text-white'
-              }`}
+                }`}
             >
               Dashboard
             </Link>
-            <Link 
-              href="/admin-panel/conversations" 
-              className={`px-3 py-2 rounded-md transition-colors ${
-                pathname?.startsWith('/admin-panel/conversations')
+            <Link
+              href="/admin-panel/conversations"
+              className={`px-3 py-2 rounded-md transition-colors ${pathname?.startsWith('/admin-panel/conversations')
                   ? 'bg-slate-800 text-white'
                   : 'hover:bg-slate-800 hover:text-white'
-              }`}
+                }`}
             >
               Conversations
             </Link>
-            <Link 
-              href="/admin-panel/support" 
-              className={`px-3 py-2 rounded-md transition-colors ${
-                pathname === '/admin-panel/support'
+            <Link
+              href="/admin-panel/support"
+              className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel/support'
                   ? 'bg-slate-800 text-white'
                   : 'hover:bg-slate-800 hover:text-white'
-              }`}
+                }`}
             >
               Support Inbox
             </Link>
-            <Link 
-              href="/admin-panel/users" 
-              className={`px-3 py-2 rounded-md transition-colors ${
-                pathname === '/admin-panel/users'
+            <Link
+              href="/admin-panel/users"
+              className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel/users'
                   ? 'bg-slate-800 text-white'
                   : 'hover:bg-slate-800 hover:text-white'
-              }`}
+                }`}
             >
               Users
             </Link>
-            <Link 
-              href="/admin-panel/cms" 
-              className={`px-3 py-2 rounded-md transition-colors ${
-                pathname === '/admin-panel/cms'
+            <Link
+              href="/admin-panel/cms"
+              className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel/cms'
                   ? 'bg-slate-800 text-white'
                   : 'hover:bg-slate-800 hover:text-white'
-              }`}
+                }`}
             >
               CMS
             </Link>

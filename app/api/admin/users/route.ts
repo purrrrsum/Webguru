@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     // Verify admin access
     const session = await getServerSession(adminAuthOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
     const email = session.user.email?.toLowerCase().trim();
     const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
     const isAdmin = (session.user as any)?.isAdmin;
-    
+
     if (!isAdmin || !email || email !== adminEmailLower) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Fetch all users
     const result = await sql`
-      SELECT id, email, name, role, job_count, created_at
+      SELECT id, email, name, role, job_count, created_at, wallet_balance
       FROM users
       ORDER BY created_at DESC
     `;
@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
       role: row.role,
       jobCount: row.job_count || 0,
       createdAt: row.created_at,
+      walletBalance: parseFloat(row.wallet_balance || '0.00'),
     }));
 
     return NextResponse.json({ users });

@@ -9,10 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        apple: {
-          blue: '#007AFF',
-          'blue-dark': '#0056CC',
-          'blue-light': '#E3F2FD',
+        brand: {
+          blue: '#4DD0E1',
+          'blue-dark': '#00BCD4',
+          'blue-light': '#E0F7FA',
+          pink: '#FF7EB3',
+          orange: '#FF758C',
           gray: {
             50: '#FAFAFA',
             100: '#F5F5F7',
@@ -36,24 +38,24 @@ const config: Config = {
         },
       },
       fontFamily: {
-        'apple': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
-        'apple-display': ['SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Inter', 'sans-serif'],
+        'brand': ['Outfit', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
+        'brand-display': ['Outfit', 'Inter', 'sans-serif'],
       },
       borderRadius: {
-        'apple': '12px',
-        'apple-large': '16px',
-        'apple-xl': '20px',
+        'brand': '12px',
+        'brand-large': '16px',
+        'brand-xl': '20px',
       },
       boxShadow: {
-        'apple': '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        'apple-hover': '0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06)',
-        'apple-lg': '0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06)',
+        'brand': '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
+        'brand-hover': '0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06)',
+        'brand-lg': '0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06)',
       },
       animation: {
-        'apple-bounce': 'apple-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        'brand-bounce': 'brand-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       },
       keyframes: {
-        'apple-bounce': {
+        'brand-bounce': {
           '0%': { transform: 'scale(0.3)', opacity: '0' },
           '50%': { transform: 'scale(1.05)' },
           '70%': { transform: 'scale(0.9)' },

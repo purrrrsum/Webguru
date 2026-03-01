@@ -32,17 +32,17 @@ export default function ContactPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen apple-chat-bg">
+      <div className="min-h-screen brand-chat-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="mb-6">
-              <span className="inline-flex items-center px-4 py-2 rounded-full bg-apple-blue-light text-apple-blue text-sm font-medium">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-brand-blue-light text-brand-blue text-sm font-medium">
                 Get in Touch
               </span>
             </div>
-            <h1 className="apple-heading-1 mb-6">We&apos;d love to hear from you</h1>
-            <p className="apple-body-large max-w-2xl mx-auto text-apple-gray-600">
+            <h1 className="brand-heading-1 mb-6">We&apos;d love to hear from you</h1>
+            <p className="brand-body-large max-w-2xl mx-auto text-brand-gray-600">
               Have questions about our proofreading services? Need help with your account?
               We&apos;re here to help you succeed.
             </p>
@@ -52,42 +52,42 @@ export default function ContactPage() {
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
-                <h2 className="apple-heading-2 mb-8">Get in Touch</h2>
+                <h2 className="brand-heading-2 mb-8">Get in Touch</h2>
                 <div className="space-y-6">
-                  <div className="apple-card p-6">
+                  <div className="brand-card p-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center">
                         <span className="text-xl">✉️</span>
                       </div>
                       <div>
-                        <h3 className="apple-heading-3 mb-1">Email Support</h3>
-                        <a href="mailto:support@thesupport.agency" className="text-apple-blue hover:text-apple-blue-dark transition-colors">
+                        <h3 className="brand-heading-3 mb-1">Email Support</h3>
+                        <a href="mailto:support@thesupport.agency" className="text-brand-blue hover:text-brand-blue-dark transition-colors">
                           support@thesupport.agency
                         </a>
                       </div>
                     </div>
                   </div>
 
-                  <div className="apple-card p-6">
+                  <div className="brand-card p-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center">
                         <span className="text-xl">📍</span>
                       </div>
                       <div>
-                        <h3 className="apple-heading-3 mb-1">Location</h3>
-                        <p className="apple-body text-apple-gray-600">Delhi, India</p>
+                        <h3 className="brand-heading-3 mb-1">Location</h3>
+                        <p className="brand-body text-brand-gray-600">Delhi, India</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="apple-card p-6">
+                  <div className="brand-card p-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-apple-blue/10 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center">
                         <span className="text-xl">🕒</span>
                       </div>
                       <div>
-                        <h3 className="apple-heading-3 mb-1">Support Hours</h3>
-                        <p className="apple-body text-apple-gray-600">Monday - Friday: 9:00 AM - 6:00 PM IST</p>
+                        <h3 className="brand-heading-3 mb-1">Support Hours</h3>
+                        <p className="brand-body text-brand-gray-600">Monday - Friday: 9:00 AM - 6:00 PM IST</p>
                       </div>
                     </div>
                   </div>
@@ -95,18 +95,18 @@ export default function ContactPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="apple-card p-8">
-                <h3 className="apple-heading-3 mb-6">Quick Actions</h3>
+              <div className="brand-card p-8">
+                <h3 className="brand-heading-3 mb-6">Quick Actions</h3>
                 <div className="space-y-4">
-                  <Link href="/pricing" className="flex items-center gap-3 p-3 rounded-xl hover:bg-apple-gray-50 transition-colors">
+                  <Link href="/pricing" className="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-gray-50 transition-colors">
                     <span className="text-xl">💰</span>
                     <span className="font-medium">View Pricing</span>
                   </Link>
-                  <Link href="/about" className="flex items-center gap-3 p-3 rounded-xl hover:bg-apple-gray-50 transition-colors">
+                  <Link href="/about" className="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-gray-50 transition-colors">
                     <span className="text-xl">ℹ️</span>
                     <span className="font-medium">Learn More About Us</span>
                   </Link>
-                  <Link href="/become-agent" className="flex items-center gap-3 p-3 rounded-xl hover:bg-apple-gray-50 transition-colors">
+                  <Link href="/become-agent" className="flex items-center gap-3 p-3 rounded-xl hover:bg-brand-gray-50 transition-colors">
                     <span className="text-xl">👥</span>
                     <span className="font-medium">Become a Proofreader</span>
                   </Link>
@@ -115,12 +115,12 @@ export default function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div className="apple-card p-8">
-              <h2 className="apple-heading-2 mb-8">Send us a Message</h2>
+            <div className="brand-card p-8">
+              <h2 className="brand-heading-2 mb-8">Send us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block apple-body-small font-medium text-apple-gray-700 mb-2">
+                    <label htmlFor="name" className="block brand-body-small font-medium text-brand-gray-700 mb-2">
                       Full Name *
                     </label>
                     <input
@@ -130,13 +130,13 @@ export default function ContactPage() {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                      className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                       placeholder="Your full name"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block apple-body-small font-medium text-apple-gray-700 mb-2">
+                    <label htmlFor="email" className="block brand-body-small font-medium text-brand-gray-700 mb-2">
                       Email Address *
                     </label>
                     <input
@@ -146,14 +146,14 @@ export default function ContactPage() {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                      className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                       placeholder="your@email.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block apple-body-small font-medium text-apple-gray-700 mb-2">
+                  <label htmlFor="subject" className="block brand-body-small font-medium text-brand-gray-700 mb-2">
                     Subject *
                   </label>
                   <select
@@ -162,7 +162,7 @@ export default function ContactPage() {
                     value={formData.subject}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900"
+                    className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900"
                   >
                     <option value="">Select a topic</option>
                     <option value="general">General Inquiry</option>
@@ -174,7 +174,7 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block apple-body-small font-medium text-apple-gray-700 mb-2">
+                  <label htmlFor="message" className="block brand-body-small font-medium text-brand-gray-700 mb-2">
                     Message *
                   </label>
                   <textarea
@@ -184,13 +184,13 @@ export default function ContactPage() {
                     onChange={handleChange}
                     required
                     rows={6}
-                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500 resize-none"
+                    className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500 resize-none"
                     placeholder="Tell us how we can help you..."
                   />
                 </div>
 
                 {submitted && (
-                  <div className="apple-card p-4 bg-green-50 border-green-200">
+                  <div className="brand-card p-4 bg-green-50 border-green-200">
                     <div className="flex items-center gap-3">
                       <span className="text-green-600 text-xl">✓</span>
                       <p className="text-green-800 font-medium">
@@ -202,7 +202,7 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full apple-button-primary"
+                  className="w-full brand-button-primary"
                 >
                   Send Message
                 </button>

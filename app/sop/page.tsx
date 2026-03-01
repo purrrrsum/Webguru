@@ -69,75 +69,75 @@ export default function SOPPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen apple-chat-bg">
+      <div className="min-h-screen brand-chat-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           {/* Hero Section */}
           <div className="text-center mb-16">
             <div className="mb-6">
-              <span className="inline-flex items-center px-4 py-2 rounded-full bg-apple-blue-light text-apple-blue text-sm font-medium">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-brand-blue-light text-brand-blue text-sm font-medium">
                 Design Request Process
               </span>
             </div>
-            <h1 className="apple-heading-1 mb-6">Standard Operating Procedure</h1>
-            <p className="apple-body-large max-w-2xl mx-auto text-apple-gray-600">
+            <h1 className="brand-heading-1 mb-6">Standard Operating Procedure</h1>
+            <p className="brand-body-large max-w-2xl mx-auto text-brand-gray-600">
               Upload your content and sample posts to get started with our design services
             </p>
           </div>
 
           {/* Process Overview */}
-          <div className="apple-card p-8 mb-12">
-            <h2 className="apple-heading-2 mb-8">How It Works</h2>
+          <div className="brand-card p-8 mb-12">
+            <h2 className="brand-heading-2 mb-8">How It Works</h2>
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="apple-card p-6">
+              <div className="brand-card p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                  <div className="w-10 h-10 bg-brand-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
                     1
                   </div>
                   <div>
-                    <h3 className="apple-heading-3 mb-2">Upload Your Content</h3>
-                    <p className="apple-body-small text-apple-gray-600">
+                    <h3 className="brand-heading-3 mb-2">Upload Your Content</h3>
+                    <p className="brand-body-small text-brand-gray-600">
                       Upload your content in PDF or Word document format. Include all guidelines, brand colors, fonts, and any specific requirements.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="apple-card p-6">
+              <div className="brand-card p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                  <div className="w-10 h-10 bg-brand-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
                     2
                   </div>
                   <div>
-                    <h3 className="apple-heading-3 mb-2">Provide Sample Posts</h3>
-                    <p className="apple-body-small text-apple-gray-600">
+                    <h3 className="brand-heading-3 mb-2">Provide Sample Posts</h3>
+                    <p className="brand-body-small text-brand-gray-600">
                       Share sample posts either as URLs or images. This helps us understand your style and preferences.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="apple-card p-6">
+              <div className="brand-card p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                  <div className="w-10 h-10 bg-brand-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
                     3
                   </div>
                   <div>
-                    <h3 className="apple-heading-3 mb-2">Contact Within 1 Hour</h3>
-                    <p className="apple-body-small text-apple-gray-600">
+                    <h3 className="brand-heading-3 mb-2">Contact Within 1 Hour</h3>
+                    <p className="brand-body-small text-brand-gray-600">
                       We&apos;ll contact you within 1 hour to discuss your requirements and answer any questions.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="apple-card p-6">
+              <div className="brand-card p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-apple-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
+                  <div className="w-10 h-10 bg-brand-blue text-white rounded-xl flex items-center justify-center font-bold text-lg">
                   4
                 </div>
                   <div>
-                    <h3 className="apple-heading-3 mb-2">Receive Designs</h3>
-                    <p className="apple-body-small text-apple-gray-600">
+                    <h3 className="brand-heading-3 mb-2">Receive Designs</h3>
+                    <p className="brand-body-small text-brand-gray-600">
                       You&apos;ll receive 3-4 design templates and 1 unique design based on your requirements.
                     </p>
                   </div>
@@ -148,29 +148,29 @@ export default function SOPPage() {
 
           {/* Form */}
           {submitted ? (
-            <div className="apple-card p-8 text-center bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <div className="brand-card p-8 text-center bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
               <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl text-white">✓</span>
               </div>
-              <h2 className="apple-heading-2 mb-4">Thank You!</h2>
-              <p className="apple-body-large text-apple-gray-700 mb-8">
+              <h2 className="brand-heading-2 mb-4">Thank You!</h2>
+              <p className="brand-body-large text-brand-gray-700 mb-8">
                 We&apos;ve received your submission. We&apos;ll contact you within 1 hour.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
-                className="apple-button-primary"
+                className="brand-button-primary"
               >
                 Submit Another Request
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="apple-card p-8">
-              <h2 className="apple-heading-2 mb-8">Submit Your Request</h2>
+            <form onSubmit={handleSubmit} className="brand-card p-8">
+              <h2 className="brand-heading-2 mb-8">Submit Your Request</h2>
 
               {/* Contact Information */}
               <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div>
-                  <label htmlFor="name" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                  <label htmlFor="name" className="block brand-body-small font-medium text-brand-gray-700 mb-3">
                     Full Name *
                   </label>
                   <input
@@ -181,11 +181,11 @@ export default function SOPPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Your full name"
-                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                    className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                  <label htmlFor="email" className="block brand-body-small font-medium text-brand-gray-700 mb-3">
                     Email Address *
                   </label>
                   <input
@@ -196,11 +196,11 @@ export default function SOPPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="your@email.com"
-                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                    className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                  <label htmlFor="phone" className="block brand-body-small font-medium text-brand-gray-700 mb-3">
                     Phone Number *
                   </label>
                   <input
@@ -211,11 +211,11 @@ export default function SOPPage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="+91 98765 43210"
-                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                    className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="company" className="block apple-body-small font-medium text-apple-gray-700 mb-3">
+                  <label htmlFor="company" className="block brand-body-small font-medium text-brand-gray-700 mb-3">
                     Company Name
                   </label>
                   <input
@@ -224,7 +224,7 @@ export default function SOPPage() {
                     name="company"
                     value={formData.company}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                    className="w-full px-4 py-3 bg-white border border-brand-gray-200 rounded-xl focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                   />
                 </div>
               </div>
@@ -316,7 +316,7 @@ export default function SOPPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="apple-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="brand-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Request'}
                 </button>
@@ -328,20 +328,20 @@ export default function SOPPage() {
           )}
 
           {/* Related Content */}
-          <div className="mt-12 apple-card p-8">
-            <h2 className="apple-heading-2 mb-8">Related Services</h2>
+          <div className="mt-12 brand-card p-8">
+            <h2 className="brand-heading-2 mb-8">Related Services</h2>
             <div className="grid md:grid-cols-3 gap-6">
-              <Link href="/services" className="apple-card p-6 hover:shadow-apple-lg transition-all duration-200">
-                <h3 className="apple-heading-3 mb-3">Extra Services</h3>
-                <p className="apple-body-small text-apple-gray-600">Social media design, banners, and video editing</p>
+              <Link href="/services" className="brand-card p-6 hover:shadow-brand-lg transition-all duration-200">
+                <h3 className="brand-heading-3 mb-3">Extra Services</h3>
+                <p className="brand-body-small text-brand-gray-600">Social media design, banners, and video editing</p>
               </Link>
-              <Link href="/pricing" className="apple-card p-6 hover:shadow-apple-lg transition-all duration-200">
-                <h3 className="apple-heading-3 mb-3">Pricing Plans</h3>
+              <Link href="/pricing" className="brand-card p-6 hover:shadow-brand-lg transition-all duration-200">
+                <h3 className="brand-heading-3 mb-3">Pricing Plans</h3>
                 <p className="text-sm text-gray-600">View our affordable pricing options</p>
               </Link>
-              <Link href="/contact" className="apple-card p-6 hover:shadow-apple-lg transition-all duration-200">
-                <h3 className="apple-heading-3 mb-3">Contact Us</h3>
-                <p className="apple-body-small text-apple-gray-600">Get in touch for custom requirements</p>
+              <Link href="/contact" className="brand-card p-6 hover:shadow-brand-lg transition-all duration-200">
+                <h3 className="brand-heading-3 mb-3">Contact Us</h3>
+                <p className="brand-body-small text-brand-gray-600">Get in touch for custom requirements</p>
               </Link>
             </div>
           </div>

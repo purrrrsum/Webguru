@@ -8,6 +8,9 @@ export interface User {
   company: string;
   address: string;
   phone: string;
+  industry?: string;
+  website?: string;
+  preferredService?: string;
   jobCount: number;
   role: 'user' | 'agent';
   password?: string;
@@ -18,6 +21,12 @@ export interface User {
   bankName?: string;
   isOnline?: boolean;
   isReady?: boolean;
+  walletBalance?: number;
+  bio?: string;
+  resumePdfUrl?: string;
+  ratingAvg?: number;
+  reviewCount?: number;
+  createdAt?: string;
 }
 
 export interface Job {
@@ -41,6 +50,7 @@ export interface Job {
   serviceType?: 'design' | 'content_creation' | 'video_editing' | 'text_editing' | 'proofreading' | 'other';
   pricingModel?: 'single_project' | 'monthly_subscription' | 'yearly_subscription';
   fileCount?: number;
+  agreedPrice?: number | null;
 }
 
 export interface FileData {
@@ -137,6 +147,25 @@ export interface JobVersion {
   notes?: string | null;
   createdBy: string;
   createdByName?: string | null;
+  createdAt: string;
+}
+
+export interface EscrowHold {
+  id: string;
+  jobId: string;
+  amount: number;
+  releasedAt: string | null;
+  status: 'held' | 'released' | 'refunded_to_user';
+  createdAt: string;
+}
+
+export interface Review {
+  id: string;
+  jobId: string;
+  reviewerId: string;
+  revieweeId: string;
+  rating: number;
+  comment?: string | null;
   createdAt: string;
 }
 

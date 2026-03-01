@@ -332,12 +332,13 @@ export default function SignInPage() {
           </form>
         )}
 
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+          <span className="text-sm text-gray-500">Don&apos;t have an account? </span>
           <Link
-            href="/agent-login"
-            className="block text-center text-sm text-whatsapp-green hover:underline"
+            href="/auth/register"
+            className="text-sm font-medium text-brand-orange hover:underline"
           >
-            Agent Login →
+            Complete your profile
           </Link>
         </div>
       </div>

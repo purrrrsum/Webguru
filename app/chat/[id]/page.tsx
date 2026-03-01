@@ -7,6 +7,8 @@ import { useEffect, useState, useRef, useCallback, ClipboardEvent as ReactClipbo
 import ChatBubble from '@/components/ChatBubble';
 import FileUploader from '@/components/FileUploader';
 import { FileData, Message, JobAnnotation, JobVersion } from '@/lib/utils';
+import { StarIcon } from '@heroicons/react/24/solid';
+import { StarIcon as StarOutline } from '@heroicons/react/24/outline';
 
 interface ChatData {
   job: {
@@ -23,6 +25,7 @@ interface ChatData {
     escalationLevel?: 'none' | 'warning' | 'escalated';
     jobNumber?: number | null;
     priority?: 'normal' | 'high' | 'urgent';
+    status?: 'pending_match' | 'assigned' | 'in_progress' | 'completed' | 'closed';
   };
   files: FileData[];
   messages: Message[];
@@ -31,6 +34,7 @@ interface ChatData {
     name: string;
     role: string;
   } | null;
+  hasReviewed?: boolean;
 }
 
 export default function ChatPage() {
@@ -56,6 +60,14 @@ export default function ChatPage() {
   const [jobNumberInput, setJobNumberInput] = useState('');
   const [updatingJobNumber, setUpdatingJobNumber] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Completion & Review State
+  const [completingJob, setCompletingJob] = useState(false);
+  const [completionAmount, setCompletionAmount] = useState('');
+  const [showReviewInput, setShowReviewInput] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const fetchAnnotations = useCallback(async () => {
     if (!jobId) return;
@@ -92,10 +104,21 @@ export default function ChatPage() {
         setChatData(data);
         if (data?.job?.dueAt) {
           setSlaDueInput(new Date(data.job.dueAt).toISOString().slice(0, 16));
+          setSlaDueInput(new Date(data.job.dueAt).toISOString().slice(0, 16));
         }
         if (data?.job?.jobNumber) {
           setJobNumberInput(String(data.job.jobNumber));
         }
+
+        // Check if I have reviewed already (basic check based on API response caching if possible, or just default to false and API handles failure)
+        try {
+          const reviewRes = await fetch(`/api/reviews/check?jobId=${jobId}`);
+          if (reviewRes.ok) {
+            const rData = await reviewRes.json();
+            data.hasReviewed = rData.hasReviewed;
+          }
+        } catch (e) { }
+
         await Promise.all([fetchAnnotations(), fetchVersions()]);
       } else if (res.status === 404) {
         router.push('/');
@@ -307,14 +330,14 @@ export default function ChatPage() {
         setChatData((prev) =>
           prev
             ? {
-                ...prev,
-                job: {
-                  ...prev.job,
-                  dueAt: data.job?.dueAt || null,
-                  slaStatus: data.job?.slaStatus || 'pending',
-                  escalationLevel: data.job?.escalationLevel || 'none',
-                },
-              }
+              ...prev,
+              job: {
+                ...prev.job,
+                dueAt: data.job?.dueAt || null,
+                slaStatus: data.job?.slaStatus || 'pending',
+                escalationLevel: data.job?.escalationLevel || 'none',
+              },
+            }
             : prev
         );
       } else {
@@ -350,12 +373,12 @@ export default function ChatPage() {
         setChatData((prev) =>
           prev
             ? {
-                ...prev,
-                job: {
-                  ...prev.job,
-                  jobNumber: data.job?.jobNumber || null,
-                },
-              }
+              ...prev,
+              job: {
+                ...prev.job,
+                jobNumber: data.job?.jobNumber || null,
+              },
+            }
             : prev
         );
         setEditingJobNumber(false);
@@ -401,6 +424,72 @@ export default function ChatPage() {
     }
   };
 
+  const handleMarkCompleted = async () => {
+    if (!completionAmount || isNaN(Number(completionAmount)) || Number(completionAmount) <= 0) {
+      alert('Please enter a valid final job price.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to complete this job for $${completionAmount}? This will deduct the amount from the user's wallet automatically.`)) {
+      return;
+    }
+
+    setCompletingJob(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed', amount: Number(completionAmount) }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        await fetchChatData();
+        alert('Job officially completed and funds moved to Escrow.');
+      } else {
+        alert(data.error || 'Failed to complete job');
+      }
+    } catch (err) {
+      alert('An error occurred while marking the job as complete.');
+    } finally {
+      setCompletingJob(false);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    if (reviewRating < 1 || reviewRating > 5) {
+      alert('Please select a valid star rating.');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId,
+          revieweeId: chatData?.otherUser?.id,
+          rating: reviewRating,
+          comment: reviewComment
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert('Review submitted! Thank you.');
+        setShowReviewInput(false);
+        await fetchChatData(); // Refresh UI state
+      } else {
+        alert(data.error || 'Failed to submit review');
+      }
+    } catch (err) {
+      alert('An error occurred while submitting the review.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   // Combine files and messages, sort by timestamp
   const allItems = [
     ...(chatData?.files.map(f => ({ type: 'file' as const, data: f, timestamp: f.uploadedAt })) || []),
@@ -417,8 +506,8 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center apple-chat-bg">
-        <div className="text-apple-blue text-xl font-medium">Loading chat...</div>
+      <div className="min-h-screen flex items-center justify-center brand-chat-bg">
+        <div className="text-brand-blue text-xl font-medium">Loading chat...</div>
       </div>
     );
   }
@@ -439,9 +528,9 @@ export default function ChatPage() {
   const counterpartRole = session.user.role === 'user' ? 'Agent' : 'User';
 
   return (
-    <div className="min-h-screen apple-chat-bg flex flex-col">
+    <div className="min-h-screen brand-chat-bg flex flex-col">
       {/* Header */}
-      <header className="apple-chat-header p-4 shadow-sm">
+      <header className="brand-chat-header p-4 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -471,11 +560,10 @@ export default function ChatPage() {
                   </button>
                 )}
                 {chatData.job.priority === 'high' || chatData.job.priority === 'urgent' ? (
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    chatData.job.priority === 'urgent' 
-                      ? 'bg-red-500/30 text-red-200 border border-red-500/50' 
-                      : 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${chatData.job.priority === 'urgent'
+                    ? 'bg-red-500/30 text-red-200 border border-red-500/50'
+                    : 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                    }`}>
                     {chatData.job.priority === 'urgent' ? 'URGENT' : 'HIGH'}
                   </span>
                 ) : null}
@@ -521,10 +609,10 @@ export default function ChatPage() {
                   {chatData.job.slaStatus === 'overdue'
                     ? 'Overdue'
                     : chatData.job.slaStatus === 'due_soon'
-                    ? 'Due soon'
-                    : chatData.job.slaStatus === 'on_track'
-                    ? 'On track'
-                    : 'Pending'}
+                      ? 'Due soon'
+                      : chatData.job.slaStatus === 'on_track'
+                        ? 'On track'
+                        : 'Pending'}
                 </p>
               )}
             </div>
@@ -542,7 +630,7 @@ export default function ChatPage() {
         <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6">
           <div className="mb-6 lg:mb-0">
             {/* Chat Messages */}
-            <div className="apple-chat-card overflow-hidden flex flex-col min-h-[60vh]">
+            <div className="brand-chat-card overflow-hidden flex flex-col min-h-[60vh]">
               <div className="flex-1 overflow-y-auto p-6 pb-24">
                 {allItems.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
@@ -555,7 +643,7 @@ export default function ChatPage() {
                       const file = item.data as FileData;
                       // Map admin role to agent for chat interface (admins have agent permissions)
                       const chatRole = session.user.role === 'admin' ? 'agent' : session.user.role;
-                      
+
                       return (
                         <ChatBubble
                           key={`file-${file.id}`}
@@ -576,17 +664,15 @@ export default function ChatPage() {
                           className={`flex mb-4 ${isOwn ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                          className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-                            isOwn
-                              ? 'bg-apple-blue text-white ml-auto'
-                              : 'bg-white text-apple-gray-900 shadow-sm border border-apple-gray-200'
-                          }`}
+                            className={`max-w-[70%] px-4 py-3 rounded-2xl ${isOwn
+                              ? 'bg-brand-blue text-white ml-auto'
+                              : 'bg-white text-brand-gray-900 shadow-sm border border-brand-gray-200'
+                              }`}
                           >
                             <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
                             <p
-                              className={`text-xs mt-1 ${
-                                isOwn ? 'text-white/70' : 'text-gray-400'
-                              }`}
+                              className={`text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-gray-400'
+                                }`}
                             >
                               {new Date(message.createdAt).toLocaleTimeString([], {
                                 hour: '2-digit',
@@ -603,7 +689,7 @@ export default function ChatPage() {
               </div>
 
               {/* Input Area */}
-              <div className="apple-chat-card border-t border-apple-gray-200 p-6">
+              <div className="brand-chat-card border-t border-brand-gray-200 p-6">
                 <form onSubmit={handleSendMessage} className="flex gap-3">
                   <input
                     type="text"
@@ -611,13 +697,13 @@ export default function ChatPage() {
                     onChange={(e) => setMessageText(e.target.value)}
                     onPaste={handlePasteImage}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-3 bg-apple-gray-100 border border-apple-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900 placeholder-apple-gray-500"
+                    className="flex-1 px-4 py-3 bg-brand-gray-100 border border-brand-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
                     disabled={sendingMessage}
                   />
                   <button
                     type="submit"
                     disabled={!messageText.trim() || sendingMessage}
-                    className="px-6 py-3 apple-button-primary rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 brand-button-primary rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sendingMessage ? 'Sending...' : 'Send'}
                   </button>
@@ -631,7 +717,75 @@ export default function ChatPage() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="apple-card p-6">
+
+            {chatData.job.status === 'completed' && !chatData.hasReviewed && (
+              <div className="brand-card p-6 border-brand-pink/50 border shadow-[0_0_20px_rgba(235,93,139,0.15)] relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-pink/10 via-transparent to-brand-orange/10 pointer-events-none" />
+                <div className="relative z-10">
+                  <h2 className="text-lg font-bold text-white mb-2">Job Completed!</h2>
+                  <p className="text-sm text-gray-300 mb-4">Please rate your experience with {counterpartName}.</p>
+
+                  <div className="flex gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button key={star} onClick={() => setReviewRating(star)} className="focus:outline-none">
+                        {star <= reviewRating ? (
+                          <StarIcon className="w-8 h-8 text-brand-orange drop-shadow-md transition-transform hover:scale-110" />
+                        ) : (
+                          <StarOutline className="w-8 h-8 text-gray-500 hover:text-brand-orange transition-colors" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Write a brief review..."
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm mb-3 focus:ring-brand-pink focus:border-brand-pink"
+                    rows={3}
+                  />
+
+                  <button
+                    onClick={handleReviewSubmit}
+                    disabled={submittingReview || reviewRating === 0}
+                    className="w-full brand-button-primary rounded-md py-2 text-sm disabled:opacity-50"
+                  >
+                    {submittingReview ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {chatData.job.status !== 'completed' && session.user.role === 'agent' && (
+              <div className="brand-card p-6 border border-brand-blue/30 selection:bg-brand-blue/30">
+                <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Job Completion
+                </h2>
+                <p className="text-xs text-gray-400 mb-4">Finalize the job and invoice the client securely through Escrow.</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm font-bold">$</span>
+                  <input
+                    type="number"
+                    value={completionAmount}
+                    onChange={(e) => setCompletionAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm focus:ring-brand-blue"
+                  />
+                  <button
+                    onClick={handleMarkCompleted}
+                    disabled={completingJob || !completionAmount}
+                    className="px-4 py-2 bg-brand-blue hover:bg-blue-600 text-white font-medium text-sm rounded-md transition-colors disabled:opacity-50"
+                  >
+                    {completingJob ? 'Processing...' : 'Complete'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="brand-card p-6">
               <h2 className="text-sm font-semibold text-white mb-3">SLA & Schedule</h2>
               <p className="text-xs text-gray-400 mb-2">
                 Track due dates to keep the project on schedule. Automations notify when items approach or miss deadlines.
@@ -640,23 +794,22 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-300">Status</span>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      chatData.job.slaStatus === 'overdue'
-                        ? 'bg-red-500/20 text-red-300 border border-red-500/40'
-                        : chatData.job.slaStatus === 'due_soon'
+                    className={`px-2 py-1 rounded-full text-xs ${chatData.job.slaStatus === 'overdue'
+                      ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+                      : chatData.job.slaStatus === 'due_soon'
                         ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
                         : chatData.job.slaStatus === 'on_track'
-                        ? 'bg-green-500/20 text-green-300 border border-green-500/40'
-                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/40'
-                    }`}
+                          ? 'bg-green-500/20 text-green-300 border border-green-500/40'
+                          : 'bg-gray-500/20 text-gray-400 border border-gray-500/40'
+                      }`}
                   >
                     {chatData.job.slaStatus === 'overdue'
                       ? 'Overdue'
                       : chatData.job.slaStatus === 'due_soon'
-                      ? 'Due soon'
-                      : chatData.job.slaStatus === 'on_track'
-                      ? 'On track'
-                      : 'Pending'}
+                        ? 'Due soon'
+                        : chatData.job.slaStatus === 'on_track'
+                          ? 'On track'
+                          : 'Pending'}
                   </span>
                 </div>
                 <div>
@@ -692,9 +845,9 @@ export default function ChatPage() {
               )}
             </div>
 
-            <div className="apple-card p-6">
+            <div className="brand-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="apple-heading-3 text-apple-gray-900">Collaboration Notes</h2>
+                <h2 className="brand-heading-3 text-brand-gray-900">Collaboration Notes</h2>
                 <span className="text-xs text-gray-400">
                   {annotations.filter((a) => a.status === 'open').length} open
                 </span>
@@ -715,11 +868,10 @@ export default function ChatPage() {
                       <p className="mt-1 whitespace-pre-wrap">{annotation.content}</p>
                       <div className="mt-2 flex items-center justify-between">
                         <span
-                          className={`px-2 py-0.5 rounded-full ${
-                            annotation.status === 'resolved'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-blue-100 text-blue-700'
-                          }`}
+                          className={`px-2 py-0.5 rounded-full ${annotation.status === 'resolved'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-blue-100 text-blue-700'
+                            }`}
                         >
                           {annotation.status === 'resolved' ? 'Resolved' : 'Open'}
                         </span>
@@ -755,9 +907,9 @@ export default function ChatPage() {
               </form>
             </div>
 
-            <div className="apple-card p-6">
+            <div className="brand-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="apple-heading-3 text-apple-gray-900">Revision History</h2>
+                <h2 className="brand-heading-3 text-brand-gray-900">Revision History</h2>
                 <span className="text-xs text-gray-400">{versions.length} versions</span>
               </div>
               <div className="max-h-64 overflow-y-auto space-y-3">

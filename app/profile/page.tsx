@@ -125,8 +125,8 @@ export default function ProfilePage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center apple-chat-bg">
-        <div className="text-apple-blue text-xl font-medium">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center brand-chat-bg">
+        <div className="text-brand-blue text-xl font-medium">Loading...</div>
       </div>
     );
   }
@@ -136,14 +136,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen apple-chat-bg">
+    <div className="min-h-screen brand-chat-bg">
       {/* Header */}
-      <header className="apple-chat-header p-6 shadow-sm">
+      <header className="brand-chat-header p-6 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-apple-gray-600 hover:text-apple-blue p-3 rounded-xl hover:bg-white/50 transition-all"
+              className="text-brand-gray-600 hover:text-brand-blue p-3 rounded-xl hover:bg-white/50 transition-all"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -155,13 +155,13 @@ export default function ProfilePage() {
               </svg>
             </Link>
             <div>
-              <h1 className="apple-heading-2">Profile Settings</h1>
-              <p className="apple-body-small text-apple-gray-600">Manage your account and preferences</p>
+              <h1 className="brand-heading-2">Profile Settings</h1>
+              <p className="brand-body-small text-brand-gray-600">Manage your account and preferences</p>
             </div>
           </div>
           <Link
             href="/api/auth/signout"
-            className="apple-button-secondary"
+            className="brand-button-secondary"
           >
             Sign Out
           </Link>
@@ -170,22 +170,22 @@ export default function ProfilePage() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-6">
-        <div className="apple-card p-8">
+        <div className="brand-card p-8">
           {/* Job Count Badge */}
-          <div className="mb-8 pb-8 border-b border-apple-gray-200">
-            <div className="apple-card p-6 bg-gradient-to-r from-apple-blue-light to-white">
+          <div className="mb-8 pb-8 border-b border-brand-gray-200">
+            <div className="brand-card p-6 bg-gradient-to-r from-brand-blue-light to-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="apple-body-small text-apple-gray-600 uppercase tracking-wide font-medium">Completed Jobs</p>
-                  <p className="text-4xl font-bold text-apple-blue mt-2">
+                  <p className="brand-body-small text-brand-gray-600 uppercase tracking-wide font-medium">Completed Jobs</p>
+                  <p className="text-4xl font-bold text-brand-blue mt-2">
                     {user.jobCount || 0}
                   </p>
-                  <p className="apple-body-small text-apple-gray-600 mt-1">
+                  <p className="brand-body-small text-brand-gray-600 mt-1">
                     {session.user.role === 'agent' ? 'Jobs completed' : 'Proofreading projects done'}
                   </p>
                 </div>
-                <div className="w-20 h-20 bg-apple-blue/10 rounded-2xl flex items-center justify-center">
-                  <span className="text-4xl text-apple-blue">✓</span>
+                <div className="w-20 h-20 bg-brand-blue/10 rounded-2xl flex items-center justify-center">
+                  <span className="text-4xl text-brand-blue">✓</span>
                 </div>
               </div>
             </div>
@@ -193,15 +193,15 @@ export default function ProfilePage() {
 
           {/* Available Agents Count (for users only) */}
           {session.user.role === 'user' && availableAgentsCount !== null && (
-            <div className="mb-8 pb-8 border-b border-apple-gray-200">
-              <div className="apple-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div className="mb-8 pb-8 border-b border-brand-gray-200">
+              <div className="brand-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="apple-body-small text-apple-gray-600 uppercase tracking-wide font-medium">Agents Online</p>
+                    <p className="brand-body-small text-brand-gray-600 uppercase tracking-wide font-medium">Agents Online</p>
                     <p className="text-4xl font-bold text-blue-600 mt-2">
                       {availableAgentsCount}
                     </p>
-                    <p className="apple-body-small text-apple-gray-600 mt-1">
+                    <p className="brand-body-small text-brand-gray-600 mt-1">
                       {availableAgentsCount === 0
                         ? 'No agents online at the moment'
                         : availableAgentsCount === 1
@@ -219,20 +219,20 @@ export default function ProfilePage() {
 
           {/* Agent Availability Toggle */}
           {session.user.role === 'agent' && (
-            <div className="mb-8 pb-8 border-b border-apple-gray-200">
-              <h3 className="apple-heading-3 mb-6">Availability Status</h3>
+            <div className="mb-8 pb-8 border-b border-brand-gray-200">
+              <h3 className="brand-heading-3 mb-6">Availability Status</h3>
               <div className="space-y-6">
-                <div className="apple-card p-6">
+                <div className="brand-card p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="apple-heading-3 text-sm mb-1">Online Status</h4>
-                      <p className="apple-body-small text-apple-gray-600">Show as available in the system</p>
+                      <h4 className="brand-heading-3 text-sm mb-1">Online Status</h4>
+                      <p className="brand-body-small text-brand-gray-600">Show as available in the system</p>
                     </div>
                     <button
                       onClick={() => handleAvailabilityToggle('isOnline', !isOnline)}
                       disabled={updatingAvailability}
                       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
-                        isOnline ? 'bg-apple-blue' : 'bg-apple-gray-300'
+                        isOnline ? 'bg-brand-blue' : 'bg-brand-gray-300'
                       }`}
                     >
                       <span
@@ -244,17 +244,17 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="apple-card p-6">
+                <div className="brand-card p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="apple-heading-3 text-sm mb-1">Ready to Take Tasks</h4>
-                      <p className="apple-body-small text-apple-gray-600">Receive new job assignments</p>
+                      <h4 className="brand-heading-3 text-sm mb-1">Ready to Take Tasks</h4>
+                      <p className="brand-body-small text-brand-gray-600">Receive new job assignments</p>
                     </div>
                     <button
                       onClick={() => handleAvailabilityToggle('isReady', !isReady)}
                       disabled={updatingAvailability || !isOnline}
                       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 ${
-                        isReady && isOnline ? 'bg-apple-blue' : 'bg-apple-gray-300'
+                        isReady && isOnline ? 'bg-brand-blue' : 'bg-brand-gray-300'
                       } ${!isOnline ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <span
@@ -266,23 +266,23 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="apple-card p-4">
+                <div className="brand-card p-4">
                   {isOnline && isReady && (
                     <div className="flex items-center gap-3">
                       <span className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
-                      <p className="apple-body-small text-green-700 font-medium">You are receiving new job assignments</p>
+                      <p className="brand-body-small text-green-700 font-medium">You are receiving new job assignments</p>
                     </div>
                   )}
                   {isOnline && !isReady && (
                     <div className="flex items-center gap-3">
                       <span className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs">⚠</span>
-                      <p className="apple-body-small text-yellow-700 font-medium">Online but not accepting new tasks</p>
+                      <p className="brand-body-small text-yellow-700 font-medium">Online but not accepting new tasks</p>
                     </div>
                   )}
                   {!isOnline && (
                     <div className="flex items-center gap-3">
-                      <span className="w-5 h-5 bg-apple-gray-400 rounded-full flex items-center justify-center text-white text-xs">⭕</span>
-                      <p className="apple-body-small text-apple-gray-600">Offline - Jobs will be reassigned if you have pending messages</p>
+                      <span className="w-5 h-5 bg-brand-gray-400 rounded-full flex items-center justify-center text-white text-xs">⭕</span>
+                      <p className="brand-body-small text-brand-gray-600">Offline - Jobs will be reassigned if you have pending messages</p>
                     </div>
                   )}
                 </div>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
 
           {/* Profile Form */}
           <div>
-            <h2 className="apple-heading-2 mb-6">Edit Profile</h2>
+            <h2 className="brand-heading-2 mb-6">Edit Profile</h2>
             <ProfileForm initialData={user} onSave={handleSave} />
           </div>
         </div>
