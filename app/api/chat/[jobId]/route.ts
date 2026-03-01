@@ -38,7 +38,7 @@ export async function GET(
     // Get user info for display
     const otherUserId =
       session.user.role === 'user' ? job.agentId : job.userId;
-    const otherUser = await getUserById(otherUserId);
+    const otherUser = otherUserId ? await getUserById(otherUserId) : null;
 
     const jobWithName = {
       ...job,
@@ -57,12 +57,12 @@ export async function GET(
         ? { id: otherUser.id, name: otherUser.name, role: otherUser.role }
         : null,
     });
-    
+
     // Add no-cache headers
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
-    
+
     return response;
   } catch (error) {
     console.error('Error fetching chat:', error);
@@ -88,10 +88,10 @@ export async function GET(
         session.user.role === 'agent'
           ? { id: fallbackJob.userId, name: 'User', role: 'user' as const }
           : {
-              id: fallbackJob.agentId,
-              name: 'Support Agent',
-              role: 'agent' as const,
-            };
+            id: fallbackJob.agentId,
+            name: 'Support Agent',
+            role: 'agent' as const,
+          };
 
       return NextResponse.json({
         job: fallbackJob,
