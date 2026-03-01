@@ -137,8 +137,8 @@ export const adminAuthOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/admin-panel/login',
-    error: '/admin-panel/login?error=AccessDenied',
+    signIn: '/admin',
+    error: '/admin?error=AccessDenied',
   },
   session: {
     strategy: 'jwt',

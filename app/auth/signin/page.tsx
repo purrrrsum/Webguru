@@ -1,9 +1,16 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+// Declare the external MSG91 initialization function on the window object
+declare global {
+  interface Window {
+    initSendOTP?: (config: any) => void;
+  }
+}
 
 export default function SignInPage() {
   const router = useRouter();
@@ -11,7 +18,6 @@ export default function SignInPage() {
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [loginMethod, setLoginMethod] = useState<'otp' | 'password'>('otp');
-  const [step, setStep] = useState<'email' | 'otp'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,26 +27,95 @@ export default function SignInPage() {
     signIn('google', { callbackUrl: '/dashboard' });
   };
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Load the MSG91 Script on component mount
+  useEffect(() => {
+    const loadOtpScript = (urls: string[]) => {
+      let i = 0;
+      const attempt = () => {
+        const s = document.createElement('script');
+        s.src = urls[i];
+        s.async = true;
+        s.onload = () => {
+          console.log('MSG91 Script loaded successfully');
+        };
+        s.onerror = () => {
+          i++;
+          if (i < urls.length) {
+            attempt();
+          } else {
+            console.error('Failed to load MSG91 OTP scripts');
+          }
+        };
+        document.head.appendChild(s);
+      };
+
+      // Prevent duplicate script injection
+      if (!document.querySelector('script[src*="otp-provider.js"]')) {
+        attempt();
+      }
+    };
+
+    loadOtpScript([
+      'https://verify.msg91.com/otp-provider.js',
+      'https://verify.phone91.com/otp-provider.js'
+    ]);
+  }, []);
+
+  const handleSendOTP = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setLoading(true);
     setError(null);
 
-    try {
-      const res = await fetch('/api/otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+    // Only proceed if MSG91 is properly loaded
+    if (typeof window.initSendOTP !== 'function') {
+      setError('OTP service is currently unavailable. Please refresh or try again later.');
+      setLoading(false);
+      return;
+    }
 
-      if (res.ok) {
-        setStep('otp');
-      } else {
-        setError('Failed to send OTP. Please try again.');
-      }
+    try {
+      const configuration = {
+        widgetId: "366361635832373332333930",
+        tokenAuth: "497253TuQmsnhAYdW69a3b86cP1",
+        identifier: email,
+        exposeMethods: "false",
+        success: async (data: any) => {
+          // data.message contains the JWT success token, data.mobile contains the verified number
+          try {
+            const result = await signIn('credentials', {
+              email: data.mobile,
+              otp: data.message,
+              isMsg91: 'true',
+              redirect: false,
+              role: 'user',
+            });
+
+            if (result?.error) {
+              setError(result.error);
+            } else if (result?.ok) {
+              router.push('/dashboard');
+            } else {
+              setError('Login failed during server verification. Please try again.');
+            }
+          } catch (err: any) {
+            setError(err.message || 'Login failed.');
+          } finally {
+            setLoading(false);
+          }
+        },
+        failure: (error: any) => {
+          console.error('MSG91 OTP Failure:', error);
+          setError(error.message || 'Failed to verify OTP. Please try again.');
+          setLoading(false);
+        },
+      };
+
+      // Trigger the MSG91 UI Modal
+      window.initSendOTP(configuration);
+
     } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-    } finally {
+      console.error(err);
+      setError('An unexpected error occurred initializing the OTP service.');
       setLoading(false);
     }
   };
@@ -87,30 +162,7 @@ export default function SignInPage() {
     }
   };
 
-  const handleOTPLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        otp,
-        redirect: false,
-        role: 'user',
-      });
-
-      if (result?.error) {
-        setError('Invalid OTP. Please try again.');
-      } else {
-        router.push('/dashboard');
-      }
-    } catch (err) {
-      setError('Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // (handleOTPLogin natively implemented via the success callback above now)
 
   return (
     <div className="min-h-screen bg-whatsapp-gray-light flex items-center justify-center p-4">
@@ -215,7 +267,6 @@ export default function SignInPage() {
                 type="button"
                 onClick={() => {
                   setLoginMethod('otp');
-                  setStep('email');
                   setError(null);
                   setPassword('');
                 }}
@@ -225,108 +276,45 @@ export default function SignInPage() {
               </button>
             </div>
           </form>
-        ) : step === 'email' ? (
-          <>
-
-            <form onSubmit={handleSendOTP}>
-              <div className="mb-4">
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-whatsapp-green hover:bg-whatsapp-green-dark text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Sending...' : 'Send OTP'}
-              </button>
-
-              <div className="mt-4 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMethod('password');
-                    setStep('email');
-                    setError(null);
-                    setOtp('');
-                  }}
-                  className="text-sm text-whatsapp-green hover:underline"
-                >
-                  Login with password instead
-                </button>
-              </div>
-            </form>
-          </>
         ) : (
-          <form onSubmit={handleOTPLogin}>
+          <form onSubmit={handleSendOTP}>
             <div className="mb-4">
               <label
-                htmlFor="otp"
+                htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Enter OTP
+                Phone Number
               </label>
               <input
-                type="text"
-                id="otp"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                required
-                maxLength={6}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-center text-2xl tracking-widest"
-                placeholder="000000"
-                autoFocus
+                type="tel"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green"
+                placeholder="Enter phone with country code (e.g. +91 9876543210)"
               />
-              <p className="text-xs text-gray-500 mt-2">
-                We sent a 6-digit code to {email}
-              </p>
+              <p className="text-xs text-gray-500 mt-2">Optional: Leave blank to use widget input</p>
             </div>
 
             <button
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              className="w-full bg-whatsapp-green hover:bg-whatsapp-green-dark text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              type="button"
+              onClick={() => handleSendOTP()}
+              disabled={loading}
+              className="w-full bg-whatsapp-green hover:bg-whatsapp-green-dark text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Verifying...' : 'Verify OTP'}
+              {loading ? 'Initializing OTP...' : 'Login via SMS OTP'}
             </button>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setStep('email');
-                  setOtp('');
-                  setError(null);
-                }}
-                className="flex-1 text-whatsapp-green hover:underline text-sm"
-              >
-                Change email
-              </button>
+            <div className="mt-4 text-center">
               <button
                 type="button"
                 onClick={() => {
                   setLoginMethod('password');
-                  setStep('email');
-                  setOtp('');
                   setError(null);
                 }}
-                className="flex-1 text-whatsapp-green hover:underline text-sm"
+                className="text-sm text-whatsapp-green hover:underline"
               >
-                Use password
+                Login with password instead
               </button>
             </div>
           </form>

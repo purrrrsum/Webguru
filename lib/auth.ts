@@ -8,6 +8,7 @@ import {
   ensureDatabaseSetup,
   createLoginLog,
   getUserByEmail,
+  getUserByPhone,
   createUser,
   updateUser,
 } from './db';
@@ -38,7 +39,7 @@ async function ensureUserAccount(
   const targetRole = overrides.role || role;
   // Check for existing account
   const existing = existingAccount ?? (await getUserByEmail(email));
-  
+
   if (existing) {
     // If email exists with different role, deny access
     if (existing.role !== targetRole) {
@@ -46,7 +47,7 @@ async function ensureUserAccount(
         `This email is already registered as ${existing.role}. Please sign in using the ${existing.role === 'agent' ? 'agent' : 'user'} login page.`
       );
     }
-    
+
     // Account exists with the correct role, update if needed
     const updates: Partial<User> = {};
 
@@ -105,7 +106,7 @@ const getNextAuthUrl = () => {
     // Client-side: use window location
     return window.location.origin;
   }
-  
+
   // Server-side runtime: Railway automatically sets this
   if (process.env.NEXTAUTH_URL) {
     return process.env.NEXTAUTH_URL;
@@ -154,19 +155,75 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: 'OTP',
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        otp: { label: 'OTP', type: 'text' },
+        email: { label: 'Email or Phone', type: 'text' },
+        otp: { label: 'OTP or Token', type: 'text' },
         role: { label: 'Role', type: 'text' },
+        isMsg91: { label: 'Is MSG91', type: 'text' }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.otp) {
           return null;
         }
 
-        const email = credentials.email.toLowerCase().trim();
+        const identifier = credentials.email.trim();
         const secret = credentials.otp.trim();
+        const isMsg91 = credentials.isMsg91 === 'true';
 
         await ensureDatabaseSetup();
+
+        // ---------------- MSG91 VERIFICATION FLOW ---------------- //
+        if (isMsg91) {
+          try {
+            // Verify token locally via MSG91 API exactly as the user specified
+            const tokenResponse = await fetch('https://control.msg91.com/api/v5/widget/verifyAccessToken', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                "authkey": "497253TuQmsnhAYdW69a3b86cP1", // The authkey from the frontend widget configuration
+                "access-token": secret // jwt_token_from_otp_widget
+              }),
+            });
+            const tokenData = await tokenResponse.json();
+
+            if (tokenData.type === 'error' || tokenData.message !== 'Mobile number verified successfully') {
+              throw new Error('MSG91 OTP Validation Failed. Please try again.');
+            }
+
+            // Extract the verified mobile number straight from the MSG91 verification payload
+            const verifiedMobile = tokenData.mobile;
+            if (!verifiedMobile) {
+              throw new Error('Mobile number could not be extracted from MSG91 payload.');
+            }
+
+            // Find User By Phone
+            const userPhone = verifiedMobile.startsWith('+') ? verifiedMobile : `+${verifiedMobile}`;
+            const existingPhoneAccount = await getUserByPhone(userPhone);
+
+            if (!existingPhoneAccount) {
+              throw new Error(`No account found for phone number ${userPhone}. Please register first.`);
+            }
+
+            // Validate requested role matches the existing account
+            if (credentials.role && existingPhoneAccount.role !== credentials.role && credentials.role !== 'auto') {
+              throw new Error(
+                `This phone number is registered as ${existingPhoneAccount.role}. Please use the ${existingPhoneAccount.role === 'agent' ? 'agent' : 'user'} login page.`
+              );
+            }
+
+            const sanitizedPhoneAccount = { ...existingPhoneAccount };
+            delete (sanitizedPhoneAccount as any).password;
+            return sanitizedPhoneAccount as any;
+
+          } catch (err: any) {
+            throw new Error(`MSG91 Authentication Error: ${err.message}`);
+          }
+        }
+        // -------------------------------------------------------- //
+
+        const email = identifier.toLowerCase();
 
         const requestedRole =
           credentials.role === 'agent' || credentials.role === 'user'
@@ -175,11 +232,11 @@ export const authOptions: NextAuthOptions = {
 
         // Check if account exists
         const existingAccount = await getUserByEmail(email);
-        
+
         // If account exists, always use its existing role for authentication
         // This prevents role mismatch errors when logging in
         const actualRole = existingAccount?.role || requestedRole;
-        
+
         // For OTP/password login with existing accounts, use the account's role
         // Role check only matters when creating new accounts via OTP
         if (existingAccount && existingAccount.role !== requestedRole) {
@@ -279,14 +336,14 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === 'google') {
         if (user.email) {
           await ensureDatabaseSetup();
-          
+
           // For Google OAuth, check if account already exists first
           const existingAccount = await getUserByEmail(user.email);
-          
+
           // If account exists, use its existing role
           // Otherwise, infer role from email
           let requestedRole: 'user' | 'agent' = existingAccount?.role || inferRoleFromEmail(user.email);
-          
+
           const dbUser = await ensureUserAccount(user.email, requestedRole, {
             name: user.name || getNameFromEmail(user.email),
           }, existingAccount || undefined);
@@ -302,14 +359,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || 'user';
-        
+
         // For Google OAuth, check if we need to update role based on cookie
         // The cookie is set before OAuth and should be available in the request
         // Since we can't access cookies directly here, we'll rely on the role
         // set during signIn, which uses email inference
         // The actual role selection happens at login page level
       }
-      
+
       return token;
     },
     async session({ session, token }) {

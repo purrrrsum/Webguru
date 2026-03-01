@@ -10,6 +10,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Name, email, and specialization are required' }, { status: 400 });
         }
 
+        if (!phone || !/^\+\d{1,3}\d{6,14}$/.test(phone)) {
+            return NextResponse.json({ error: 'Phone number is required and must include a valid country code (e.g., +1 for US, +91 for India)' }, { status: 400 });
+        }
+
         // 1. Check if user already exists
         const existingUser = await getUserByEmail(email);
         if (existingUser) {

@@ -9,6 +9,7 @@ export default function RegisterPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phone: '',
         company: '',
         industry: '',
         preferredService: ''
@@ -115,6 +116,24 @@ export default function RegisterPage() {
                                 required
                                 className="w-full px-4 py-2 border border-brand-gray-300 rounded-lg focus:ring-brand-orange focus:border-brand-orange"
                                 placeholder="you@company.com"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-brand-gray-700 mb-1">
+                                Phone Number (include Country Code) *
+                            </label>
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                required
+                                pattern="^\+\d{1,3}\d{6,14}$"
+                                title="Must include country code, starting with +, e.g., +1234567890"
+                                className="w-full px-4 py-2 border border-brand-gray-300 rounded-lg focus:ring-brand-orange focus:border-brand-orange"
+                                placeholder="+1 555 123 4567"
                             />
                         </div>
 

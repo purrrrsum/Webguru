@@ -21,8 +21,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && status === 'unauthenticated') {
-      if (pathname !== '/admin-panel/login') {
-        router.push('/admin-panel/login');
+      if (pathname !== '/admin') {
+        router.push('/admin');
       }
     } else if (!isLoading && status === 'authenticated') {
       // STRICT: Check if user is admin
@@ -30,15 +30,15 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
 
       // Reject if not admin
       if (!isAdmin) {
-        if (pathname !== '/admin-panel/login') {
-          router.push('/admin-panel/login?error=AccessDenied');
+        if (pathname !== '/admin') {
+          router.push('/admin?error=AccessDenied');
         }
       }
     }
   }, [status, session, isLoading, pathname, router]);
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/admin-panel/login' });
+    await signOut({ callbackUrl: '/admin' });
   };
 
   // Show loading state
@@ -54,7 +54,7 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
   }
 
   // If on login page, don't show the layout
-  if (pathname === '/admin-panel/login') {
+  if (pathname === '/admin') {
     return <>{children}</>;
   }
 
@@ -79,8 +79,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <Link
               href="/admin-panel"
               className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel' || pathname === '/admin-panel/'
-                  ? 'bg-slate-800 text-white'
-                  : 'hover:bg-slate-800 hover:text-white'
+                ? 'bg-slate-800 text-white'
+                : 'hover:bg-slate-800 hover:text-white'
                 }`}
             >
               Dashboard
@@ -88,8 +88,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <Link
               href="/admin-panel/conversations"
               className={`px-3 py-2 rounded-md transition-colors ${pathname?.startsWith('/admin-panel/conversations')
-                  ? 'bg-slate-800 text-white'
-                  : 'hover:bg-slate-800 hover:text-white'
+                ? 'bg-slate-800 text-white'
+                : 'hover:bg-slate-800 hover:text-white'
                 }`}
             >
               Conversations
@@ -97,8 +97,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <Link
               href="/admin-panel/support"
               className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel/support'
-                  ? 'bg-slate-800 text-white'
-                  : 'hover:bg-slate-800 hover:text-white'
+                ? 'bg-slate-800 text-white'
+                : 'hover:bg-slate-800 hover:text-white'
                 }`}
             >
               Support Inbox
@@ -106,8 +106,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <Link
               href="/admin-panel/users"
               className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel/users'
-                  ? 'bg-slate-800 text-white'
-                  : 'hover:bg-slate-800 hover:text-white'
+                ? 'bg-slate-800 text-white'
+                : 'hover:bg-slate-800 hover:text-white'
                 }`}
             >
               Users
@@ -115,8 +115,8 @@ export default function AdminPanelAuth({ children }: { children: ReactNode }) {
             <Link
               href="/admin-panel/cms"
               className={`px-3 py-2 rounded-md transition-colors ${pathname === '/admin-panel/cms'
-                  ? 'bg-slate-800 text-white'
-                  : 'hover:bg-slate-800 hover:text-white'
+                ? 'bg-slate-800 text-white'
+                : 'hover:bg-slate-800 hover:text-white'
                 }`}
             >
               CMS

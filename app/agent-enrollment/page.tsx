@@ -1,9 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+// Declare the external MSG91 initialization function on the window object
+declare global {
+    interface Window {
+        initSendOTP?: (config: any) => void;
+    }
+}
 
 export default function AgentEnrollmentPage() {
     const router = useRouter();
@@ -13,7 +20,8 @@ export default function AgentEnrollmentPage() {
     const [success, setSuccess] = useState(false);
 
     // Login State
-    const [loginEmail, setLoginEmail] = useState('');
+    const [loginMethod, setLoginMethod] = useState<'otp' | 'password'>('otp');
+    const [loginEmail, setLoginEmail] = useState(''); // Serves as mobile number field too during OTP flow
     const [loginPassword, setLoginPassword] = useState('');
 
     // Enrollment State
@@ -56,6 +64,99 @@ export default function AgentEnrollmentPage() {
         } catch (err: any) {
             setError('Login failed: ' + (err.message || 'Unknown error'));
         } finally {
+            setLoading(false);
+        }
+    };
+
+    // Load the MSG91 Script on component mount
+    useEffect(() => {
+        const loadOtpScript = (urls: string[]) => {
+            let i = 0;
+            const attempt = () => {
+                const s = document.createElement('script');
+                s.src = urls[i];
+                s.async = true;
+                s.onload = () => {
+                    console.log('MSG91 Script loaded successfully');
+                };
+                s.onerror = () => {
+                    i++;
+                    if (i < urls.length) {
+                        attempt();
+                    } else {
+                        console.error('Failed to load MSG91 OTP scripts');
+                    }
+                };
+                document.head.appendChild(s);
+            };
+
+            // Prevent duplicate script injection
+            if (!document.querySelector('script[src*="otp-provider.js"]')) {
+                attempt();
+            }
+        };
+
+        loadOtpScript([
+            'https://verify.msg91.com/otp-provider.js',
+            'https://verify.phone91.com/otp-provider.js'
+        ]);
+    }, []);
+
+    const handleSendOTP = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        // Only proceed if MSG91 is properly loaded
+        if (typeof window.initSendOTP !== 'function') {
+            setError('OTP service is currently unavailable. Please refresh or try again later.');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const configuration = {
+                widgetId: "366361635832373332333930",
+                tokenAuth: "497253TuQmsnhAYdW69a3b86cP1",
+                identifier: loginEmail,
+                exposeMethods: "false",
+                success: async (data: any) => {
+                    // data.message contains the JWT success token, data.mobile contains the verified number
+                    try {
+                        const result = await signIn('credentials', {
+                            email: data.mobile,
+                            otp: data.message,
+                            isMsg91: 'true',
+                            redirect: false,
+                            role: 'agent',
+                        });
+
+                        if (result?.error) {
+                            setError(result.error);
+                        } else if (result?.ok) {
+                            router.push('/dashboard');
+                        } else {
+                            setError('Login failed during server verification. Please try again.');
+                        }
+                    } catch (err: any) {
+                        setError(err.message || 'Login failed.');
+                    } finally {
+                        setLoading(false);
+                    }
+                },
+                failure: (error: any) => {
+                    console.error('MSG91 OTP Failure:', error);
+                    setError(error.message || 'Failed to verify OTP. Please try again.');
+                    setLoading(false);
+                },
+            };
+
+            // Trigger the MSG91 UI Modal
+            window.initSendOTP(configuration);
+
+        } catch (err) {
+            console.error(err);
+            setError('An unexpected error occurred initializing the OTP service.');
             setLoading(false);
         }
     };
@@ -104,8 +205,8 @@ export default function AgentEnrollmentPage() {
                     <button
                         onClick={() => { setActiveTab('enroll'); setError(null); }}
                         className={`flex-1 pb-4 text-center font-medium transition-colors ${activeTab === 'enroll'
-                                ? 'text-brand-orange border-b-2 border-brand-orange'
-                                : 'text-brand-gray-500 hover:text-brand-gray-700'
+                            ? 'text-brand-orange border-b-2 border-brand-orange'
+                            : 'text-brand-gray-500 hover:text-brand-gray-700'
                             }`}
                     >
                         Apply to be an Agent
@@ -113,8 +214,8 @@ export default function AgentEnrollmentPage() {
                     <button
                         onClick={() => { setActiveTab('login'); setError(null); }}
                         className={`flex-1 pb-4 text-center font-medium transition-colors ${activeTab === 'login'
-                                ? 'text-brand-orange border-b-2 border-brand-orange'
-                                : 'text-brand-gray-500 hover:text-brand-gray-700'
+                            ? 'text-brand-orange border-b-2 border-brand-orange'
+                            : 'text-brand-gray-500 hover:text-brand-gray-700'
                             }`}
                     >
                         Existing Agent Login
@@ -128,7 +229,7 @@ export default function AgentEnrollmentPage() {
                 )}
 
                 {/* Login Form */}
-                {activeTab === 'login' && (
+                {activeTab === 'login' && loginMethod === 'password' && (
                     <form onSubmit={handleLoginSubmit} className="max-w-md mx-auto space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-brand-gray-700 mb-1">Email Address</label>
@@ -157,6 +258,55 @@ export default function AgentEnrollmentPage() {
                         >
                             {loading ? 'Authenticating...' : 'Secure Login'}
                         </button>
+                        <div className="mt-4 text-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setLoginMethod('otp');
+                                    setError(null);
+                                    setLoginPassword('');
+                                }}
+                                className="text-sm text-brand-orange hover:underline"
+                            >
+                                Login with MSG91 OTP instead
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {activeTab === 'login' && loginMethod === 'otp' && (
+                    <form onSubmit={handleSendOTP} className="max-w-md mx-auto space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-brand-gray-700 mb-1">Phone Number</label>
+                            <input
+                                type="tel"
+                                value={loginEmail}
+                                onChange={(e) => setLoginEmail(e.target.value)}
+                                className="w-full px-4 py-2 border border-brand-gray-300 rounded-lg focus:ring-brand-orange focus:border-brand-orange"
+                                placeholder="Enter phone with country code (e.g. +91 9876543210)"
+                            />
+                            <p className="text-xs text-brand-gray-500 mt-2">Optional: Leave blank to use widget input</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => handleSendOTP()}
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-brand-pink to-brand-orange text-white font-medium py-3 px-4 rounded-xl shadow-md transition-all hover:shadow-lg disabled:opacity-50 mt-4"
+                        >
+                            {loading ? 'Initializing OTP...' : 'Login via SMS OTP'}
+                        </button>
+                        <div className="mt-4 text-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setLoginMethod('password');
+                                    setError(null);
+                                }}
+                                className="text-sm text-brand-orange hover:underline"
+                            >
+                                Login with password instead
+                            </button>
+                        </div>
                     </form>
                 )}
 

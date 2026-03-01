@@ -15,10 +15,9 @@ export default function AboutPage() {
                 About Our Mission
               </span>
             </div>
-            <h1 className="brand-heading-1 mb-6">Human-powered proofreading for modern teams</h1>
+            <h1 className="brand-heading-1 mb-6">Human-powered creative services for modern teams</h1>
             <p className="brand-body-large max-w-3xl mx-auto text-brand-gray-600">
-              We believe every creative deserves professional proofreading without the premium price tag.
-              Our platform connects design agencies with skilled proofreaders worldwide.
+              We connect visionary clients with skilled professionals worldwide, offering premium Design, Content Creation, Video Editing, and Proofreading services without the premium price tag.
             </p>
           </div>
 
@@ -27,8 +26,8 @@ export default function AboutPage() {
             <div className="text-center mb-8">
               <h2 className="brand-heading-2 mb-4">Our Mission</h2>
               <p className="brand-body-large text-brand-gray-600 max-w-3xl mx-auto">
-                To democratize professional proofreading services, making them accessible, affordable, and efficient
-                for design agencies of all sizes through our innovative human-powered platform.
+                To democratize professional creative and editorial services, making them accessible, affordable, and efficient
+                for businesses of all sizes through our innovative human-powered platform.
               </p>
             </div>
 
@@ -39,7 +38,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="brand-heading-3 mb-3">Quality First</h3>
                 <p className="brand-body-small text-brand-gray-600">
-                  Every piece of content is reviewed by experienced professionals with attention to detail.
+                  Every project is executed by experienced professionals with deep attention to detail.
                 </p>
               </div>
               <div className="text-center">
@@ -48,7 +47,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="brand-heading-3 mb-3">Lightning Fast</h3>
                 <p className="brand-body-small text-brand-gray-600">
-                  Quick turnaround times without compromising on the quality of our proofreading.
+                  Quick turnaround times without ever compromising on the quality of our deliverables.
                 </p>
               </div>
               <div className="text-center">
@@ -63,17 +62,15 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* What We Proofread */}
+          {/* What We Do */}
           <div className="mb-12">
-            <h2 className="brand-heading-2 text-center mb-12">What We Proofread</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 className="brand-heading-2 text-center mb-12">Our Specialized Services</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: "📱", title: "Social Media Posts", desc: "Captions, hashtags, and content for all platforms" },
-                { icon: "🎬", title: "Videos & Subtitles", desc: "Accurate subtitles, translations, and closed captions" },
-                { icon: "📚", title: "Books & Publications", desc: "Complete proofreading for novels and eBooks" },
-                { icon: "🌐", title: "Website Content", desc: "Landing pages, blog posts, and web copy" },
-                { icon: "📄", title: "Technical Documents", desc: "User manuals and technical specifications" },
-                { icon: "🎨", title: "Design Mockups", desc: "Text corrections in design files and presentations" }
+                { icon: "🎨", title: "Design & Graphics", desc: "Logos, brand identity, marketing materials, and UI/UX design mockups." },
+                { icon: "✍️", title: "Content Creation", desc: "Engaging blog posts, SEO articles, copywriting, and social media captions." },
+                { icon: "🎬", title: "Video Editing", desc: "Professional cuts, color grading, subtitles, and motion graphics for all platforms." },
+                { icon: "🔍", title: "Proofreading", desc: "Meticulous review of documents, books, and website copy to ensure flawless delivery." }
               ].map((item, index) => (
                 <div key={index} className="brand-card p-6 text-center">
                   <div className="w-12 h-12 bg-brand-blue/10 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -98,13 +95,13 @@ export default function AboutPage() {
                 </div>
                 <div className="text-center">
                   <div className="w-12 h-12 bg-brand-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">2</div>
-                  <h3 className="font-semibold mb-2">Expert Review</h3>
-                  <p className="text-sm text-brand-gray-600">Our proofreaders download and review your content</p>
+                  <h3 className="font-semibold mb-2">Expert Execution</h3>
+                  <p className="text-sm text-brand-gray-600">Our vetted professionals download and execute your vision</p>
                 </div>
                 <div className="text-center">
                   <div className="w-12 h-12 bg-brand-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">3</div>
-                  <h3 className="font-semibold mb-2">Receive Corrections</h3>
-                  <p className="text-sm text-brand-gray-600">Get your proofread content back with detailed corrections</p>
+                  <h3 className="font-semibold mb-2">Receive Deliverables</h3>
+                  <p className="text-sm text-brand-gray-600">Get your finalized files back with complete transparency</p>
                 </div>
                 <div className="text-center">
                   <div className="w-12 h-12 bg-brand-blue text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold">4</div>
@@ -116,13 +113,13 @@ export default function AboutPage() {
           </div>
 
           {/* CTA Section */}
-          <div className="brand-card p-8 bg-gradient-to-r from-brand-blue-light to-white text-center">
-            <h2 className="brand-heading-2 mb-4">Ready to get started?</h2>
-            <p className="brand-body-large text-brand-gray-700 mb-6">
-              Join thousands of design professionals who trust us with their content.
+          <div className="brand-card p-8 bg-gradient-to-r from-brand-pink/20 to-brand-orange/20 text-center border border-brand-pink/30 shadow-[0_0_15px_rgba(235,93,139,0.1)]">
+            <h2 className="brand-heading-2 mb-4 text-white">Ready to get started?</h2>
+            <p className="brand-body-large text-gray-300 mb-6">
+              Join thousands of businesses who trust us with their creative needs.
             </p>
             <Link href="/auth/signin" className="brand-button-primary">
-              Start Proofreading Today
+              Launch Your First Project
             </Link>
           </div>
         </div>

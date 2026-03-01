@@ -506,7 +506,7 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center brand-chat-bg">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
         <div className="text-brand-blue text-xl font-medium">Loading chat...</div>
       </div>
     );
@@ -528,9 +528,9 @@ export default function ChatPage() {
   const counterpartRole = session.user.role === 'user' ? 'Agent' : 'User';
 
   return (
-    <div className="min-h-screen brand-chat-bg flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-300 flex flex-col">
       {/* Header */}
-      <header className="brand-chat-header p-4 shadow-sm">
+      <header className="bg-slate-900/50 backdrop-blur-md border-b border-white/5 sticky top-0 z-50 p-4 text-white">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -581,7 +581,7 @@ export default function ChatPage() {
                   <button
                     onClick={handleJobNumberUpdate}
                     disabled={updatingJobNumber}
-                    className="px-3 py-1 text-xs bg-whatsapp-green hover:bg-whatsapp-green-dark rounded disabled:opacity-50"
+                    className="px-3 py-1 text-xs bg-brand-blue hover:bg-brand-blue-dark rounded disabled:opacity-50 text-white font-medium"
                   >
                     {updatingJobNumber ? 'Saving...' : 'Save'}
                   </button>
@@ -630,7 +630,7 @@ export default function ChatPage() {
         <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6">
           <div className="mb-6 lg:mb-0">
             {/* Chat Messages */}
-            <div className="brand-chat-card overflow-hidden flex flex-col min-h-[60vh]">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden flex flex-col min-h-[60vh]">
               <div className="flex-1 overflow-y-auto p-6 pb-24">
                 {allItems.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
@@ -689,7 +689,7 @@ export default function ChatPage() {
               </div>
 
               {/* Input Area */}
-              <div className="brand-chat-card border-t border-brand-gray-200 p-6">
+              <div className="bg-slate-900/50 border-t border-slate-800 p-6 rounded-b-xl">
                 <form onSubmit={handleSendMessage} className="flex gap-3">
                   <input
                     type="text"
@@ -697,7 +697,7 @@ export default function ChatPage() {
                     onChange={(e) => setMessageText(e.target.value)}
                     onPaste={handlePasteImage}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-3 bg-brand-gray-100 border border-brand-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent text-brand-gray-900 placeholder-brand-gray-500"
+                    className="flex-1 px-4 py-3 bg-slate-950 border border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent text-white placeholder-slate-500"
                     disabled={sendingMessage}
                   />
                   <button
@@ -719,7 +719,7 @@ export default function ChatPage() {
           <aside className="space-y-6">
 
             {chatData.job.status === 'completed' && !chatData.hasReviewed && (
-              <div className="brand-card p-6 border-brand-pink/50 border shadow-[0_0_20px_rgba(235,93,139,0.15)] relative overflow-hidden">
+              <div className="bg-slate-900/50 border border-brand-pink/50 rounded-xl p-6 shadow-[0_0_20px_rgba(235,93,139,0.15)] relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-pink/10 via-transparent to-brand-orange/10 pointer-events-none" />
                 <div className="relative z-10">
                   <h2 className="text-lg font-bold text-white mb-2">Job Completed!</h2>
@@ -757,7 +757,7 @@ export default function ChatPage() {
             )}
 
             {chatData.job.status !== 'completed' && session.user.role === 'agent' && (
-              <div className="brand-card p-6 border border-brand-blue/30 selection:bg-brand-blue/30">
+              <div className="bg-slate-900/50 rounded-xl p-6 border border-brand-blue/30 selection:bg-brand-blue/30">
                 <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -785,7 +785,7 @@ export default function ChatPage() {
               </div>
             )}
 
-            <div className="brand-card p-6">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
               <h2 className="text-sm font-semibold text-white mb-3">SLA & Schedule</h2>
               <p className="text-xs text-gray-400 mb-2">
                 Track due dates to keep the project on schedule. Automations notify when items approach or miss deadlines.
@@ -831,13 +831,13 @@ export default function ChatPage() {
                     type="datetime-local"
                     value={slaDueInput}
                     onChange={(e) => setSlaDueInput(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm text-white"
+                    className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-brand-blue focus:border-brand-blue text-sm text-white"
                     min={new Date().toISOString().slice(0, 16)}
                   />
                   <button
                     type="submit"
                     disabled={updatingSla}
-                    className="w-full px-3 py-2 text-sm bg-whatsapp-green text-white rounded-md hover:bg-whatsapp-green-dark transition disabled:opacity-50"
+                    className="w-full px-3 py-2 text-sm bg-brand-blue text-white rounded-md hover:bg-blue-600 transition disabled:opacity-50"
                   >
                     {updatingSla ? 'Saving...' : 'Save due date'}
                   </button>
@@ -845,9 +845,9 @@ export default function ChatPage() {
               )}
             </div>
 
-            <div className="brand-card p-6">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="brand-heading-3 text-brand-gray-900">Collaboration Notes</h2>
+                <h2 className="text-sm font-semibold text-white">Collaboration Notes</h2>
                 <span className="text-xs text-gray-400">
                   {annotations.filter((a) => a.status === 'open').length} open
                 </span>
@@ -879,7 +879,7 @@ export default function ChatPage() {
                           <button
                             type="button"
                             onClick={() => handleResolveAnnotation(annotation.id)}
-                            className="text-whatsapp-green hover:underline"
+                            className="text-brand-blue hover:underline"
                           >
                             Mark resolved
                           </button>
@@ -894,7 +894,7 @@ export default function ChatPage() {
                   value={annotationContent}
                   onChange={(e) => setAnnotationContent(e.target.value)}
                   placeholder="Add a clarification or instruction..."
-                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm text-white placeholder-gray-400"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-brand-blue focus:border-brand-blue text-sm text-white placeholder-gray-400"
                   rows={3}
                 />
                 <button
@@ -907,9 +907,9 @@ export default function ChatPage() {
               </form>
             </div>
 
-            <div className="brand-card p-6">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="brand-heading-3 text-brand-gray-900">Revision History</h2>
+                <h2 className="text-sm font-semibold text-white">Revision History</h2>
                 <span className="text-xs text-gray-400">{versions.length} versions</span>
               </div>
               <div className="max-h-64 overflow-y-auto space-y-3">
@@ -941,7 +941,7 @@ export default function ChatPage() {
                   value={versionNotes}
                   onChange={(e) => setVersionNotes(e.target.value)}
                   placeholder="Describe what changed in this revision..."
-                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-whatsapp-green focus:border-whatsapp-green text-sm text-white placeholder-gray-400"
+                  className="w-full px-3 py-2 bg-white/10 border border-gray-600 rounded-md focus:ring-brand-blue focus:border-brand-blue text-sm text-white placeholder-gray-400"
                   rows={2}
                 />
                 <button

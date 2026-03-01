@@ -4,10 +4,14 @@ import { generateOTP, sendOTPEmail } from '@/lib/otp';
 
 export async function POST(request: NextRequest) {
     try {
-        const { name, email, company, industry, preferredService } = await request.json();
+        const { name, email, company, industry, preferredService, phone } = await request.json();
 
         if (!email || !email.includes('@') || !name) {
             return NextResponse.json({ error: 'Name and valid email required' }, { status: 400 });
+        }
+
+        if (phone && !/^\+\d{1,3}\d{6,14}$/.test(phone)) {
+            return NextResponse.json({ error: 'Phone number must include a valid country code (e.g., +1 for US, +91 for India)' }, { status: 400 });
         }
 
         // 1. Check if user already exists
@@ -31,7 +35,7 @@ export async function POST(request: NextRequest) {
             industry: industry || '',
             preferredService: preferredService || '',
             address: '',
-            phone: '',
+            phone: phone || '',
             role: 'user',
             password, // Save generated password
             jobCount: 0

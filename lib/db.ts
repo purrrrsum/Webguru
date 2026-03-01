@@ -766,6 +766,16 @@ export async function getJobById(id: string): Promise<Job | null> {
   }
 }
 
+export async function getUserByPhone(phone: string): Promise<User | null> {
+  try {
+    const result = await sql`SELECT * FROM users WHERE phone = ${phone} LIMIT 1`;
+    return result.rows[0] ? mapUserRow(result.rows[0]) : null;
+  } catch (error) {
+    console.error('Error fetching user by phone:', error);
+    return null;
+  }
+}
+
 export async function getJobsByUserId(userId: string): Promise<Job[]> {
   try {
     const result = await sql`

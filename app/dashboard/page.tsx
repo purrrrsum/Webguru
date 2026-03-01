@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center brand-chat-bg">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
         <div className="text-brand-blue text-xl font-medium">Loading...</div>
       </div>
     );
@@ -79,8 +79,8 @@ export default function DashboardPage() {
   }
 
   const isAgent = session.user.role === 'agent';
-  const headerClass = 'telegram-header text-white';
-  const pageBgClass = 'brand-chat-bg';
+  const headerClass = 'bg-slate-900/50 backdrop-blur-md border-b border-white/5 sticky top-0 z-50 text-white';
+  const pageBgClass = 'bg-slate-950 text-slate-300';
 
   const handleNewJobSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -143,7 +143,7 @@ export default function DashboardPage() {
   return (
     <div className={`min-h-screen ${pageBgClass}`}>
       {/* Header */}
-      <header className={`${headerClass} p-4 shadow-md`}>
+      <header className={`${headerClass} p-4`}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="hover:underline">
@@ -179,9 +179,9 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-4">
         {session.user.role === 'user' && (
-          <div className="mb-6 brand-card p-6">
-            <h2 className="brand-heading-3 text-brand-gray-900 mb-3">Pay for your proofreading jobs</h2>
-            <p className="brand-body-small text-brand-gray-600 mb-4">
+          <div className="mb-6 bg-slate-900/50 border border-slate-800 rounded-xl p-6">
+            <h2 className="brand-heading-3 text-white mb-3">Pay for your proofreading jobs</h2>
+            <p className="brand-body-small text-slate-400 mb-4">
               Scan the QR or use the UPI details below. Share the payment reference in the chat so our finance team can match it quickly.
             </p>
             <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -226,8 +226,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="brand-card p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <h2 className="text-2xl font-bold text-white">
               {session.user.role === 'user' ? 'Your Jobs' : 'All User Conversations'}
             </h2>
@@ -249,7 +249,7 @@ export default function DashboardPage() {
           </div>
 
           {showJobForm && (
-            <form onSubmit={handleNewJobSubmit} className="mb-6 bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3">
+            <form onSubmit={handleNewJobSubmit} className="mb-6 bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
               <div>
                 <label htmlFor="job-title" className="block text-sm font-medium text-gray-300 mb-1">
                   Job title
@@ -344,9 +344,9 @@ export default function DashboardPage() {
           )}
 
           {isAgent && (
-            <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4 text-gray-300">
-              <p className="text-sm font-semibold">Agent view</p>
-              <p className="mt-1 text-sm">
+            <div className="mb-6 rounded-xl border border-slate-800 bg-slate-950 p-5 text-slate-300">
+              <p className="text-sm font-semibold text-white">Agent view</p>
+              <p className="mt-1 text-sm text-slate-400">
                 You can open any active job to review messages and files. Tags highlight the content type and status shared by the user.
               </p>
             </div>
@@ -360,12 +360,12 @@ export default function DashboardPage() {
               )}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {jobs.map((job) => (
                 <Link
                   key={job.id}
                   href={`/chat/${job.id}`}
-                  className="block brand-card p-6 hover:shadow-brand-lg transition-all duration-200"
+                  className="block bg-slate-900/50 border border-slate-800 rounded-xl p-5 hover:bg-slate-800/50 hover:border-brand-pink/50 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -378,8 +378,8 @@ export default function DashboardPage() {
                         </p>
                         {job.priority === 'high' || job.priority === 'urgent' ? (
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${job.priority === 'urgent'
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                              : 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
+                            ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+                            : 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
                             }`}>
                             {job.priority === 'urgent' ? 'URGENT' : 'HIGH'}
                           </span>
@@ -412,10 +412,10 @@ export default function DashboardPage() {
                           {job.slaStatus && (
                             <span
                               className={`px-2 py-1 rounded-full ${job.slaStatus === 'overdue'
-                                  ? 'bg-red-500/20 text-red-300 border border-red-500/40'
-                                  : job.slaStatus === 'due_soon'
-                                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
-                                    : 'bg-green-500/20 text-green-300 border border-green-500/40'
+                                ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+                                : job.slaStatus === 'due_soon'
+                                  ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
+                                  : 'bg-green-500/20 text-green-300 border border-green-500/40'
                                 }`}
                             >
                               {job.slaStatus === 'overdue'
