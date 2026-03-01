@@ -159,7 +159,29 @@ export async function ensureDatabaseSetup() {
 
     await sql`
       ALTER TABLE jobs
-      ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open', 'closed'))
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending_match' CHECK (status IN ('pending_match', 'assigned', 'in_progress', 'completed', 'closed'))
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS service_type VARCHAR(50) DEFAULT 'other' CHECK (service_type IN ('design', 'content_creation', 'video_editing', 'text_editing', 'proofreading', 'other'))
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS pricing_model VARCHAR(50) DEFAULT 'single_project' CHECK (pricing_model IN ('single_project', 'monthly_subscription', 'yearly_subscription'))
+    `;
+
+    await sql`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'jobs' AND column_name = 'agent_id' AND is_nullable = 'NO'
+        ) THEN
+          ALTER TABLE jobs ALTER COLUMN agent_id DROP NOT NULL;
+        END IF;
+      END $$;
     `;
 
     await sql`
@@ -330,7 +352,7 @@ function mapJobRow(row: any): Job {
   return {
     id: row.id,
     userId: row.user_id,
-    agentId: row.agent_id,
+    agentId: row.agent_id || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     title: row.title || null,
@@ -343,7 +365,9 @@ function mapJobRow(row: any): Job {
     jobNumber: row.job_number || null,
     previousAgentId: row.previous_agent_id || null,
     priority: row.priority || 'normal',
-    status: row.status || 'open',
+    status: row.status || 'pending_match',
+    serviceType: row.service_type || 'other',
+    pricingModel: row.pricing_model || 'single_project',
   };
 }
 
@@ -455,7 +479,7 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
     return mapUserRow(result.rows[0]);
   } catch (error: any) {
     console.error('Error creating user:', error);
-    
+
     // Provide more helpful error messages
     if (error.code === '23505') {
       // Unique constraint violation - email already exists
@@ -470,15 +494,15 @@ export async function createUser(user: Omit<User, 'id'> & { id?: string }): Prom
       }
       throw new Error(`User with email ${user.email} already exists`);
     }
-    
+
     if (error.message?.includes('does not exist') || error.message?.includes('relation')) {
       throw new Error('Database tables not initialized. Run: npm run setup-db');
     }
-    
+
     if (error.message?.includes('DATABASE_URL') || error.code === 'ECONNREFUSED') {
       throw new Error('Database not configured. Add PostgreSQL in Railway Dashboard.');
     }
-    
+
     throw error;
   }
 }
@@ -498,13 +522,13 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
         throw new Error(`Email ${updates.email} is already in use by another account.`);
       }
     }
-    
+
     // Role changes are allowed (for admin), but email uniqueness is still enforced
     // No additional checks needed here - admin can change roles
 
     const fields: string[] = [];
     const values: any[] = [];
-    
+
     if (updates.name !== undefined) {
       fields.push('name');
       values.push(updates.name);
@@ -537,60 +561,60 @@ export async function updateUser(id: string, updates: Partial<User>): Promise<Us
       fields.push('password');
       values.push(updates.password);
     }
-  if (updates.upiId !== undefined) {
-    fields.push('upi_id');
-    values.push(updates.upiId);
-  }
-  if (updates.bankAccountName !== undefined) {
-    fields.push('bank_account_name');
-    values.push(updates.bankAccountName);
-  }
-  if (updates.bankAccountNumber !== undefined) {
-    fields.push('bank_account_number');
-    values.push(updates.bankAccountNumber);
-  }
-  if (updates.bankIfsc !== undefined) {
-    fields.push('bank_ifsc');
-    values.push(updates.bankIfsc);
-  }
-  if (updates.bankName !== undefined) {
-    fields.push('bank_name');
-    values.push(updates.bankName);
-  }
+    if (updates.upiId !== undefined) {
+      fields.push('upi_id');
+      values.push(updates.upiId);
+    }
+    if (updates.bankAccountName !== undefined) {
+      fields.push('bank_account_name');
+      values.push(updates.bankAccountName);
+    }
+    if (updates.bankAccountNumber !== undefined) {
+      fields.push('bank_account_number');
+      values.push(updates.bankAccountNumber);
+    }
+    if (updates.bankIfsc !== undefined) {
+      fields.push('bank_ifsc');
+      values.push(updates.bankIfsc);
+    }
+    if (updates.bankName !== undefined) {
+      fields.push('bank_name');
+      values.push(updates.bankName);
+    }
 
-  if (updates.isOnline !== undefined) {
-    fields.push('is_online');
-    values.push(updates.isOnline);
-  }
+    if (updates.isOnline !== undefined) {
+      fields.push('is_online');
+      values.push(updates.isOnline);
+    }
 
-  if (updates.isReady !== undefined) {
-    fields.push('is_ready');
-    values.push(updates.isReady);
-  }
+    if (updates.isReady !== undefined) {
+      fields.push('is_ready');
+      values.push(updates.isReady);
+    }
 
-  // If agent goes offline or not ready, check and reassign their jobs
-  if ((updates.isOnline === false || updates.isReady === false) && fields.length > 0) {
-    const user = await getUserById(id);
-    if (user?.role === 'agent') {
-      // Get final state after update
-      const finalIsOnline = updates.isOnline !== undefined ? updates.isOnline : user.isOnline;
-      const finalIsReady = updates.isReady !== undefined ? updates.isReady : user.isReady;
-      
-      // If agent is going offline or not ready, reassign jobs
-      if (finalIsOnline === false || finalIsReady === false) {
-        // Reassign jobs in background (don't wait)
-        checkAndReassignJobsForOfflineAgent(id).catch(err => 
-          console.error('Error reassigning jobs:', err)
-        );
+    // If agent goes offline or not ready, check and reassign their jobs
+    if ((updates.isOnline === false || updates.isReady === false) && fields.length > 0) {
+      const user = await getUserById(id);
+      if (user?.role === 'agent') {
+        // Get final state after update
+        const finalIsOnline = updates.isOnline !== undefined ? updates.isOnline : user.isOnline;
+        const finalIsReady = updates.isReady !== undefined ? updates.isReady : user.isReady;
+
+        // If agent is going offline or not ready, reassign jobs
+        if (finalIsOnline === false || finalIsReady === false) {
+          // Reassign jobs in background (don't wait)
+          checkAndReassignJobsForOfflineAgent(id).catch(err =>
+            console.error('Error reassigning jobs:', err)
+          );
+        }
       }
     }
-  }
 
     if (fields.length === 0) {
       return await getUserById(id);
     }
 
-    const setClause = fields.map((field, index) => 
+    const setClause = fields.map((field, index) =>
       `${field} = $${index + 2}`
     ).join(', ');
 
@@ -728,7 +752,7 @@ export async function reassignJobToAvailableAgent(jobId: string, previousAgentId
     // Get available agents (excluding the previous one)
     const availableAgents = await getAvailableAgents();
     const newAgent = availableAgents.find(a => a.id !== previousAgentId) || availableAgents[0];
-    
+
     if (!newAgent) {
       console.warn('No available agents to reassign job', jobId);
       return null;
@@ -744,7 +768,7 @@ export async function reassignJobToAvailableAgent(jobId: string, previousAgentId
       WHERE id = ${jobId}
       RETURNING *
     `;
-    
+
     return result.rows[0] ? mapJobRow(result.rows[0]) : null;
   } catch (error) {
     console.error('Error reassigning job:', error);
@@ -757,14 +781,14 @@ export async function checkAndReassignJobsForOfflineAgent(agentId: string): Prom
   try {
     const jobs = await getJobsByAgentId(agentId);
     let reassignedCount = 0;
-    
+
     for (const job of jobs) {
       // Check if there are unread messages from user (user is waiting for response)
       const messages = await getMessagesByJobId(job.id);
-      const hasUnreadUserMessages = messages.some(m => 
+      const hasUnreadUserMessages = messages.some(m =>
         m.senderId === job.userId && !m.readByAgent
       );
-      
+
       if (hasUnreadUserMessages) {
         const reassigned = await reassignJobToAvailableAgent(job.id, agentId);
         if (reassigned) {
@@ -772,7 +796,7 @@ export async function checkAndReassignJobsForOfflineAgent(agentId: string): Prom
         }
       }
     }
-    
+
     return reassignedCount;
   } catch (error) {
     console.error('Error checking and reassigning jobs:', error);
@@ -780,10 +804,10 @@ export async function checkAndReassignJobsForOfflineAgent(agentId: string): Prom
   }
 }
 
-export async function createJob(job: Omit<Job, 'id' | 'agentId'> & { id?: string; agentId?: string }): Promise<Job> {
+export async function createJob(job: Omit<Job, 'id' | 'agentId'> & { id?: string; agentId?: string | null }): Promise<Job> {
   let jobId = job.id;
   let jobNumber = job.jobNumber;
-  
+
   // Generate sequential job number if not provided
   if (!jobNumber) {
     try {
@@ -796,14 +820,16 @@ export async function createJob(job: Omit<Job, 'id' | 'agentId'> & { id?: string
       jobNumber = 1;
     }
   }
-  
+
   // Generate sequential job ID if not provided
   if (!jobId) {
     jobId = `job${String(jobNumber).padStart(6, '0')}`;
   }
-  
-  // If no agent specified, assign to available agent
-  let agentId = job.agentId;
+
+  // Handle agent assignment and status
+  let agentId = job.agentId || null;
+  let status = job.status || 'pending_match';
+
   if (!agentId) {
     const availableAgents = await getAvailableAgents();
     if (availableAgents.length > 0) {
@@ -816,21 +842,16 @@ export async function createJob(job: Omit<Job, 'id' | 'agentId'> & { id?: string
       );
       agentJobCounts.sort((a, b) => a.count - b.count);
       agentId = agentJobCounts[0].agent.id;
-    } else {
-      // Fallback to first agent if none available
-      const allAgents = await sql`SELECT * FROM users WHERE role = 'agent' LIMIT 1`;
-      if (allAgents.rows.length > 0) {
-        agentId = allAgents.rows[0].id;
-      } else {
-        throw new Error('No agents available');
-      }
+      status = 'assigned';
     }
+  } else {
+    status = job.status || 'assigned';
   }
-  
+
   const now = new Date().toISOString();
   try {
     const result = await sql`
-      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags, due_at, sla_status, escalation_level, job_number, priority)
+      INSERT INTO jobs (id, user_id, agent_id, created_at, updated_at, title, tags, due_at, sla_status, escalation_level, job_number, priority, status, service_type, pricing_model)
       VALUES (
         ${jobId},
         ${job.userId},
@@ -843,7 +864,10 @@ export async function createJob(job: Omit<Job, 'id' | 'agentId'> & { id?: string
         ${job.slaStatus || 'pending'},
         ${job.escalationLevel || 'none'},
         ${jobNumber},
-        ${job.priority || 'normal'}
+        ${job.priority || 'normal'},
+        ${status},
+        ${job.serviceType || 'other'},
+        ${job.pricingModel || 'single_project'}
       )
       RETURNING *
     `;
@@ -889,6 +913,16 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<Job 
       values.push(updates.status);
     }
 
+    if (updates.serviceType !== undefined) {
+      updateFields.push('service_type');
+      values.push(updates.serviceType);
+    }
+
+    if (updates.pricingModel !== undefined) {
+      updateFields.push('pricing_model');
+      values.push(updates.pricingModel);
+    }
+
     if (updateFields.length === 0) {
       return await getJobById(id);
     }
@@ -896,7 +930,7 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<Job 
     updateFields.push('updated_at');
     values.push(new Date().toISOString());
 
-    const setClause = updateFields.map((field, index) => 
+    const setClause = updateFields.map((field, index) =>
       `${field} = $${index + 2}`
     ).join(', ');
 
@@ -969,7 +1003,7 @@ export async function updateFile(id: string, updates: Partial<FileData>): Promis
       return await getFileById(id);
     }
 
-    const setClause = fields.map((field, index) => 
+    const setClause = fields.map((field, index) =>
       `${field} = $${index + 2}`
     ).join(', ');
 

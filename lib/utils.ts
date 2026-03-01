@@ -23,7 +23,7 @@ export interface User {
 export interface Job {
   id: string;
   userId: string;
-  agentId: string;
+  agentId?: string | null;
   createdAt: string;
   updatedAt: string;
   title?: string | null;
@@ -37,7 +37,9 @@ export interface Job {
   jobNumber?: number | null;
   previousAgentId?: string | null;
   priority?: 'normal' | 'high' | 'urgent';
-  status?: 'open' | 'closed';
+  status?: 'pending_match' | 'assigned' | 'in_progress' | 'completed' | 'closed';
+  serviceType?: 'design' | 'content_creation' | 'video_editing' | 'text_editing' | 'proofreading' | 'other';
+  pricingModel?: 'single_project' | 'monthly_subscription' | 'yearly_subscription';
   fileCount?: number;
 }
 

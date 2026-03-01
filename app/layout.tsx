@@ -6,8 +6,21 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'thesupport.in - Design Correction Portal',
-  description: 'WhatsApp-style design correction portal',
+  title: 'thesupport.agency | Premium Creative Services',
+  description: 'On-demand design, video editing, content creation, and meticulous proofreading for marketing teams. Affordable subscriptions and fast turnarounds.',
+  keywords: ['design', 'video editing', 'content creation', 'proofreading', 'creative agency', 'marketing support', 'subscription agency'],
+  openGraph: {
+    title: 'thesupport.agency | Premium Creative Services',
+    description: 'On-demand design, video editing, content creation, and meticulous proofreading for marketing teams.',
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'thesupport.agency',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'thesupport.agency | Premium Creative Services',
+    description: 'On-demand design, video editing, content creation, and meticulous proofreading for marketing teams.',
+  },
 };
 
 export default function RootLayout({

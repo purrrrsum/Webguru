@@ -32,6 +32,8 @@ export default function DashboardPage() {
   const [jobTitle, setJobTitle] = useState('');
   const [jobTagsInput, setJobTagsInput] = useState('');
   const [jobDueAt, setJobDueAt] = useState('');
+  const [jobServiceType, setJobServiceType] = useState('design');
+  const [jobPricingModel, setJobPricingModel] = useState('single_project');
   const [jobFormError, setJobFormError] = useState<string | null>(null);
   const [creatingJob, setCreatingJob] = useState(false);
 
@@ -107,6 +109,8 @@ export default function DashboardPage() {
           title: jobTitle.trim(),
           tags,
           dueAt: jobDueAt ? new Date(jobDueAt).toISOString() : null,
+          serviceType: jobServiceType,
+          pricingModel: jobPricingModel,
         }),
       });
 
@@ -118,6 +122,8 @@ export default function DashboardPage() {
         setJobTitle('');
         setJobTagsInput('');
         setJobDueAt('');
+        setJobServiceType('design');
+        setJobPricingModel('single_project');
         setShowJobForm(false);
         setLoading(true);
         await fetchJobs();
@@ -260,6 +266,39 @@ export default function DashboardPage() {
                 />
               </div>
               <div>
+                <label htmlFor="service-type" className="block text-sm font-medium text-gray-300 mb-1">
+                  Service requirements
+                </label>
+                <select
+                  id="service-type"
+                  value={jobServiceType}
+                  onChange={(e) => setJobServiceType(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900"
+                >
+                  <option value="design">Design</option>
+                  <option value="content_creation">Content Creation</option>
+                  <option value="video_editing">Video Editing</option>
+                  <option value="text_editing">Text Editing</option>
+                  <option value="proofreading">Proofreading</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="pricing-model" className="block text-sm font-medium text-gray-300 mb-1">
+                  Pricing Model
+                </label>
+                <select
+                  id="pricing-model"
+                  value={jobPricingModel}
+                  onChange={(e) => setJobPricingModel(e.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-apple-gray-200 rounded-xl focus:ring-2 focus:ring-apple-blue focus:border-transparent text-apple-gray-900"
+                >
+                  <option value="single_project">Single Project / Task</option>
+                  <option value="monthly_subscription">Monthly Subscription</option>
+                  <option value="yearly_subscription">Yearly Subscription</option>
+                </select>
+              </div>
+              <div>
                 <label htmlFor="job-tags" className="block text-sm font-medium text-gray-300 mb-1">
                   Tags (optional)
                 </label>
@@ -338,11 +377,10 @@ export default function DashboardPage() {
                           {job.title?.length ? job.title : `Job ${job.id.slice(0, 8)}`}
                         </p>
                         {job.priority === 'high' || job.priority === 'urgent' ? (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                            job.priority === 'urgent' 
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/40' 
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${job.priority === 'urgent'
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/40'
                               : 'bg-orange-500/20 text-orange-400 border border-orange-500/40'
-                          }`}>
+                            }`}>
                             {job.priority === 'urgent' ? 'URGENT' : 'HIGH'}
                           </span>
                         ) : null}
@@ -373,19 +411,18 @@ export default function DashboardPage() {
                           </span>
                           {job.slaStatus && (
                             <span
-                              className={`px-2 py-1 rounded-full ${
-                                job.slaStatus === 'overdue'
+                              className={`px-2 py-1 rounded-full ${job.slaStatus === 'overdue'
                                   ? 'bg-red-500/20 text-red-300 border border-red-500/40'
                                   : job.slaStatus === 'due_soon'
-                                  ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
-                                  : 'bg-green-500/20 text-green-300 border border-green-500/40'
-                              }`}
+                                    ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40'
+                                    : 'bg-green-500/20 text-green-300 border border-green-500/40'
+                                }`}
                             >
                               {job.slaStatus === 'overdue'
                                 ? 'Overdue'
                                 : job.slaStatus === 'due_soon'
-                                ? 'Due soon'
-                                : 'On track'}
+                                  ? 'Due soon'
+                                  : 'On track'}
                             </span>
                           )}
                         </div>

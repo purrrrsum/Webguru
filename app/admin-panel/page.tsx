@@ -31,7 +31,7 @@ const statusLabel: Record<string, string> = {
 export default async function AdminPanelPage() {
   // Server-side protection: Verify admin access
   const session = await getServerSession(adminAuthOptions);
-  
+
   if (!session?.user) {
     redirect('/admin-panel/login?error=AccessDenied');
   }
@@ -39,7 +39,7 @@ export default async function AdminPanelPage() {
   const email = session.user.email?.toLowerCase().trim();
   const adminEmailLower = ADMIN_EMAIL.toLowerCase().trim();
   const isAdmin = (session.user as any)?.isAdmin;
-  
+
   // STRICT: Only allow jaffarsadiq1001@gmail.com
   if (!isAdmin || !email || email !== adminEmailLower) {
     redirect('/admin-panel/login?error=AccessDenied');
@@ -101,6 +101,7 @@ export default async function AdminPanelPage() {
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Job</th>
                 <th className="px-4 py-3 text-left font-medium">Client</th>
+                <th className="px-4 py-3 text-left font-medium">Service</th>
                 <th className="px-4 py-3 text-left font-medium">Tags</th>
                 <th className="px-4 py-3 text-left font-medium">Due</th>
                 <th className="px-4 py-3 text-left font-medium">SLA</th>
@@ -109,7 +110,7 @@ export default async function AdminPanelPage() {
             <tbody className="divide-y divide-slate-900">
               {jobs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
+                  <td colSpan={6} className="px-4 py-6 text-center text-slate-400">
                     No jobs available.
                   </td>
                 </tr>
@@ -132,16 +133,20 @@ export default async function AdminPanelPage() {
                       </p>
                     </td>
                     <td className="px-4 py-3">
+                      <p className="text-sm text-slate-200 capitalize">{(job.serviceType || 'other').replace('_', ' ')}</p>
+                      <p className="text-xs text-slate-500 capitalize">{(job.pricingModel || 'single_project').replace('_', ' ')}</p>
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {job.tags?.length
                           ? job.tags.map((tag) => (
-                              <span
-                                key={`${job.id}-${tag}`}
-                                className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-200"
-                              >
-                                {tag}
-                              </span>
-                            ))
+                            <span
+                              key={`${job.id}-${tag}`}
+                              className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-200"
+                            >
+                              {tag}
+                            </span>
+                          ))
                           : <span className="text-xs text-slate-500">—</span>}
                       </div>
                     </td>
@@ -156,10 +161,9 @@ export default async function AdminPanelPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${
-                          statusBadgeClasses[job.slaStatus || 'pending'] ||
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs ${statusBadgeClasses[job.slaStatus || 'pending'] ||
                           statusBadgeClasses.pending
-                        }`}
+                          }`}
                       >
                         {statusLabel[job.slaStatus || 'pending']}
                       </span>

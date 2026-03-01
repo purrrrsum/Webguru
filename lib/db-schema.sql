@@ -20,7 +20,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS jobs (
   id VARCHAR(255) PRIMARY KEY,
   user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  agent_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  agent_id VARCHAR(255) REFERENCES users(id) ON DELETE SET NULL,
+  status VARCHAR(20) DEFAULT 'pending_match' CHECK (status IN ('pending_match', 'assigned', 'in_progress', 'completed', 'closed')),
+  service_type VARCHAR(50) DEFAULT 'other' CHECK (service_type IN ('design', 'content_creation', 'video_editing', 'text_editing', 'proofreading', 'other')),
+  pricing_model VARCHAR(50) DEFAULT 'single_project' CHECK (pricing_model IN ('single_project', 'monthly_subscription', 'yearly_subscription')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

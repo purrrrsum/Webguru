@@ -17,17 +17,17 @@ export default function HomePage() {
         <div className="text-center">
           <div className="mb-8">
             <span className="inline-flex items-center px-4 py-2 rounded-full bg-apple-blue-light text-apple-blue text-sm font-medium mb-6">
-              ✨ Human-Powered Proofreading
+              ✨ Design, Creation, & Proofreading
             </span>
           </div>
 
           <h1 className="apple-heading-1 mb-8 max-w-5xl mx-auto">
-            Exceptional proofreading for design & marketing teams
+            Exceptional creative services for marketing teams
           </h1>
 
           <p className="apple-body-large mb-8 max-w-3xl mx-auto text-apple-gray-700">
-            Work directly with experienced editors who understand brand voice, multilingual publishing, and campaign deadlines.
-            Every caption, subtitle, and document is reviewed manually to keep messaging sharp and on-brand.
+            Work directly with experienced agents who handle design, video editing, content creation, and meticulous proofreading.
+            Scale your output seamlessly with on-demand talent and subscription packages.
           </p>
 
           <div className="flex justify-center gap-4 mb-12">
@@ -62,10 +62,10 @@ export default function HomePage() {
       <div className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="apple-heading-2 mb-6">Why human proofreading matters</h2>
+            <h2 className="apple-heading-2 mb-6">Why human expertise matters</h2>
             <p className="apple-body-large max-w-3xl mx-auto text-apple-gray-600">
-              Automatic spell-checkers miss context. Our editors read every asset from start to finish,
-              verifying tone, terminology, and localization before it goes live.
+              AI misses nuance. Our creative pros craft, edit, and review every asset from start to finish,
+              ensuring it perfectly aligns with your brand voice and goals.
             </p>
           </div>
 
@@ -117,9 +117,9 @@ export default function HomePage() {
       <div className="py-24 bg-apple-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="apple-heading-2 mb-6">What we proofread</h2>
+            <h2 className="apple-heading-2 mb-6">What we create & edit</h2>
             <p className="apple-body-large text-apple-gray-600 max-w-2xl mx-auto">
-              From social media to technical documentation, we handle all your content proofreading needs.
+              From social media design to technical documentation, we handle all your creative and editorial needs.
             </p>
           </div>
 
@@ -136,16 +136,16 @@ export default function HomePage() {
               <div className="w-16 h-16 bg-apple-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl">🎬</span>
               </div>
-              <h3 className="apple-heading-3 mb-4">Videos with Subtitles</h3>
-              <p className="apple-body text-apple-gray-600">Accurate subtitles, translations, and closed captions for your video content.</p>
+              <h3 className="apple-heading-3 mb-4">Video Editing</h3>
+              <p className="apple-body text-apple-gray-600">Professional editing, subtitles, and motion graphics for your contents.</p>
             </div>
 
             <div className="apple-card p-8 text-center">
               <div className="w-16 h-16 bg-apple-blue/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-3xl">📚</span>
               </div>
-              <h3 className="apple-heading-3 mb-4">Books & Publications</h3>
-              <p className="apple-body text-apple-gray-600">Complete proofreading for novels, eBooks, and printed materials.</p>
+              <h3 className="apple-heading-3 mb-4">Content & Copy</h3>
+              <p className="apple-body text-apple-gray-600">Engaging writing and rigorous proofreading for all your materials.</p>
             </div>
 
             <div className="apple-card p-8 text-center">
@@ -181,7 +181,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="apple-heading-2 mb-6">Why choose us</h2>
             <p className="apple-body-large text-apple-gray-600 max-w-2xl mx-auto">
-              Experience the difference with our premium proofreading service designed for modern teams.
+              Experience the flexibility of a full creative agency, powered by dedicated agents and simple subscriptions.
             </p>
           </div>
 
@@ -243,7 +243,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="apple-heading-2 mb-6">How it works</h2>
             <p className="apple-body-large text-apple-gray-600 max-w-2xl mx-auto">
-              Simple, transparent, and effective. Get your content proofread in four easy steps.
+              Simple, transparent, and effective. Get your creative projects done in four easy steps.
             </p>
           </div>
 
@@ -288,9 +288,9 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="apple-card p-8 relative">
               <div className="text-center">
-                <div className="text-5xl font-bold text-apple-blue mb-4">₹5</div>
-                <div className="apple-body text-apple-gray-600 mb-6">Per Image</div>
-                <div className="text-sm text-apple-gray-500">Perfect for occasional proofreading</div>
+                <div className="text-3xl font-bold text-apple-blue mb-4">Single Project</div>
+                <div className="apple-body text-apple-gray-600 mb-6">Pay per Request</div>
+                <div className="text-sm text-apple-gray-500">Perfect for one-off creative or editing tasks</div>
               </div>
             </div>
 
@@ -299,17 +299,17 @@ export default function HomePage() {
                 <span className="bg-apple-blue text-white px-4 py-1 rounded-full text-sm font-medium">Most Popular</span>
               </div>
               <div className="text-center">
-                <div className="text-5xl font-bold text-apple-blue mb-4">₹30</div>
-                <div className="apple-body text-apple-gray-600 mb-6">10+ Images Bundle</div>
-                <div className="text-sm text-apple-gray-500">Save 40% on bulk orders</div>
+                <div className="text-3xl font-bold text-apple-blue mb-4">Monthly</div>
+                <div className="apple-body text-apple-gray-600 mb-6">Subscription</div>
+                <div className="text-sm text-apple-gray-500">Continuous creative support mapped to your cadence</div>
               </div>
             </div>
 
             <div className="apple-card p-8 relative">
               <div className="text-center">
-                <div className="text-5xl font-bold text-apple-blue mb-4">₹200</div>
-                <div className="apple-body text-apple-gray-600 mb-6">100+ Images Bundle</div>
-                <div className="text-sm text-apple-gray-500">Maximum savings for large projects</div>
+                <div className="text-3xl font-bold text-apple-blue mb-4">Yearly</div>
+                <div className="apple-body text-apple-gray-600 mb-6">Subscription</div>
+                <div className="text-sm text-apple-gray-500">Maximum savings for long-term dedicated agents</div>
               </div>
             </div>
           </div>

@@ -43,7 +43,7 @@ export async function GET() {
           const jobUser = await getUserById(job.userId);
           userName = jobUser?.name || null;
         }
-        
+
         let hasUnread = false;
         if (session.user.role === 'user') {
           hasUnread = jobFiles.some((f) => !f.userTick && f.agentTick);
@@ -115,6 +115,8 @@ export async function POST(request: NextRequest) {
       dueAt,
       slaStatus: dueAt ? 'on_track' : 'pending',
       escalationLevel: 'none',
+      serviceType: payload.serviceType || 'other',
+      pricingModel: payload.pricingModel || 'single_project',
     });
 
     return NextResponse.json({
