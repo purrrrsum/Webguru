@@ -182,7 +182,7 @@ export const authOptions: NextAuthOptions = {
                 'Accept': 'application/json'
               },
               body: JSON.stringify({
-                "authkey": "497253TuQmsnhAYdW69a3b86cP1", // The authkey from the frontend widget configuration
+                "authkey": "497253A4J1zh4Z65c69a3ee4aP1",
                 "access-token": secret // jwt_token_from_otp_widget
               }),
             });
@@ -223,7 +223,22 @@ export const authOptions: NextAuthOptions = {
         }
         // -------------------------------------------------------- //
 
-        const email = identifier.toLowerCase();
+        const searchIdentifier = identifier.toLowerCase();
+
+        // Check if account exists by email or phone
+        let existingAccount = await getUserByEmail(searchIdentifier);
+
+        if (!existingAccount) {
+          existingAccount = await getUserByPhone(identifier);
+        }
+
+        // Try with + if not started with +
+        if (!existingAccount && !identifier.startsWith('+')) {
+          existingAccount = await getUserByPhone(`+91${identifier}`) || await getUserByPhone(`+${identifier}`);
+        }
+
+        // Use the resolved email if account exists, otherwise fallback to the inputted identifier
+        const email = existingAccount ? existingAccount.email.toLowerCase() : searchIdentifier;
 
         const requestedRole =
           credentials.role === 'agent' || credentials.role === 'user'
@@ -231,7 +246,6 @@ export const authOptions: NextAuthOptions = {
             : inferRoleFromEmail(email);
 
         // Check if account exists
-        const existingAccount = await getUserByEmail(email);
 
         // If account exists, always use its existing role for authentication
         // This prevents role mismatch errors when logging in

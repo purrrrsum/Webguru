@@ -12,121 +12,27 @@ interface UserData {
   password: string;
 }
 
-const USERS: UserData[] = [
-  {
-    id: 'sampletest',
-    email: 'sampletest@thesupport.in',
-    name: 'Sample Test User',
-    company: 'Test Company',
-    address: 'Test Address',
-    phone: '+919999999999',
-    role: 'user',
-    password: 'Test123!',
-  },
-  {
-    id: 'user1',
-    email: 'user1@thesupport.in',
-    name: 'Alice Johnson',
-    company: 'Creative Designs Co.',
-    address: '123 Main St, Mumbai, India',
-    phone: '+919876543210',
-    role: 'user',
-    password: 'User123!',
-  },
-  {
-    id: 'user2',
-    email: 'user2@thesupport.in',
-    name: 'Bob Smith',
-    company: 'Digital Marketing Pro',
-    address: '456 Park Ave, Delhi, India',
-    phone: '+919876543211',
-    role: 'user',
-    password: 'User123!',
-  },
-  {
-    id: 'user3',
-    email: 'user3@thesupport.in',
-    name: 'Carol Williams',
-    company: 'Brand Studio',
-    address: '789 Business Rd, Bangalore, India',
-    phone: '+919876543212',
-    role: 'user',
-    password: 'User123!',
-  },
-  {
-    id: 'user4',
-    email: 'user4@thesupport.in',
-    name: 'David Brown',
-    company: 'Marketing Solutions',
-    address: '321 Commerce St, Pune, India',
-    phone: '+919876543213',
-    role: 'user',
-    password: 'User123!',
-  },
-  {
-    id: 'user5',
-    email: 'user5@thesupport.in',
-    name: 'Emma Davis',
-    company: 'Design Hub',
-    address: '654 Creative Ave, Chennai, India',
-    phone: '+919876543214',
-    role: 'user',
-    password: 'User123!',
-  },
-];
+const USERS: UserData[] = Array.from({ length: 10 }, (_, i) => ({
+  id: `testuser${i + 1}`,
+  email: `user${i + 1}@thesupport.in`,
+  name: `Test User ${i + 1}`,
+  company: `Test Company ${i + 1}`,
+  address: `Test Address, City ${i + 1}`,
+  phone: `+9198765000${(i + 10).toString().padStart(2, '0')}`,
+  role: 'user',
+  password: 'Password123!',
+}));
 
-const AGENTS: UserData[] = [
-  {
-    id: 'agent1',
-    email: 'agent1@thesupport.in',
-    name: 'Support Agent One',
-    company: 'TheSupport.in',
-    address: 'Delhi, India',
-    phone: '+919900112231',
-    role: 'agent',
-    password: 'Agent123!',
-  },
-  {
-    id: 'agent2',
-    email: 'agent2@thesupport.in',
-    name: 'Support Agent Two',
-    company: 'TheSupport.in',
-    address: 'Mumbai, India',
-    phone: '+919900112232',
-    role: 'agent',
-    password: 'Agent123!',
-  },
-  {
-    id: 'agent3',
-    email: 'agent3@thesupport.in',
-    name: 'Support Agent Three',
-    company: 'TheSupport.in',
-    address: 'Bangalore, India',
-    phone: '+919900112233',
-    role: 'agent',
-    password: 'Agent123!',
-  },
-  {
-    id: 'agent4',
-    email: 'agent4@thesupport.in',
-    name: 'Support Agent Four',
-    company: 'TheSupport.in',
-    address: 'Pune, India',
-    phone: '+919900112234',
-    role: 'agent',
-    password: 'Agent123!',
-  },
-  {
-    id: 'agent5',
-    email: 'agent5@thesupport.in',
-    name: 'Support Agent Five',
-    company: 'TheSupport.in',
-    address: 'Chennai, India',
-    phone: '+919900112235',
-    role: 'agent',
-    password: 'Agent123!',
-  },
-];
+const AGENTS: UserData[] = Array.from({ length: 4 }, (_, i) => ({
+  id: `testagent${i + 1}`,
+  email: `agent${i + 1}@thesupport.in`,
+  name: `Test Agent ${i + 1}`,
+  company: `Agent Services ${i + 1}`,
+  address: `Agent Address, City ${i + 1}`,
+  phone: `+9199001000${(i + 10).toString().padStart(2, '0')}`,
+  role: 'agent',
+  password: 'Password123!',
+}));
 
 async function createUserIfNotExists(userData: UserData): Promise<void> {
   try {
@@ -137,10 +43,10 @@ async function createUserIfNotExists(userData: UserData): Promise<void> {
 
     if (existingUser.rows.length > 0) {
       console.log(`✓ User ${userData.email} already exists, updating password...`);
-      
+
       // Hash password
       const hashedPassword = await hash(userData.password, 10);
-      
+
       // Update existing user (idempotent - only update password if needed)
       await sql`
         UPDATE users 
@@ -157,10 +63,10 @@ async function createUserIfNotExists(userData: UserData): Promise<void> {
       console.log(`  Updated password for ${userData.email}`);
     } else {
       console.log(`+ Creating new user: ${userData.email}`);
-      
+
       // Hash password
       const hashedPassword = await hash(userData.password, 10);
-      
+
       // Insert new user
       await sql`
         INSERT INTO users (id, email, name, company, address, phone, job_count, role, password)
@@ -182,7 +88,7 @@ async function createUserIfNotExists(userData: UserData): Promise<void> {
     if (error.code === '23505') {
       // Unique constraint violation - user with this ID already exists
       console.log(`⚠ User with ID ${userData.id} already exists, trying with email...`);
-      
+
       // Try to update by email instead
       const hashedPassword = await hash(userData.password, 10);
       await sql`
