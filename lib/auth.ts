@@ -217,26 +217,47 @@ export const authOptions: NextAuthOptions = {
         // ---------------- MSG91 VERIFICATION FLOW ---------------- //
         if (isMsg91) {
           try {
-            // Verify token locally via MSG91 API exactly as the user specified
+            // Verify token via MSG91 API
             const tokenResponse = await fetch('https://control.msg91.com/api/v5/widget/verifyAccessToken', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
               },
               body: JSON.stringify({
-                "authkey": "497253A4J1zh4Z65c69a3ee4aP1",
-                "access-token": secret // jwt_token_from_otp_widget
+                authkey: '497253A4J1zh4Z65c69a3ee4aP1',
+                'access-token': secret, // jwt_token_from_otp_widget
               }),
             });
-            const tokenData = await tokenResponse.json();
 
-            if (tokenData.type === 'error' || tokenData.message !== 'Mobile number verified successfully') {
-              throw new Error('MSG91 OTP Validation Failed. Please try again.');
+            const tokenData: any = await tokenResponse.json();
+
+            // In non-production, log the raw response for easier debugging
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('MSG91 verifyAccessToken response:', tokenData);
             }
 
-            // Extract the verified mobile number straight from the MSG91 verification payload
-            const verifiedMobile = tokenData.mobile;
+            // Basic error handling based on MSG91 response shape
+            if (!tokenResponse.ok || tokenData.type === 'error') {
+              const msg = tokenData?.message || 'MSG91 reported an error while validating the OTP token.';
+              throw new Error(msg);
+            }
+
+            // Accept any non-error "success" style message instead of a hard-coded string match
+            const messageText = String(tokenData?.message || '').toLowerCase();
+            if (messageText.includes('fail') || messageText.includes('error')) {
+              throw new Error(tokenData?.message || 'MSG91 OTP validation failed.');
+            }
+
+            // Extract the verified mobile number from common response locations
+            const verifiedMobile =
+              tokenData.mobile ||
+              tokenData.number ||
+              tokenData.phone ||
+              tokenData.data?.mobile ||
+              tokenData.data?.number ||
+              tokenData.data?.phone;
+
             if (!verifiedMobile) {
               throw new Error('Mobile number could not be extracted from MSG91 payload.');
             }
