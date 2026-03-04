@@ -169,6 +169,49 @@ export const authOptions: NextAuthOptions = {
         const secret = credentials.otp.trim();
         const isMsg91 = credentials.isMsg91 === 'true';
 
+        // -------------------------------------------------------- //
+        // Default preset username/password login (no database required)
+        // Allows a single preset credential pair to log in even if the
+        // database is not yet available or user record is missing.
+        // Configure via environment variables:
+        // - DEFAULT_LOGIN_USERNAME
+        // - DEFAULT_LOGIN_PASSWORD
+        // - DEFAULT_LOGIN_EMAIL (optional, falls back to username)
+        // -------------------------------------------------------- //
+        const defaultUsername = process.env.DEFAULT_LOGIN_USERNAME?.trim();
+        const defaultPassword = process.env.DEFAULT_LOGIN_PASSWORD?.trim();
+
+        if (
+          defaultUsername &&
+          defaultPassword &&
+          identifier === defaultUsername &&
+          secret === defaultPassword
+        ) {
+          const defaultEmailRaw =
+            process.env.DEFAULT_LOGIN_EMAIL?.trim() ||
+            (defaultUsername.includes('@')
+              ? defaultUsername
+              : `${defaultUsername}@example.com`);
+
+          const defaultEmail = defaultEmailRaw.toLowerCase();
+
+          const defaultUser: User = {
+            id: 'default-user',
+            email: defaultEmail,
+            name: getNameFromEmail(defaultEmail),
+            company: '',
+            address: '',
+            phone: '',
+            jobCount: 0,
+            role: 'user',
+            password: undefined,
+          };
+
+          const sanitizedDefault: any = { ...defaultUser };
+          delete sanitizedDefault.password;
+          return sanitizedDefault;
+        }
+
         await ensureDatabaseSetup();
 
         // ---------------- MSG91 VERIFICATION FLOW ---------------- //
