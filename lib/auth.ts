@@ -218,6 +218,11 @@ export const authOptions: NextAuthOptions = {
         if (isMsg91) {
           try {
             // Verify token via MSG91 API
+            const authKey = process.env.MSG91_AUTHKEY;
+            if (!authKey) {
+              throw new Error('MSG91_AUTHKEY is not configured on the server.');
+            }
+
             const tokenResponse = await fetch('https://control.msg91.com/api/v5/widget/verifyAccessToken', {
               method: 'POST',
               headers: {
@@ -225,7 +230,7 @@ export const authOptions: NextAuthOptions = {
                 'Accept': 'application/json',
               },
               body: JSON.stringify({
-                authkey: '497253A4J1zh4Z65c69a3ee4aP1',
+                authkey: authKey,
                 'access-token': secret, // jwt_token_from_otp_widget
               }),
             });
@@ -240,6 +245,14 @@ export const authOptions: NextAuthOptions = {
             // Basic error handling based on MSG91 response shape
             if (!tokenResponse.ok || tokenData.type === 'error') {
               const msg = tokenData?.message || 'MSG91 reported an error while validating the OTP token.';
+
+              // Provide clearer guidance for common MSG91 auth errors
+              if (msg.toLowerCase().includes('authenticationfailure')) {
+                throw new Error(
+                  'AuthenticationFailure from MSG91. Please verify MSG91 authkey / widget configuration and allowed domains.'
+                );
+              }
+
               throw new Error(msg);
             }
 
