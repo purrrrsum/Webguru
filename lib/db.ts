@@ -218,6 +218,31 @@ export async function ensureDatabaseSetup() {
     `;
 
     await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS quote_min DECIMAL(10,2)
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS quote_max DECIMAL(10,2)
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS quote_amount DECIMAL(10,2)
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS quote_status VARCHAR(20) DEFAULT 'none'
+    `;
+
+    await sql`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS quote_last_role VARCHAR(20)
+    `;
+
+    await sql`
       DO $$
       BEGIN
         IF EXISTS (
@@ -449,6 +474,11 @@ function mapJobRow(row: any): Job {
     serviceType: row.service_type || 'other',
     pricingModel: row.pricing_model || 'single_project',
     agreedPrice: row.agreed_price ? parseFloat(row.agreed_price) : null,
+    quoteMin: row.quote_min != null ? parseFloat(row.quote_min) : null,
+    quoteMax: row.quote_max != null ? parseFloat(row.quote_max) : null,
+    quoteAmount: row.quote_amount != null ? parseFloat(row.quote_amount) : null,
+    quoteStatus: (row.quote_status as Job['quoteStatus']) || 'none',
+    quoteLastRole: (row.quote_last_role as Job['quoteLastRole']) || null,
   };
 }
 

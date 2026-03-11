@@ -51,6 +51,11 @@ export interface Job {
   pricingModel?: 'single_project' | 'monthly_subscription' | 'yearly_subscription';
   fileCount?: number;
   agreedPrice?: number | null;
+  quoteMin?: number | null;
+  quoteMax?: number | null;
+  quoteAmount?: number | null;
+  quoteStatus?: 'none' | 'proposed' | 'counter_user' | 'counter_agent' | 'accepted';
+  quoteLastRole?: 'user' | 'agent' | null;
 }
 
 export interface FileData {

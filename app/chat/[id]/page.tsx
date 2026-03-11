@@ -69,6 +69,12 @@ export default function ChatPage() {
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  // Quote / negotiation state
+  const [quoteMin, setQuoteMin] = useState<string>('');
+  const [quoteMax, setQuoteMax] = useState<string>('');
+  const [quoteAmountInput, setQuoteAmountInput] = useState<string>('');
+  const [updatingQuote, setUpdatingQuote] = useState(false);
+
   const fetchAnnotations = useCallback(async () => {
     if (!jobId) return;
     try {
@@ -102,6 +108,15 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         setChatData(data);
+        if (data?.job?.quoteMin != null) {
+          setQuoteMin(String(data.job.quoteMin));
+        }
+        if (data?.job?.quoteMax != null) {
+          setQuoteMax(String(data.job.quoteMax));
+        }
+        if (data?.job?.quoteAmount != null) {
+          setQuoteAmountInput(String(data.job.quoteAmount));
+        }
         if (data?.job?.dueAt) {
           setSlaDueInput(new Date(data.job.dueAt).toISOString().slice(0, 16));
           setSlaDueInput(new Date(data.job.dueAt).toISOString().slice(0, 16));
@@ -456,6 +471,109 @@ export default function ChatPage() {
     }
   };
 
+  const handleQuoteUpdate = async () => {
+    if (!jobId) return;
+
+    const amount = Number(quoteAmountInput);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid quote amount.');
+      return;
+    }
+
+    const isAgent = session?.user?.role === 'agent';
+    const body: any = { amount };
+
+    if (isAgent) {
+      // Agent can define / adjust negotiation range
+      const minVal = Number(quoteMin);
+      const maxVal = Number(quoteMax);
+      if (!minVal || !maxVal || isNaN(minVal) || isNaN(maxVal) || minVal <= 0 || maxVal <= 0 || minVal > maxVal) {
+        alert('Please provide a valid negotiation range (min <= max, both > 0).');
+        return;
+      }
+      body.min = minVal;
+      body.max = maxVal;
+    }
+
+    setUpdatingQuote(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/quote`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to update quote.');
+        return;
+      }
+
+      if (data.job) {
+        setChatData((prev) =>
+          prev
+            ? {
+                ...prev,
+                job: {
+                  ...prev.job,
+                  quoteMin: data.job.quoteMin ?? data.job.quote_min ?? null,
+                  quoteMax: data.job.quoteMax ?? data.job.quote_max ?? null,
+                  quoteAmount: data.job.quoteAmount ?? data.job.quote_amount ?? null,
+                  quoteStatus: data.job.quoteStatus ?? data.job.quote_status ?? 'proposed',
+                  quoteLastRole: data.job.quoteLastRole ?? data.job.quote_last_role ?? null,
+                  agreedPrice: data.job.agreedPrice ?? data.job.agreed_price ?? prev.job.agreedPrice,
+                },
+              }
+            : prev
+        );
+      }
+    } catch (err) {
+      console.error('Quote update error:', err);
+      alert('Failed to update quote.');
+    } finally {
+      setUpdatingQuote(false);
+    }
+  };
+
+  const handleQuoteAccept = async () => {
+    if (!jobId || !chatData?.job?.quoteAmount || chatData.job.quoteAmount <= 0) {
+      alert('No active quote to accept.');
+      return;
+    }
+
+    setUpdatingQuote(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/quote/accept`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to accept quote.');
+        return;
+      }
+
+      if (data.job) {
+        setChatData((prev) =>
+          prev
+            ? {
+                ...prev,
+                job: {
+                  ...prev.job,
+                  quoteStatus: data.job.quoteStatus ?? data.job.quote_status ?? 'accepted',
+                  agreedPrice: data.job.agreedPrice ?? data.job.agreed_price ?? prev.job.agreedPrice,
+                },
+              }
+            : prev
+        );
+        alert('Quote accepted. The agreed price will be used when completing this job.');
+      }
+    } catch (err) {
+      console.error('Quote accept error:', err);
+      alert('Failed to accept quote.');
+    } finally {
+      setUpdatingQuote(false);
+    }
+  };
+
   const handleReviewSubmit = async () => {
     if (reviewRating < 1 || reviewRating > 5) {
       alert('Please select a valid star rating.');
@@ -690,6 +808,87 @@ export default function ChatPage() {
 
               {/* Input Area */}
               <div className="bg-slate-900/50 border-t border-slate-800 p-6 rounded-b-xl">
+                {/* Quote / negotiation controls, shown just below the latest messages */}
+                <div className="mb-4 rounded-xl bg-slate-950/80 border border-slate-800 p-4">
+                  <p className="text-xs font-semibold text-gray-300 mb-2">
+                    Job quote &amp; negotiation
+                  </p>
+                  <div className="space-y-2">
+                    {session.user.role === 'agent' && (
+                      <div className="grid grid-cols-3 gap-2 mb-2">
+                        <div>
+                          <label className="block text-[10px] text-gray-400 mb-1">Min</label>
+                          <input
+                            type="number"
+                            value={quoteMin}
+                            onChange={(e) => setQuoteMin(e.target.value)}
+                            className="w-full px-2 py-1 text-xs bg-slate-900 border border-slate-700 rounded text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-400 mb-1">Max</label>
+                          <input
+                            type="number"
+                            value={quoteMax}
+                            onChange={(e) => setQuoteMax(e.target.value)}
+                            className="w-full px-2 py-1 text-xs bg-slate-900 border border-slate-700 rounded text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-gray-400 mb-1">Your quote</label>
+                          <input
+                            type="number"
+                            value={quoteAmountInput}
+                            onChange={(e) => setQuoteAmountInput(e.target.value)}
+                            className="w-full px-2 py-1 text-xs bg-slate-900 border border-slate-700 rounded text-white"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {session.user.role === 'user' && (
+                      <div className="mb-2 text-[11px] text-gray-300">
+                        <p>
+                          Agent range:{' '}
+                          {chatData.job.quoteMin != null && chatData.job.quoteMax != null
+                            ? `${chatData.job.quoteMin} – ${chatData.job.quoteMax}`
+                            : 'not yet set'}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={quoteAmountInput}
+                        onChange={(e) => setQuoteAmountInput(e.target.value)}
+                        placeholder="Enter amount"
+                        className="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-2xl text-xs text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleQuoteUpdate}
+                        disabled={updatingQuote}
+                        className="px-4 py-2 bg-brand-blue text-white text-xs rounded-2xl disabled:opacity-50"
+                      >
+                        {session.user.role === 'agent' ? 'Set / Update quote' : 'Negotiate'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleQuoteAccept}
+                        disabled={updatingQuote || !chatData.job.quoteAmount}
+                        className="px-4 py-2 bg-emerald-600 text-white text-xs rounded-2xl disabled:opacity-50"
+                      >
+                        Accept
+                      </button>
+                    </div>
+                    {chatData.job.quoteAmount != null && (
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        Latest offer: {chatData.job.quoteAmount}{' '}
+                        {chatData.job.quoteStatus === 'accepted' && '(accepted)'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <form onSubmit={handleSendMessage} className="flex gap-3">
                   <input
                     type="text"

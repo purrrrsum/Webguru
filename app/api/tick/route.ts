@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getFileById, updateFile, incrementUserJobCount } from '@/lib/db';
+import { getFileById, updateFile, incrementUserJobCount, getJobById, updateWalletBalance } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,10 +35,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update file' }, { status: 500 });
     }
 
-    // Check if both ticks are done
+    // Check if both ticks are done (user and agent have confirmed completion)
     if (updatedFile.userTick && updatedFile.agentTick) {
-      // Increment job count for user
+      // Increment job count for the original uploader
       await incrementUserJobCount(file.uploadedBy);
+
+      // Load the related job to access agreed price and agent
+      const job = await getJobById(updatedFile.jobId);
+
+      if (job && job.agentId && job.agreedPrice && job.agreedPrice > 0) {
+        // Credit the agreed price to the agent's wallet balance
+        await updateWalletBalance(job.agentId, job.agreedPrice);
+
+        // Mark the latest held escrow for this job as released
+        const sql = (await import('@/lib/db-client')).default;
+        await sql`
+          UPDATE escrow_holds
+          SET status = 'released', released_at = NOW()
+          WHERE id = (
+            SELECT id FROM escrow_holds
+            WHERE job_id = ${job.id} AND status = 'held'
+            ORDER BY created_at DESC
+            LIMIT 1
+          )
+        `;
+      }
 
       // Get updated user to return job count
       const { getUserById } = await import('@/lib/db');

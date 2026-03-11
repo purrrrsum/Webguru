@@ -31,7 +31,7 @@ export async function PATCH(
     }
 
     if (status === 'completed') {
-      const completionAmount = Number(amount) || job.agreedPrice || 0;
+      const completionAmount = job.agreedPrice || Number(amount) || 0;
       if (completionAmount <= 0) {
         return NextResponse.json({ error: 'Invalid or missing job price to deduct.' }, { status: 400 });
       }
